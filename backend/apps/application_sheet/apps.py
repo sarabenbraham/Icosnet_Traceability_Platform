@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class ApplicationSheetConfig(AppConfig):
-    name = 'application_sheet'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.application_sheet"
