@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-
 class User(AbstractUser):
     poste = models.CharField(max_length=100, blank=True )
 
@@ -18,6 +17,14 @@ class User(AbstractUser):
         return f"{self.first_name} {self.last_name}"
 
 class Ingenieur(User):
+    departement = models.ForeignKey(
+        "organization.Departement",
+        on_delete=models.CASCADE,
+        related_name="ingenieurs",
+        null=True,
+        blank=True,
+    )
+    
     def remplirFormulaire(self):
         pass
 
