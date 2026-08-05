@@ -301,3 +301,140 @@ python manage.py migrate
 * Each business feature will be implemented as a separate Django application.
 * The project is intended to remain scalable and maintainable.
 * Docker, PostgreSQL and deployment will be configured after the core application is functional.
+
+
+Frontend Setup Guide
+Objectif
+
+Le frontend du projet est développé avec React en utilisant Vite.
+
+Le backend est développé séparément avec Django, ce qui permet au frontend et au backend d'être développés en parallèle.
+
+Technologies utilisées
+React
+Vite
+JavaScript
+ESLint
+Node.js
+npm
+Structure du projet
+Icosnet_Traceability_Platform/
+│
+├── backend/      → Django Backend
+├── frontend/     → React Frontend
+├── docs/
+└── README.md
+Prérequis
+
+Avant de commencer, installer :
+
+Node.js (version LTS recommandée)
+npm (installé avec Node.js)
+Visual Studio Code
+
+Vérifier les versions :
+
+node -v
+npm -v
+Récupérer le projet
+
+Cloner le dépôt GitHub :
+
+git clone <URL_DU_REPOSITORY>
+
+Entrer dans le projet :
+
+cd Icosnet_Traceability_Platform
+Installer les dépendances
+
+Se placer dans le dossier frontend :
+
+cd frontend
+
+Installer les dépendances :
+
+npm install
+Lancer le projet
+npm run dev
+
+Le frontend sera disponible à l'adresse :
+
+http://localhost:5173
+Dépendances à installer
+
+Installer React Router :
+
+npm install react-router-dom
+
+Installer Axios :
+
+npm install axios
+
+Installer React Icons :
+
+npm install react-icons
+
+Installer SweetAlert2 :
+
+npm install sweetalert2
+Architecture recommandée
+
+Créer la structure suivante dans src :
+
+src/
+│
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   └── logo/
+│
+├── components/
+│   ├── common/
+│   ├── forms/
+│   ├── layout/
+│   └── tables/
+│
+├── pages/
+│   ├── auth/
+│   ├── dashboard/
+│   ├── application_sheet/
+│   ├── meetings/
+│   └── profile/
+│
+├── services/
+├── routes/
+├── hooks/
+├── context/
+├── utils/
+├── styles/
+│
+├── App.jsx
+└── main.jsx
+Travail à réaliser
+
+Le frontend peut être développé indépendamment du backend.
+
+Les premières interfaces à réaliser sont :
+
+Page de connexion
+Tableau de bord
+Liste des fiches applicatives
+Création d'une fiche applicative
+Détail d'une fiche
+Modification d'une fiche
+Gestion des réunions
+Profil utilisateur
+
+Les données peuvent être simulées (mock data) jusqu'à la mise à disposition des API du backend.
+
+Communication avec le backend
+
+Le frontend communiquera avec le backend Django via des API REST.
+
+Les appels HTTP seront réalisés avec Axios.
+
+État actuel
+✅ Frontend React créé avec Vite.
+✅ Projet lancé avec succès.
+⏳ Développement des pages à commencer.
+⏳ Connexion avec le backend prévue après la création des API.
