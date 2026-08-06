@@ -21,14 +21,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 ]
 
-
 urlpatterns = [
+    path("admin/", admin.site.urls),
 
     path(
-        "api/",
-        include(
-            "apps.application_sheet.urls"
-        )
+        "application-sheet/",
+        include("apps.application_sheet.urls"),
     ),
-
 ]

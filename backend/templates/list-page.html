@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tous les documents – icoDoc</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ... Global styles (subset for brevity) ... */
+    * { font-family: 'Poppins', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4fb; min-height: 100vh; }
+    .topbar { position: fixed; top: 0; left: 0; right: 0; width: 100%; height: 64px; background: #fff; border-bottom: 1px solid #e8edf5; display: flex; align-items: center; z-index: 200; box-shadow: 0 1px 8px rgba(15,30,69,.06); }
+    .topbar-brand { width: 248px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 20px; height: 100%; border-right: 1px solid #e8edf5; }
+    .topbar-brand-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#2d5be3,#1a3470); display: flex; align-items: center; justify-content: center; }
+    .topbar-brand-name { font-size: 1.15rem; font-weight: 700; color: #1e3f8a; font-family: 'Quicksand', sans-serif; }
+    .topbar-center { flex: 1; padding: 0 28px; display: flex; flex-direction: column; justify-content: center; }
+    .topbar-title { font-size: 1.1rem; font-weight: 700; color: #4a5568; font-family: 'Quicksand', sans-serif; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; padding-right: 24px; }
+    .sidebar { position: fixed; top: 64px; left: 0; width: 248px; height: calc(100vh - 64px); background: linear-gradient(180deg,#1a3a8f 0%,#0f1e45 100%); display: flex; flex-direction: column; z-index: 100; border-top-right-radius: 28px; }
+    .sidebar-nav { flex: 1; padding: 4px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 999px; color: rgba(255,255,255,.6); text-decoration: none; font-size: .82rem; font-weight: 400; }
+    .nav-item.active { background: #fff; color: #1a3980; font-weight: 600; }
+    .main { margin-left: 248px; padding-top: 64px; min-height: 100vh; }
+    .content { padding: 28px 32px 48px; }
+
+    /* ── List Page Specific Styles ── */
+    .search-bar-card { background:transparent; border:none; box-shadow:none; padding:0 0 14px; margin-bottom:0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:200px; }
+    .search-input { width:100%; border:1.5px solid #e8edf5; border-radius:999px; padding:13px 20px 13px 44px; font-size:.88rem; color:#2d3748; background:#fff; transition:border-color .2s; }
+    .search-input:focus { outline:none; border-color:#2d5be3; box-shadow:0 0 0 3px rgba(45,91,227,.1); }
+    .bar-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 15px; border-radius:10px; font-size:.82rem; font-weight:500; cursor:pointer; border:none; }
+    .bar-btn-search { background:linear-gradient(135deg,#2d5be3,#1a3470); color:#fff; }
+    .bar-btn-filter { background:#f0f4fb; color:#2d5be3; border:1.5px solid #c7d7f8; }
+    .bar-separator { width:1px; height:28px; background:#e8edf5; flex-shrink:0; }
+
+    .table-wrap { background:#fff; border-radius:16px; border:1px solid #e8edf5; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { background:#f7f9fc; padding:12px 16px; font-size:.68rem; font-weight:600; text-transform:uppercase; color:#718096; text-align:left; border-bottom:1px solid #e8edf5; }
+    tbody tr { border-bottom:1px solid #f0f4fb; }
+    tbody tr:hover { background:#f7f9fc; }
+    td { padding:13px 16px; font-size:.83rem; color:#2d3748; vertical-align:middle; }
+    .doc-link { color:#2d5be3; font-weight:500; text-decoration:none; }
+    
+    .actions-cell { display:flex; align-items:center; gap:4px; justify-content:center; }
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; text-decoration:none; }
+    .icon-btn-view { background:#eef2ff; color:#2d5be3; }
+    .icon-btn-dl { background:#f0fff4; color:#276749; }
+    .badge { display:inline-flex; align-items:center; gap:5px; font-size:.78rem; font-weight:400; padding:4px 8px; border-radius:6px; background:#f0fff4; color:#276749; }
+    .badge-dot { width:6px; height:6px; border-radius:50%; background:#38a169; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-brand-icon">
+      <!-- Icon -->
+    </div>
+    <div class="topbar-brand-name">IcoDoc</div>
+  </div>
+  <div class="topbar-center">
+    <div class="topbar-title">Tous les documents</div>
+  </div>
+</header>
+
+<aside class="sidebar">
+  <nav class="sidebar-nav">
+    <br/>
+    <a href="list-page.html" class="nav-item active">Tous les documents</a>
+    <a href="dashboard.html" class="nav-item">Tableau de bord</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="content">
+
+    <div class="search-bar-card">
+      <div class="search-wrap">
+        <input type="text" placeholder="Rechercher par titre, mot-clé, description…" class="search-input">
+      </div>
+      <button class="bar-btn bar-btn-search">Rechercher</button>
+      <div class="bar-separator"></div>
+      <button class="bar-btn bar-btn-filter">Filtres</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Auteur</th>
+            <th>Statut</th>
+            <th>Date d'ajout</th>
+            <th style="text-align:center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="#" class="doc-link">Rapport d'activité Q3</a></td>
+            <td>John Doe</td>
+            <td><span class="badge"><span class="badge-dot"></span>Validé</span></td>
+            <td style="color:#718096; font-size:0.78rem;">15/10/2026</td>
+            <td>
+              <div class="actions-cell">
+                <a href="#" class="icon-btn icon-btn-view" title="Voir">👁</a>
+                <a href="#" class="icon-btn icon-btn-dl" title="Télécharger">⬇</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><a href="#" class="doc-link">Spécifications Techniques</a></td>
+            <td>Jane Smith</td>
+            <td><span class="badge" style="background:#fffaf0; color:#b7791f;"><span class="badge-dot" style="background:#dd6b20;"></span>En attente</span></td>
+            <td style="color:#718096; font-size:0.78rem;">12/10/2026</td>
+            <td>
+              <div class="actions-cell">
+                <a href="#" class="icon-btn icon-btn-view" title="Voir">👁</a>
+                <a href="#" class="icon-btn icon-btn-dl" title="Télécharger">⬇</a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

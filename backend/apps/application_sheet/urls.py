@@ -1,73 +1,43 @@
-from django.urls import path, include
+from django.urls import path
 
-from rest_framework.routers import DefaultRouter
-
-from .views import *
-
-
-router = DefaultRouter()
-
-
-router.register(
-    "fiches",
-    FicheApplicativeViewSet
+from .views import (
+    FicheApplicativeListView,
+    fiche_create,
+    fiche_detail,
+    fiche_update,
+    FicheApplicativeDeleteView,
 )
 
-router.register(
-    "contrats",
-    ContratViewSet
-)
-
-router.register(
-    "infrastructures",
-    InfrastructureViewSet
-)
-
-router.register(
-    "acces",
-    UtilisateurAccesViewSet
-)
-
-router.register(
-    "developpements",
-    DeveloppementViewSet
-)
-
-router.register(
-    "modules",
-    ModuleMetierViewSet
-)
-
-router.register(
-    "stockages",
-    StockageViewSet
-)
-
-router.register(
-    "integrations",
-    IntegrationViewSet
-)
-
-router.register(
-    "flux",
-    FluxApplicationViewSet
-)
-
-router.register(
-    "sauvegardes",
-    SauvegardeViewSet
-)
-
-router.register(
-    "interventions",
-    InterventionViewSet
-)
-
+app_name = "application_sheet"
 
 urlpatterns = [
     path(
         "",
-        include(router.urls)
-    )
-]
+        FicheApplicativeListView.as_view(),
+        name="fiche_list",
+    ),
 
+    path(
+        "create/",
+        fiche_create,
+        name="fiche_create",
+    ),
+
+    path(
+        "<int:pk>/",
+        fiche_detail,
+        name="fiche_detail",
+    ),
+
+    path(
+        "<int:pk>/edit/",
+        fiche_update,
+        name="fiche_update",
+    ),
+
+    path(
+        "<int:pk>/delete/",
+        FicheApplicativeDeleteView.as_view(),
+        name="fiche_delete",
+    ),
+]
