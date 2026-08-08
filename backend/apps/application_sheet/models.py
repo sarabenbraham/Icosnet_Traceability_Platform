@@ -1,31 +1,35 @@
 from django.core.exceptions import ValidationError
-
 from django.db import models
 
 
+# ============================================================
+# 1. FICHE APPLICATIVE
+# ============================================================
+
 class FicheApplicative(models.Model):
 
-    DOMAINE_CHOICES = [
-        ("RH", "RH"),
-        ("COMMERCIAL", "Commercial"),
-        ("TECHNIQUE", "Technique / Telco"),
-        ("MIDDLEWARE", "Middleware"),
-        ("BI", "Décisionnel"),
-    ]
+    class Domaine(models.TextChoices):
+        RH = "RH", "RH"
+        COMMERCIAL = "COMMERCIAL", "Commercial"
+        TECHNIQUE = "TECHNIQUE", "Technique / Telco"
+        MIDDLEWARE = "MIDDLEWARE", "Middleware"
+        BI = "BI", "Décisionnel"
 
-    CRITICITE_CHOICES = [
-        ("CRITIQUE", "Critique"),
-        ("MAJEURE", "Majeure"),
-        ("MINEURE", "Mineure"),
-    ]
+    class Criticite(models.TextChoices):
+        CRITIQUE = "CRITIQUE", "Critique"
+        MAJEURE = "MAJEURE", "Majeure"
+        MINEURE = "MINEURE", "Mineure"
 
-    STATUT_CHOICES = [
-        ("BROUILLON", "Brouillon"),
-        ("EN_ATTENTE", "En attente"),
-        ("EN_VALIDATION", "En validation"),
-        ("VALIDEE", "Validée"),
-        ("REFUSEE", "Refusée"),
-    ]
+    class Statut(models.TextChoices):
+        BROUILLON = "BROUILLON", "Brouillon"
+        EN_ATTENTE = "EN_ATTENTE", "En attente"
+        EN_VALIDATION = "EN_VALIDATION", "En validation"
+        VALIDEE = "VALIDEE", "Validée"
+        REFUSEE = "REFUSEE", "Refusée"
+
+    # ========================================================
+    # IDENTIFICATION
+    # ========================================================
 
     nom_application = models.CharField(max_length=200)
 
@@ -36,38 +40,50 @@ class FicheApplicative(models.Model):
 
     domaine_fonctionnel = models.CharField(
         max_length=30,
-        choices=DOMAINE_CHOICES
+        choices=Domaine.choices
     )
 
     criticite = models.CharField(
         max_length=20,
-        choices=CRITICITE_CHOICES
+        choices=Criticite.choices
     )
 
-    description = models.TextField()
-
-    date_creation = models.DateTimeField(auto_now_add=True)
-
-    statut = models.CharField(
-        max_length=20,
-        choices=STATUT_CHOICES,
-        default="BROUILLON"
-    )
+    description = models.TextField(blank=True)
 
     ingenieur = models.ForeignKey(
         "users.Ingenieur",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="fiches"
     )
 
     departements = models.ManyToManyField(
         "organization.Departement",
-        related_name="fiches"
+        related_name="fiches",
+        blank=True
     )
 
-    def __str__(self):
-        return self.nom_application
+    statut = models.CharField(
+        max_length=20,
+        choices=Statut.choices,
+        default=Statut.BROUILLON
+    )
 
+    date_creation = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = "Fiche applicative"
+        verbose_name_plural = "Fiches applicatives"
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"{self.nom_application} ({self.code_application})"
+
+
+# ============================================================
+# 2. CONTRAT
+# ============================================================
 
 class Contrat(models.Model):
 
@@ -77,7 +93,9 @@ class Contrat(models.Model):
         related_name="contrat"
     )
 
-    fournisseur = models.CharField(max_length=200)
+    fournisseur = models.CharField(
+        max_length=200
+    )
 
     budget_annuel = models.DecimalField(
         max_digits=15,
@@ -86,7 +104,9 @@ class Contrat(models.Model):
         blank=True
     )
 
-    support_externe = models.BooleanField(default=False)
+    support_externe = models.BooleanField(
+        default=False
+    )
 
     reference_contrat = models.CharField(
         max_length=100,
@@ -114,28 +134,29 @@ class Contrat(models.Model):
     )
 
     def __str__(self):
-        return self.fournisseur
+        return f"Contrat - {self.fiche.nom_application}"
 
+
+# ============================================================
+# 3. INFRASTRUCTURE
+# ============================================================
 
 class Infrastructure(models.Model):
 
-    TYPE_INFRASTRUCTURE_CHOICES = [
-        ("ON_PREMISE", "On-Premise"),
-        ("CLOUD", "Cloud"),
-    ]
+    class TypeInfrastructure(models.TextChoices):
+        ON_PREMISE = "ON_PREMISE", "On-Premise"
+        CLOUD = "CLOUD", "Cloud"
 
-    TYPE_CLOUD_CHOICES = [
-        ("IAAS", "IaaS"),
-        ("PAAS", "PaaS"),
-        ("SAAS", "SaaS"),
-    ]
+    class TypeCloud(models.TextChoices):
+        IAAS = "IAAS", "IaaS"
+        PAAS = "PAAS", "PaaS"
+        SAAS = "SAAS", "SaaS"
 
-    VIRTUALISATION_CHOICES = [
-        ("PROXMOX", "Proxmox"),
-        ("VMWARE", "VMware"),
-        ("DOCKER", "Docker / Kubernetes"),
-        ("PHYSIQUE", "Serveur Physique"),
-    ]
+    class Virtualisation(models.TextChoices):
+        PROXMOX = "PROXMOX", "Proxmox"
+        VMWARE = "VMWARE", "VMware"
+        DOCKER = "DOCKER", "Docker / Kubernetes"
+        PHYSIQUE = "PHYSIQUE", "Serveur Physique"
 
     fiche = models.OneToOneField(
         FicheApplicative,
@@ -143,36 +164,37 @@ class Infrastructure(models.Model):
         related_name="infrastructure"
     )
 
-    # ===========================
-    # 2. Infrastructure
-    # ===========================
-
     type_infrastructure = models.CharField(
         max_length=20,
-        choices=TYPE_INFRASTRUCTURE_CHOICES
+        choices=TypeInfrastructure.choices
     )
 
     type_cloud = models.CharField(
         max_length=10,
-        choices=TYPE_CLOUD_CHOICES,
+        choices=TypeCloud.choices,
         null=True,
         blank=True
     )
 
     plateforme_virtualisation = models.CharField(
         max_length=30,
-        choices=VIRTUALISATION_CHOICES
+        choices=Virtualisation.choices
     )
 
-    # ===========================
-    # 2.1 Réseau / Système
-    # ===========================
+    cluster = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    cluster = models.CharField(max_length=200)
+    machine = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    machine = models.CharField(max_length=200)
-
-    ip_lan = models.GenericIPAddressField()
+    ip_lan = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
 
     ip_publique = models.GenericIPAddressField(
         null=True,
@@ -194,36 +216,44 @@ class Infrastructure(models.Model):
         blank=True
     )
 
-    systeme = models.CharField(max_length=200)
-
-    version_os = models.CharField(max_length=100)
-
-    # ===========================
-    # 2.2 Dimensionnement
-    # ===========================
-
-    serveur_application = models.CharField(
-        max_length=200
+    systeme = models.CharField(
+        max_length=200,
+        blank=True
     )
 
-    ip_serveur_application = models.GenericIPAddressField()
+    version_os = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    serveur_application = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    ip_serveur_application = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
 
     cpu = models.CharField(
         max_length=50,
-        help_text="Ex: 8 vCPU"
+        blank=True
     )
 
     ram = models.CharField(
         max_length=50,
-        help_text="Ex: 16 Go"
+        blank=True
     )
 
     type_sgbd = models.CharField(
-        max_length=100
+        max_length=100,
+        blank=True
     )
 
     version_sgbd = models.CharField(
-        max_length=50
+        max_length=50,
+        blank=True
     )
 
     serveur_bd_dedie = models.BooleanField(
@@ -240,92 +270,113 @@ class Infrastructure(models.Model):
         blank=True
     )
 
-    def __str__(self):
-        return f"{self.fiche} - Infrastructure"
-
     def clean(self):
         erreurs = {}
 
-        # Cloud
-        if self.type_infrastructure == "CLOUD" and not self.type_cloud:
-            erreurs["type_cloud"] = "Obligatoire pour une infrastructure Cloud."
+        if self.type_infrastructure == self.TypeInfrastructure.CLOUD:
+            if not self.type_cloud:
+                erreurs["type_cloud"] = (
+                    "Le type de Cloud est obligatoire."
+                )
 
-        if self.type_infrastructure == "ON_PREMISE":
+        if self.type_infrastructure == self.TypeInfrastructure.ON_PREMISE:
             self.type_cloud = None
 
-        # Base de données dédiée
         if self.serveur_bd_dedie:
             if not self.ip_serveur_bd:
-                erreurs["ip_serveur_bd"] = "L'adresse IP est obligatoire."
+                erreurs["ip_serveur_bd"] = (
+                    "L'adresse IP est obligatoire."
+                )
 
             if not self.nom_serveur_bd:
-                erreurs["nom_serveur_bd"] = "Le nom du serveur est obligatoire."
-        else:
-            self.ip_serveur_bd = None
-            self.nom_serveur_bd = ""
+                erreurs["nom_serveur_bd"] = (
+                    "Le nom du serveur est obligatoire."
+                )
 
         if erreurs:
             raise ValidationError(erreurs)
 
+    def __str__(self):
+        return f"Infrastructure - {self.fiche.nom_application}"
+
+
+# ============================================================
+# 4. UTILISATEURS & ACCÈS
+# ============================================================
 
 class UtilisateurAcces(models.Model):
 
-    CANAL_CHOICES = [
-        ("WEB", "Navigateur Web"),
-        ("API", "API"),
-        ("MOBILE", "Application Mobile"),
-        ("CLI", "Client Lourd"),
-    ]
+    class Canal(models.TextChoices):
+        WEB = "WEB", "Navigateur Web"
+        API = "API", "API"
+        MOBILE = "MOBILE", "Application Mobile"
+        CLI = "CLI", "Client Lourd"
 
     fiche = models.OneToOneField(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="utilisateurs_acces"
+        related_name="acces"
     )
 
     utilisateurs_cibles = models.TextField()
 
-    profils_utilisateurs = models.TextField()
+    profils_utilisateurs = models.TextField(
+        blank=True
+    )
 
-    canaux_acces = models.JSONField(default=list)
-
-    def __str__(self):
-        return f"{self.fiche} - Accès Utilisateurs"
+    canaux_acces = models.JSONField(
+        default=list
+    )
 
     def clean(self):
+        erreurs = {}
+
         if not self.utilisateurs_cibles:
-            raise ValidationError(
-                {"utilisateurs_cibles": "Vous devez préciser les utilisateurs cibles."}
+            erreurs["utilisateurs_cibles"] = (
+                "Les utilisateurs cibles sont obligatoires."
             )
 
         if not self.canaux_acces:
-            raise ValidationError(
-                {"canaux_acces": "Au moins un canal d'accès doit être sélectionné."}
+            erreurs["canaux_acces"] = (
+                "Au moins un canal d'accès doit être sélectionné."
             )
 
-        canaux_valides = [choix[0] for choix in self.CANAL_CHOICES]
+        valides = {
+            c[0] for c in self.Canal.choices
+        }
 
-        for canal in self.canaux_acces:
-            if canal not in canaux_valides:
-                raise ValidationError({
-                    "canaux_acces": f"{canal} n'est pas un canal valide."
-                })
-        
+        invalides = [
+            valeur
+            for valeur in self.canaux_acces
+            if valeur not in valides
+        ]
 
-    
+        if invalides:
+            erreurs["canaux_acces"] = (
+                f"Canaux invalides : {', '.join(invalides)}."
+            )
+
+        if erreurs:
+            raise ValidationError(erreurs)
+
+    def __str__(self):
+        return f"Accès - {self.fiche.nom_application}"
+
+
+# ============================================================
+# 5. DÉVELOPPEMENT
+# ============================================================
 
 class Developpement(models.Model):
 
-    MODE_CHOICES = [
-        ("INTERNE", "Développé en interne"),
-        ("EXTERNE", "Éditeur externe"),
-    ]
+    class ModeDeveloppement(models.TextChoices):
+        INTERNE = "INTERNE", "Développé en interne"
+        EXTERNE = "EXTERNE", "Éditeur externe"
 
-    ENVIRONNEMENT_CHOICES = [
-        ("PRODUCTION", "Production"),
-        ("PREPROD", "Pré-production"),
-        ("DEVELOPPEMENT", "Développement"),
-    ]
+    class Environnement(models.TextChoices):
+        PRODUCTION = "PRODUCTION", "Production"
+        PREPROD = "PREPROD", "Pré-production"
+        DEVELOPPEMENT = "DEVELOPPEMENT", "Développement"
 
     fiche = models.OneToOneField(
         FicheApplicative,
@@ -335,30 +386,44 @@ class Developpement(models.Model):
 
     mode_developpement = models.CharField(
         max_length=20,
-        choices=MODE_CHOICES
+        choices=ModeDeveloppement.choices
     )
 
-    gestion_sources = models.CharField(max_length=300)
+    gestion_sources = models.CharField(
+        max_length=300,
+        blank=True
+    )
 
-    processus_ci_cd = models.TextField()
+    processus_ci_cd = models.TextField(
+        blank=True
+    )
 
-    environnements = models.JSONField(default=list)
+    environnements = models.JSONField(
+        default=list
+    )
 
-    methode_personnalisation = models.TextField()
+    methode_personnalisation = models.TextField(
+        blank=True
+    )
 
-    livrables_personnalisation = models.TextField()
+    livrables_personnalisation = models.TextField(
+        blank=True
+    )
 
-    services = models.TextField()
-
-    def __str__(self):
-        return f"{self.fiche} - Développement"
+    services = models.TextField(
+        blank=True
+    )
 
     def clean(self):
         erreurs = {}
 
-        if self.mode_developpement == "INTERNE" and not self.gestion_sources:
+        if (
+            self.mode_developpement == self.ModeDeveloppement.INTERNE
+            and not self.gestion_sources
+        ):
             erreurs["gestion_sources"] = (
-                "Un dépôt Git est obligatoire pour un développement interne."
+                "Un dépôt Git est obligatoire "
+                "pour un développement interne."
             )
 
         if not self.environnements:
@@ -366,55 +431,48 @@ class Developpement(models.Model):
                 "Sélectionnez au moins un environnement."
             )
 
-        valeurs_valides = [choix[0] for choix in self.ENVIRONNEMENT_CHOICES]
-
-        for env in self.environnements:
-            if env not in valeurs_valides:
-                erreurs["environnements"] = (
-                    f"{env} est un environnement invalide."
-                )
-
         if erreurs:
             raise ValidationError(erreurs)
 
+    def __str__(self):
+        return f"Développement - {self.fiche.nom_application}"
 
+
+# ============================================================
+# 6. MODULES MÉTIERS
+# ============================================================
 
 class ModuleMetier(models.Model):
 
-    fiche = models.ForeignKey(
+    fiche = models.OneToOneField(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="modules"
+        related_name="module_metier"
     )
 
-    nom = models.CharField(max_length=200)
+    modules = models.JSONField(
+        default=list
+    )
+
+    description = models.TextField(
+        blank=True
+    )
 
     def __str__(self):
-        return self.nom
+        return f"Modules métier - {self.fiche.nom_application}"
 
-    def clean(self):
-        if not self.nom:
-            raise ValidationError(
-                {"nom": "Le nom du module est obligatoire."}
-            )
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["fiche", "nom"],
-                name="unique_module_par_fiche"
-            )
-        ]
-
+# ============================================================
+# 7. STOCKAGE
+# ============================================================
 
 class Stockage(models.Model):
 
-    EMPLACEMENT_CHOICES = [
-        ("LOCAL_VM", "Local VM"),
-        ("NAS", "NAS"),
-        ("OBJET", "Stockage Objet"),
-        ("GED", "GED Externe"),
-    ]
+    class Emplacement(models.TextChoices):
+        LOCAL_VM = "LOCAL_VM", "Local VM"
+        NAS = "NAS", "NAS"
+        OBJET = "OBJET", "Stockage Objet"
+        GED = "GED", "GED Externe"
 
     fiche = models.OneToOneField(
         FicheApplicative,
@@ -422,32 +480,32 @@ class Stockage(models.Model):
         related_name="stockage"
     )
 
-    persistance = models.BooleanField(default=False)
+    persistance = models.BooleanField(
+        default=False
+    )
 
-    emplacements = models.JSONField(default=list)
-
-    def __str__(self):
-        return f"{self.fiche} - Stockage"
+    emplacements = models.JSONField(
+        default=list
+    )
 
     def clean(self):
+        erreurs = {}
+
         if self.persistance and not self.emplacements:
-            raise ValidationError(
-                {"emplacements": "Au moins un emplacement doit être sélectionné."}
+            erreurs["emplacements"] = (
+                "Au moins un emplacement est obligatoire."
             )
 
-        if not self.persistance:
-            self.emplacements = []
+        if erreurs:
+            raise ValidationError(erreurs)
 
-        emplacements_valides = [
-    choix[0] for choix in self.EMPLACEMENT_CHOICES
-]
+    def __str__(self):
+        return f"Stockage - {self.fiche.nom_application}"
 
-        for emplacement in self.emplacements:
-            if emplacement not in emplacements_valides:
-                raise ValidationError({
-                    "emplacements":
-                    f"{emplacement} n'est pas un emplacement valide."
-                })
+
+# ============================================================
+# 8. INTÉGRATIONS
+# ============================================================
 
 class Integration(models.Model):
 
@@ -457,82 +515,107 @@ class Integration(models.Model):
         related_name="integration"
     )
 
-    active_directory = models.BooleanField(default=False)
+    active_directory = models.BooleanField(
+        default=False
+    )
 
-    groupes_ad = models.TextField(blank=True)
+    groupes_ad = models.TextField(
+        blank=True
+    )
 
-    messagerie = models.CharField(max_length=200)
+    messagerie = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    compte_messagerie = models.CharField(max_length=200)
+    compte_messagerie = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    usage = models.CharField(max_length=200)
+    usage = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    integration_bi = models.BooleanField(default=False)
+    integration_bi = models.BooleanField(
+        default=False
+    )
 
     methode_bi = models.CharField(
         max_length=200,
         blank=True
     )
 
-    def __str__(self):
-        return f"{self.fiche} - Intégration"
-
     def clean(self):
+        erreurs = {}
+
         if self.active_directory and not self.groupes_ad:
-            raise ValidationError(
-                {"groupes_ad": "Les groupes Active Directory sont obligatoires."}
+            erreurs["groupes_ad"] = (
+                "Les groupes Active Directory sont obligatoires."
             )
 
         if self.integration_bi and not self.methode_bi:
-            raise ValidationError(
-                {"methode_bi": "La méthode d'intégration BI est obligatoire."}
+            erreurs["methode_bi"] = (
+                "La méthode d'intégration BI est obligatoire."
             )
+
+        if erreurs:
+            raise ValidationError(erreurs)
+
+    def __str__(self):
+        return f"Intégration - {self.fiche.nom_application}"
+
+
+# ============================================================
+# 9. FLUX INTER-APPLICATIONS
+# ============================================================
 
 class FluxApplication(models.Model):
 
-    TYPE_CHOICES = [
-        ("API", "API REST"),
-        ("WEBHOOK", "Webhook"),
-        ("AUTRE", "Autre"),
-    ]
+    class TypeFlux(models.TextChoices):
+        API = "API", "API REST"
+        WEBHOOK = "WEBHOOK", "Webhook"
+        AUTRE = "AUTRE", "Autre"
 
-    fiche = models.ForeignKey(
+    fiche = models.OneToOneField(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="flux"
+        related_name="flux_application"
     )
 
-    solution_distante = models.CharField(max_length=200)
+    adresse = models.CharField(
+        max_length=255,
+        blank=True
+    )
 
-    adresse = models.CharField(max_length=200)
-
-    port = models.IntegerField()
-
-    reception = models.BooleanField(default=False)
-
-    envoi = models.BooleanField(default=False)
+    port = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
 
     type_flux = models.CharField(
         max_length=20,
-        choices=TYPE_CHOICES
+        choices=TypeFlux.choices,
+        blank=True
     )
 
-    description = models.TextField()
+    def clean(self):
+        if self.port is not None and not (
+            1 <= self.port <= 65535
+        ):
+            raise ValidationError({
+                "port":
+                "Le port doit être compris entre 1 et 65535."
+            })
 
     def __str__(self):
-        return f"{self.fiche} - {self.solution_distante}"
+        return f"Flux - {self.fiche.nom_application}"
 
-    def clean(self):
-        if not self.adresse:
-            raise ValidationError(
-                {"adresse": "L'adresse IP ou l'URL est obligatoire."}
-            )
 
-        if self.port <= 0:
-            raise ValidationError(
-                {"port": "Le port doit être compris entre 1 et 65535."}
-            )
-
+# ============================================================
+# 10. SAUVEGARDE
+# ============================================================
 
 class Sauvegarde(models.Model):
 
@@ -542,11 +625,18 @@ class Sauvegarde(models.Model):
         related_name="sauvegarde"
     )
 
-    emplacement_logs = models.TextField()
+    emplacement_logs = models.TextField(
+        blank=True
+    )
 
-    supervision = models.CharField(max_length=200)
+    supervision = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    sauvegarde_planifiee = models.BooleanField(default=False)
+    sauvegarde_planifiee = models.BooleanField(
+        default=False
+    )
 
     outil = models.CharField(
         max_length=200,
@@ -568,83 +658,51 @@ class Sauvegarde(models.Model):
     )
 
     def __str__(self):
-        return f"{self.fiche} - {self.emplacement_logs}"
+        return f"Sauvegarde - {self.fiche.nom_application}"
 
-    def clean(self):
-        if self.sauvegarde_planifiee:
-            if not self.outil:
-                raise ValidationError({
-                    "outil": "L'outil de sauvegarde est obligatoire."
-                })
 
-            if not self.recurrence:
-                raise ValidationError({
-                    "recurrence": "La récurrence est obligatoire."
-                })
-
-            if not self.heure:
-                raise ValidationError({
-                    "heure": "L'heure de sauvegarde est obligatoire."
-                })
-
-            if not self.console_backup:
-                raise ValidationError({
-                    "console_backup": "La console de sauvegarde est obligatoire."
-                })
-        else:
-            self.outil = ""
-            self.recurrence = ""
-            self.heure = None
-
+# ============================================================
+# 11. INTERVENTION
+# ============================================================
 
 class Intervention(models.Model):
 
-    STATUT_CHOICES = [
-        ("SUCCES", "Succès"),
-        ("ECHEC", "Échec"),
-        ("ROLLBACK", "Rollback"),
-    ]
+    class StatutIntervention(models.TextChoices):
+        SUCCES = "SUCCES", "Succès"
+        ECHEC = "ECHEC", "Échec"
+        ROLLBACK = "ROLLBACK", "Rollback"
 
-    fiche = models.ForeignKey(
+    fiche = models.OneToOneField(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="interventions"
+        related_name="intervention"
     )
 
-    date_heure = models.DateTimeField()
+    date_heure = models.DateTimeField(
+        null=True,
+        blank=True
+    )
 
-    intervenant = models.CharField(max_length=200)
+    intervenant = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    type_intervention = models.CharField(max_length=200)
+    type_intervention = models.CharField(
+        max_length=200,
+        blank=True
+    )
 
-    description = models.TextField()
+    description = models.TextField(
+        blank=True
+    )
 
     statut = models.CharField(
         max_length=20,
-        choices=STATUT_CHOICES
+        choices=StatutIntervention.choices,
+        blank=True
     )
 
     def __str__(self):
-        return f"{self.date_heure} - {self.type_intervention}"
-
-    def clean(self):
-        if not self.date_heure:
-            raise ValidationError({
-                "date_heure": "La date et l'heure de l'intervention sont obligatoires."
-            })
-
-        if not self.intervenant:
-            raise ValidationError({
-                "intervenant": "L'intervenant est obligatoire."
-            })
-
-        if not self.type_intervention:
-            raise ValidationError({
-                "type_intervention": "Le type d'intervention est obligatoire."
-            })
-
-        if not self.description:
-            raise ValidationError({
-                "description": "La description de l'intervention est obligatoire."
-            })
-
+        return f"Intervention - {self.fiche.nom_application}"
+    

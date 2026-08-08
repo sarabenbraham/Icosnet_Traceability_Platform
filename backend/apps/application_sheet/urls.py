@@ -1,43 +1,13 @@
 from django.urls import path
 
-from .views import (
-    FicheApplicativeListView,
-    fiche_create,
-    fiche_detail,
-    fiche_update,
-    FicheApplicativeDeleteView,
-)
+from . import views
 
 app_name = "application_sheet"
 
 urlpatterns = [
     path(
-        "",
-        FicheApplicativeListView.as_view(),
-        name="fiche_list",
-    ),
-
-    path(
         "create/",
-        fiche_create,
+        views.create_fiche_applicative,
         name="fiche_create",
-    ),
-
-    path(
-        "<int:pk>/",
-        fiche_detail,
-        name="fiche_detail",
-    ),
-
-    path(
-        "<int:pk>/edit/",
-        fiche_update,
-        name="fiche_update",
-    ),
-
-    path(
-        "<int:pk>/delete/",
-        FicheApplicativeDeleteView.as_view(),
-        name="fiche_delete",
     ),
 ]
