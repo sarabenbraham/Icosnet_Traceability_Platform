@@ -1,10 +1,70 @@
 from django.contrib import messages
 from django.db import transaction
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 
-from .forms import (
-    FicheApplicativeCompleteForm,
-)
+from .forms import FicheApplicativeCompleteForm
+from .models import FicheApplicative
+
+
+def fiche_list(request):
+    fiches = FicheApplicative.objects.select_related(
+        "ingenieur"
+    ).prefetch_related(
+        "departements"
+    )
+
+    return render(
+        request,
+        "application_sheet/fiche_list.html",
+        {
+            "fiches": fiches,
+        },
+    )
+
+
+def fiche_detail(request, pk):
+    fiche = get_object_or_404(
+        FicheApplicative.objects.select_related(
+            "ingenieur"
+        ).prefetch_related(
+            "departements"
+        ),
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "application_sheet/fiche_detail.html",
+        {
+            "fiche": fiche,
+        },
+    )
+
+
+def fiche_delete(request, pk):
+    fiche = get_object_or_404(
+        FicheApplicative,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        fiche.delete()
+
+        messages.success(
+            request,
+            "La fiche applicative a été supprimée avec succès.",
+        )
+
+        return redirect("application_sheet:fiche_list")
+
+    return render(
+        request,
+        "application_sheet/fiche_confirm_delete.html",
+        {
+            "fiche": fiche,
+        },
+    )
+
 
 
 def create_fiche_applicative(request):

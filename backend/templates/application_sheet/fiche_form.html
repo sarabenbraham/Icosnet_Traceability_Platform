@@ -92,11 +92,11 @@
           <label for="{{ form.nom_application.id_for_label }}">
             Nom de l'application <span class="required-mark">*</span>
           </label>
-          {{ form.nom_application }}
-          {% if form.nom_application.errors %}
+          {{ form.fiche.nom_application }}
+          {% if form.fiche.nom_application.errors %}
             <div class="field-error">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-              {{ form.nom_application.errors.0 }}
+              {{ form.fiche.nom_application.errors.0 }}
             </div>
           {% endif %}
         </div>

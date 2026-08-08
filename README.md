@@ -7,12 +7,11 @@
 The platform aims to centralize, structure, and historize important DSI activities such as:
 
 * Application sheet management
-* User access management
+* Generic account management
 * Meeting traceability
 * Hardware tracking
-* Technical history management
 
-The project follows a modular architecture to ensure scalability and maintainability.
+The project follows a modular Django architecture to ensure maintainability, scalability, and a clear separation between business modules.
 
 ---
 
@@ -22,16 +21,14 @@ The project follows a modular architecture to ensure scalability and maintainabi
 
 * Python
 * Django
-* Django REST Framework
 * SQLite (development)
 * PostgreSQL (planned for production)
 
 ## Frontend
 
-* React
-* Vite
-* JavaScript
-* Axios
+The user interface is implemented using **Django Templates** and standard HTML/CSS.
+
+React and Vite are not used in the current architecture.
 
 ## Development Tools
 
@@ -43,14 +40,28 @@ The project follows a modular architecture to ensure scalability and maintainabi
 
 # Project Structure
 
-```
+```text
 Icosnet_Traceability_Platform/
 
-├── backend/        # Django REST API
+├── backend/
+│   ├── config/
+│   │   └── ...
+│   │
+│   ├── apps/
+│   │   ├── users/
+│   │   ├── organization/
+│   │   ├── application_sheet/
+│   │   └── ...
+│   │
+│   ├── TEMPLATES/
+│   │   ├── base.html
+│   │   ├── application_sheet/
+│   │   └── ...
+│   │
+│   ├── manage.py
+│   └── ...
 │
-├── frontend/       # React application
-│
-├── docs/           # Documentation
+├── docs/
 │
 └── README.md
 ```
@@ -59,21 +70,48 @@ Icosnet_Traceability_Platform/
 
 # Backend Architecture
 
-The backend is organized using a modular Django architecture:
+The backend is organized using a modular Django architecture.
 
-```
+```text
 backend/
 
 ├── apps/
+│   ├── users/
+│   │       # User and organizational roles
+│   │
+│   ├── organization/
+│   │       # Organizational structure
+│   │
+│   └── application_sheet/
+│           # Application Sheet business module
 │
-├── users/
-│       # User management and authentication
-│
-└── application_sheet/
-        # Application Sheet business module
+└── config/
+        # Django project configuration
 ```
 
-Each business functionality will be implemented as an independent Django application.
+Each business functionality is implemented as an independent Django application.
+
+This structure allows the platform to evolve by adding new modules without mixing their business logic.
+
+---
+
+# User Interface
+
+The application uses Django's server-side rendering system.
+
+The common interface is defined in:
+
+```text
+TEMPLATES/base.html
+```
+
+Application-specific templates are organized under:
+
+```text
+TEMPLATES/application_sheet/
+```
+
+The templates inherit from the common `base.html` template in order to maintain a consistent interface throughout the platform.
 
 ---
 
@@ -81,143 +119,139 @@ Each business functionality will be implemented as an independent Django applica
 
 ## Application Sheet Module
 
-The first implemented business module allows DSI teams to manage application information:
+The first implemented business module is the **Application Sheet**.
 
-* Application details
-* Infrastructure information
-* Contracts
-* User accesses
-* Development information
+It allows DSI teams to manage a complete application record containing several sections.
+
+The main sections include:
+
+* Application identification
+* Contract information
+* Infrastructure
+* Users and access
+* Development and configuration
+* Business modules
 * Storage
 * Integrations
-* Backup management
-* Intervention history
+* Application flows
+* Backup
+* Interventions
 
-Business validation rules are integrated directly into the backend models.
+The different sections are represented by dedicated Django models.
+
+Each section is associated with the main `FicheApplicative` through a **One-to-One relationship**.
+
+This ensures that a fiche has only one section of each type.
 
 ---
 
-# API
+# Testing
 
-The backend exposes REST APIs using Django REST Framework.
+The models and their relationships have been tested directly using the Django shell.
 
-Example:
+The tests include:
 
-```
-GET    /api/fiches/
-POST   /api/fiches/
-GET    /api/fiches/{id}/
-PUT    /api/fiches/{id}/
-DELETE /api/fiches/{id}/
-```
+* Creation of an application sheet
+* Creation of the different sections
+* Verification of One-to-One relationships
+* Validation using `full_clean()`
+* Verification of required relationships
+* Testing uniqueness constraints
+* Verification that a second section of the same type cannot be associated with the same application sheet
+
+For example, attempting to create a second `Intervention` for the same `FicheApplicative` correctly produces a uniqueness error.
+
+This confirms that the One-to-One relationship is enforced both by Django validation and by the database constraint.
 
 ---
 
 # Installation
 
-## Backend
-
-Clone the repository:
+## Clone the repository
 
 ```bash
 git clone <repository_url>
+cd Icosnet_Traceability_Platform
 ```
 
-Create and activate the virtual environment:
+## Create the virtual environment
+
+From the `backend` directory:
 
 ```bash
 python -m venv .venv
-
-source .venv/Scripts/activate
 ```
 
-Install dependencies:
+## Activate the virtual environment
+
+On Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+## Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Apply migrations:
+## Apply migrations
 
 ```bash
 python manage.py migrate
 ```
 
-Run the backend:
+## Run the development server
 
 ```bash
 python manage.py runserver
 ```
 
-Backend URL:
+The application will be available at:
 
-```
-http://127.0.0.1:8000
-```
-
----
-
-## Frontend
-
-Go to frontend folder:
-
-```bash
-cd frontend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Frontend URL:
-
-```
-http://localhost:5173
+```text
+http://127.0.0.1:8000/
 ```
 
 ---
 
 # Development Roadmap
 
-Upcoming features:
+Planned features include:
 
 * Authentication and authorization
-* Role management
-* JWT security
+* Role and permission management
 * Workflow validation system
-* Meeting management module
-* Generic accounts module
+* Generic accounts management
+* Meeting traceability module
 * Hardware tracking module
 * Vulnerability monitoring
-* Docker deployment
 * PostgreSQL migration
+* Docker deployment
 
 ---
 
-# Architecture Goal
+# Architecture Goals
 
 The project is designed to provide:
 
 * Better traceability of DSI processes
-* Centralized technical documentation
+* Centralized technical information
 * Improved audit readiness
-* Secure role-based access management
-* Scalable architecture for future extensions
+* Structured workflow management
+* Clear separation of business modules
+* Maintainable and scalable architecture
+* Secure access management
 
 ---
 
 ## Contributors
 
-- Sara Benbraham
-- Farah Laggoune
+* Sara Benbraham
+* Farah Laggoune
+
+---
 
 ## License
 

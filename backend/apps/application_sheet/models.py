@@ -2,10 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-# ============================================================
-# 1. FICHE APPLICATIVE
-# ============================================================
-
 class FicheApplicative(models.Model):
 
     class Domaine(models.TextChoices):
@@ -26,10 +22,6 @@ class FicheApplicative(models.Model):
         EN_VALIDATION = "EN_VALIDATION", "En validation"
         VALIDEE = "VALIDEE", "Validée"
         REFUSEE = "REFUSEE", "Refusée"
-
-    # ========================================================
-    # IDENTIFICATION
-    # ========================================================
 
     nom_application = models.CharField(max_length=200)
 
@@ -80,10 +72,6 @@ class FicheApplicative(models.Model):
     def __str__(self):
         return f"{self.nom_application} ({self.code_application})"
 
-
-# ============================================================
-# 2. CONTRAT
-# ============================================================
 
 class Contrat(models.Model):
 
@@ -136,10 +124,6 @@ class Contrat(models.Model):
     def __str__(self):
         return f"Contrat - {self.fiche.nom_application}"
 
-
-# ============================================================
-# 3. INFRASTRUCTURE
-# ============================================================
 
 class Infrastructure(models.Model):
 
@@ -300,10 +284,6 @@ class Infrastructure(models.Model):
         return f"Infrastructure - {self.fiche.nom_application}"
 
 
-# ============================================================
-# 4. UTILISATEURS & ACCÈS
-# ============================================================
-
 class UtilisateurAcces(models.Model):
 
     class Canal(models.TextChoices):
@@ -362,10 +342,6 @@ class UtilisateurAcces(models.Model):
     def __str__(self):
         return f"Accès - {self.fiche.nom_application}"
 
-
-# ============================================================
-# 5. DÉVELOPPEMENT
-# ============================================================
 
 class Developpement(models.Model):
 
@@ -438,10 +414,6 @@ class Developpement(models.Model):
         return f"Développement - {self.fiche.nom_application}"
 
 
-# ============================================================
-# 6. MODULES MÉTIERS
-# ============================================================
-
 class ModuleMetier(models.Model):
 
     fiche = models.OneToOneField(
@@ -461,10 +433,6 @@ class ModuleMetier(models.Model):
     def __str__(self):
         return f"Modules métier - {self.fiche.nom_application}"
 
-
-# ============================================================
-# 7. STOCKAGE
-# ============================================================
 
 class Stockage(models.Model):
 
@@ -503,9 +471,6 @@ class Stockage(models.Model):
         return f"Stockage - {self.fiche.nom_application}"
 
 
-# ============================================================
-# 8. INTÉGRATIONS
-# ============================================================
 
 class Integration(models.Model):
 
@@ -567,10 +532,6 @@ class Integration(models.Model):
         return f"Intégration - {self.fiche.nom_application}"
 
 
-# ============================================================
-# 9. FLUX INTER-APPLICATIONS
-# ============================================================
-
 class FluxApplication(models.Model):
 
     class TypeFlux(models.TextChoices):
@@ -613,9 +574,6 @@ class FluxApplication(models.Model):
         return f"Flux - {self.fiche.nom_application}"
 
 
-# ============================================================
-# 10. SAUVEGARDE
-# ============================================================
 
 class Sauvegarde(models.Model):
 
@@ -660,10 +618,6 @@ class Sauvegarde(models.Model):
     def __str__(self):
         return f"Sauvegarde - {self.fiche.nom_application}"
 
-
-# ============================================================
-# 11. INTERVENTION
-# ============================================================
 
 class Intervention(models.Model):
 
