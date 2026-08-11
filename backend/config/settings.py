@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.application_sheet",
     "apps.meetings",
     "rest_framework",
+    "apps.account_management",
 ]
 
 MIDDLEWARE = [
