@@ -93,6 +93,10 @@ La documentation technique détaillée (diagrammes de classes, diagrammes de sé
 * `docs/applicationsheet/application_sheet.md` : Description de l'application, types d'utilisateurs, fonctionnalités et workflow d'activité.
 * `docs/applicationsheet/technical_diagrams.md` : Diagrammes de classes, énumérations, diagrammes de séquence et endpoints.
 
+**Gestion de Comptes (Account Management)**
+* `docs/account_management/account_management.md` : Description du module, sécurité, et workflows.
+* `docs/account_management/technical_diagrams.md` : Diagrammes de classes, diagrammes de séquences (Hachage et Expiration).
+
 ## Contributeurs
 
 * Sara Benbraham
