@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Utilisateurs DSI – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Comptes Utilisateurs{% endblock %}
+{% block page_sub %}Liste des collaborateurs, ingénieurs et directeurs de la DSI{% endblock %}
+
+{% block topbar_action %}
+  <a href="{% url 'accounts:utilisateur_creer' %}" class="btn-upload">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Nouveau compte
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>Comptes utilisateurs & Rôles</h1>
+    <p>{{ total }} collaborateur{{ total|pluralize }} répertorié{{ total|pluralize }}</p>
+  </div>
+</div>
+
+<form method="get" action="">
+  <div class="search-bar-card fade-in">
+    <div class="search-wrap">
+      <svg width="16" height="16" fill="none" stroke="#a0aec0" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Rechercher un utilisateur par nom, email ou rôle…">
+    </div>
+    <button type="submit" class="bar-btn bar-btn-search">Rechercher</button>
+  </div>
+</form>
+
+<div class="table-wrap fade-in">
+  <table>
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Email</th>
+        <th>Poste</th>
+        <th>Département</th>
+        <th>Rôle</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in utilisateurs %}
+      <tr>
+        <td>
+          <div style="font-weight:600; color:#0f1e45; font-size:.85rem;">{{ u.first_name }} {{ u.last_name }}</div>
+          <div style="font-size:.72rem; color:#a0aec0; margin-top:1px;">@{{ u.username }}</div>
+        </td>
+        <td style="font-size:.82rem; color:#4a5568;">{{ u.email }}</td>
+        <td style="font-size:.82rem; color:#4a5568;">{{ u.poste }}</td>
+        <td style="font-size:.82rem; color:#4a5568;">{{ u.departement }}</td>
+        <td>
+          {% if u.role == 'DIRECTEUR' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>Directeur DSI</span>
+          {% elif u.role == 'CHEF_DEPARTEMENT' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>Chef de Département</span>
+          {% else %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Ingénieur DSI</span>
+          {% endif %}
+        </td>
+        <td><span class="badge badge-green">Actif</span></td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center; padding:40px; color:#a0aec0;">Aucun utilisateur trouvé.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

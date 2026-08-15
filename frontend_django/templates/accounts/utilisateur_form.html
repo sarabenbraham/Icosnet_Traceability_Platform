@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titre }} – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>{{ titre }}</h1>
+    <p>{{ sous_titre }}</p>
+  </div>
+</div>
+
+<div class="form-card fade-in" style="max-width:680px;">
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <div class="form-grid" style="margin-bottom:18px;">
+      <div class="form-group">
+        <label for="{{ form.first_name.id_for_label }}">Prénom</label>
+        {{ form.first_name }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.last_name.id_for_label }}">Nom</label>
+        {{ form.last_name }}
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:18px;">
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Identifiant</label>
+        {{ form.username }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Email professionnel</label>
+        {{ form.email }}
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:18px;">
+      <label for="{{ form.role.id_for_label }}">Rôle / Type d'utilisateur</label>
+      {{ form.role }}
+    </div>
+
+    <div class="form-group" style="margin-bottom:24px;">
+      <label for="{{ form.poste.id_for_label }}">Poste</label>
+      {{ form.poste }}
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:12px;">
+      <a href="{% url 'accounts:utilisateurs_liste' %}" class="btn-secondary">Annuler</a>
+      <button type="submit" class="btn-submit">Créer l'utilisateur</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

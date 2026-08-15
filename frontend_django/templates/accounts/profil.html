@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon profil – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Mon profil{% endblock %}
+{% block page_sub %}Gérer vos informations personnelles et préférences de compte{% endblock %}
+
+{% block extra_style %}
+  .profile-card { background: #fff; border-radius: 16px; border: 1px solid #e8edf5; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,.02); max-width: 680px; }
+  .profile-header { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f0f4fb; }
+  .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg,#4a7cff,#2d5be3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: #fff; flex-shrink: 0; box-shadow: 0 4px 14px rgba(45,91,227,.3); }
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>Mon profil utilisateur</h1>
+    <p>Informations relatives à votre compte DSI</p>
+  </div>
+</div>
+
+<div class="profile-card fade-in">
+  <div class="profile-header">
+    <div class="profile-avatar">
+      {{ user_data.first_name|slice:":1" }}{{ user_data.last_name|slice:":1" }}
+    </div>
+    <div>
+      <h2 style="font-size:1.2rem; font-weight:700; color:#0f1e45; font-family:'Quicksand';">{{ user_data.first_name }} {{ user_data.last_name }}</h2>
+      <div style="font-size:.82rem; color:#718096; margin-top:2px;">{{ user_data.poste }} &nbsp;·&nbsp; <span class="badge badge-blue">{{ user_data.role_label }}</span></div>
+      <div style="font-size:.78rem; color:#a0aec0; margin-top:4px;">{{ user_data.email }}</div>
+    </div>
+  </div>
+
+  <form method="post" action="">
+    {% csrf_token %}
+    
+    <div class="form-grid" style="margin-bottom:20px;">
+      <div class="form-group">
+        <label for="{{ form.first_name.id_for_label }}">Prénom</label>
+        {{ form.first_name }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.last_name.id_for_label }}">Nom</label>
+        {{ form.last_name }}
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:20px;">
+      <label for="{{ form.email.id_for_label }}">Adresse Email</label>
+      {{ form.email }}
+    </div>
+
+    <div class="form-grid" style="margin-bottom:24px;">
+      <div class="form-group">
+        <label for="{{ form.poste.id_for_label }}">Poste / Fonction</label>
+        {{ form.poste }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.departement.id_for_label }}">Département</label>
+        {{ form.departement }}
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end;">
+      <button type="submit" class="btn-submit">
+        Mettre à jour le profil
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
