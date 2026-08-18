@@ -24,4 +24,9 @@ urlpatterns = [
         "application_sheet/",
         include("apps.application_sheet.urls"),
     ),
+
+    path(
+        "account_management/",
+        include("apps.account_management.urls"),
+    ),
 ]
