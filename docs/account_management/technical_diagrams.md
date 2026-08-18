@@ -1,93 +1,46 @@
 # Diagrammes Techniques - Gestion de Comptes
 
-## Diagramme de Classes
+*(Les diagrammes de classes, d'activité et de séquence ont été insérés en format image. Vous trouverez ci-dessous les explications détaillant la logique de ces diagrammes pour accompagner les photos).*
 
-```mermaid
-classDiagram
-    class Compte {
-        +OneToOneField utilisateur
-        +EmailField email_connexion
-        +CharField mot_de_passe
-        +DateTimeField date_creation
-        +DateField date_expiration
-        +CharField statut
-        +BooleanField expire
-        +set_password(raw_password)
-        +check_password(raw_password) bool
-        +verifier_expiration() bool
-    }
+## 1. Description du Diagramme de Classes
 
-    class AUTH_USER_MODEL {
-        <<Django Default User>>
-    }
-
-    AUTH_USER_MODEL "1" -- "1" Compte : possède >
-```
-
-### Description du Diagramme de Classes
-
-Le système s'articule autour de l'entité `Compte`.
+Le système s'articule autour de l'entité de sécurité `Compte`.
 
 **Relations :**
-* Le `Compte` étend le modèle utilisateur par défaut de Django (`AUTH_USER_MODEL`) via une relation **OneToOneField**. Si l'utilisateur principal est supprimé, son profil de connexion l'est aussi (via `on_delete=models.CASCADE`).
+* L'entité `Compte` étend le modèle utilisateur par défaut de Django (`AUTH_USER_MODEL`) via une relation **OneToOneField**. Si l'utilisateur principal est supprimé, son profil de connexion l'est aussi automatiquement (grâce à `on_delete=models.CASCADE`).
 
-**Énumérations (Enums) :**
-* **Statut (`Compte.Statut`)** : Les choix possibles sont `ACTIF` ou `DESACTIVE`.
-
----
-
-## Diagrammes d'Activité et de Séquence
-
-### 1. Workflow : Vérification de l'Expiration du Compte (Activité)
-
-```mermaid
-stateDiagram-v2
-    [*] --> Verification : Appel de verifier_expiration()
-    
-    Verification --> Check_Date
-    
-    state Check_Date {
-        Date_Valide : Date actuelle < Date_expiration
-        Date_Depassee : Date actuelle >= Date_expiration
-    }
-    
-    Check_Date --> Date_Valide
-    Check_Date --> Date_Depassee
-    
-    Date_Valide --> Compte_Valide : Return False
-    
-    Date_Depassee --> Check_Statut : Vérifier le statut
-    
-    Check_Statut --> Statut_Desactive : Statut == DESACTIVE
-    Statut_Desactive --> Compte_Valide : Return False
-    
-    Check_Statut --> Bascule_Expiration : Statut == ACTIF
-    Bascule_Expiration --> Update_DB : save(update_fields=["expire"])
-    Update_DB --> Compte_Expire : Return True
-    
-    Compte_Valide --> [*]
-    Compte_Expire --> [*]
-```
-
-### 2. Séquence : Création / Hashage du Mot de Passe
-
-```mermaid
-sequenceDiagram
-    participant Application
-    participant CompteModel as Modèle Compte
-    participant Hasher as django.contrib.auth.hashers
-
-    Application->>CompteModel: set_password("mon_mot_de_passe")
-    CompteModel->>Hasher: make_password("mon_mot_de_passe")
-    Hasher-->>CompteModel: hash_sécurisé (ex: pbkdf2_sha256$...)
-    CompteModel->>CompteModel: self.mot_de_passe = hash_sécurisé
-    Application->>CompteModel: save()
-```
+**Champs et Énumérations (Enums) :**
+* Le compte possède un identifiant unique de connexion (`email_connexion`) et un `mot_de_passe` sécurisé.
+* Les dates permettent de tracer la création (`date_creation`) et la limite de validité (`date_expiration`).
+* Le champ `expire` (booléen) indique de manière rapide si le compte a dépassé sa date de validité.
+* **Statut (`Compte.Statut`)** : Les choix possibles pour le statut sont strictement limités à `ACTIF` ou `DESACTIVE`.
 
 ---
 
-## URLs et Vues
+## 2. Diagrammes d'Activité et de Séquence
 
-> **Note :** À l'heure actuelle, le module `account_management` encapsule la structure de la base de données et la logique métier de sécurité cryptographique au sein du modèle (`models.py`). 
+### A. Workflow : Vérification de l'Expiration du Compte (Activité)
+
+Le diagramme d'activité illustre le comportement de la méthode `verifier_expiration()` :
+1. **Vérification de la Date** : Le système compare la date actuelle avec la `date_expiration` définie dans le compte.
+2. **Date Valide** : Si la date actuelle est strictement inférieure à la date d'expiration, le processus s'arrête et retourne `False` (le compte n'est pas expiré).
+3. **Date Dépassée** : Si la date d'expiration est atteinte ou dépassée, le système vérifie le statut du compte :
+   * Si le statut est déjà `DESACTIVE`, il ne se passe rien (la méthode retourne `False`).
+   * Si le statut est `ACTIF`, le système bascule le champ `expire` à `True`, effectue une mise à jour uniquement sur ce champ précis dans la base de données (`save(update_fields=["expire"])`), et retourne `True` pour confirmer l'expiration effective.
+
+### B. Séquence : Création et Hachage du Mot de Passe
+
+Le diagramme de séquence décrit le processus de sécurisation d'un mot de passe via la méthode `set_password()` :
+1. L'application (ou la vue) transmet le mot de passe en clair à la méthode `set_password("...")` du modèle `Compte`.
+2. Le modèle fait appel à la fonction cryptographique `make_password()` issue du module `django.contrib.auth.hashers`.
+3. Ce module génère une empreinte sécurisée (hash) à partir du mot de passe (généralement via l'algorithme par défaut pbkdf2_sha256).
+4. Le modèle assigne cette empreinte illisible au champ `self.mot_de_passe`.
+5. L'application appelle finalement la méthode `save()` pour stocker de façon permanente ce hash sécurisé en base de données. Le mot de passe en clair n'est jamais conservé.
+
+---
+
+## 3. URLs et Vues
+
+> **Note :** À l'heure actuelle, le module `account_management` encapsule la structure de la base de données et la logique métier de sécurité (vérifications, expirations, hachage) directement au sein du modèle (`models.py`). 
 > 
-> Les URLs et les Vues Django associées (endpoints web pour l'interface de connexion, d'inscription ou d'administration personnalisée) sont en cours d'intégration et le fichier `urls.py` n'a pas encore de routes exposées. 
+> Les URLs et les Vues Django (endpoints web ou API pour les pages de login, d'inscription ou d'administration) sont en cours d'intégration. Le fichier de routage `urls.py` ne contient donc pas encore de chemins exposés pour ce module.
