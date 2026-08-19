@@ -97,6 +97,10 @@ La documentation technique détaillée (diagrammes de classes, diagrammes de sé
 * `docs/account_management/account_management.md` : Description du module, sécurité, et workflows.
 * `docs/account_management/technical_diagrams.md` : Diagrammes de classes, diagrammes de séquences (Hachage et Expiration).
 
+**Module Réunions (Meetings)**
+* `docs/meetings/meetings.md` : Description, cycle de vie, gestion des lieux et participations.
+* `docs/meetings/technical_diagrams.md` : Diagrammes de classes, activité, séquence et table des URLs.
+
 ## Contributeurs
 
 * Sara Benbraham
