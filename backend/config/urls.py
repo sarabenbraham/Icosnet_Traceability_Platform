@@ -29,4 +29,9 @@ urlpatterns = [
         "account_management/",
         include("apps.account_management.urls"),
     ),
+
+    path(
+        "meetings/",
+        include("apps.meetings.urls"),
+    ),
 ]
