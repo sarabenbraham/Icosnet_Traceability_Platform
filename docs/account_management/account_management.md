@@ -33,21 +33,3 @@ Pour lancer le projet et activer ce module en environnement de développement lo
    `python manage.py runserver`
 5. **Accès** : L'interface d'administration est disponible sur `http://127.0.0.1:8000/`.
 
-## 5. Explication du Code (Architecture et Logique)
-
-*(Les diagrammes ayant potentiellement été insérés en format image, voici l'explication textuelle du fonctionnement du module)*
-
-### A. Modèle de Données (`Compte` - `models.py`)
-Le modèle de données repose sur l'entité `Compte` :
-* **Relation avec l'Utilisateur** : Il est rattaché au modèle utilisateur de base de Django (`AUTH_USER_MODEL`) via un **OneToOneField**. Cela signifie que chaque profil utilisateur possède une extension de compte spécifique et sécurisée au sein de l'application.
-* **Champs de sécurité** : 
-  * `mot_de_passe` : Stocke le mot de passe de façon cryptée.
-  * `email_connexion` : Sert d'identifiant unique.
-  * `statut` : Géré par des `TextChoices` (Enum) pour s'assurer que le statut est strictement `ACTIF` ou `DESACTIVE`.
-  * `date_expiration` et `expire` : Gèrent la validité temporelle de l'accès de l'utilisateur.
-
-### B. Méthodes Intégrées (Logique Métier)
-Le modèle contient lui-même la logique de sécurité essentielle, sans s'appuyer uniquement sur les vues :
-* **`set_password()` et `check_password()`** : Ces fonctions font appel aux utilitaires cryptographiques de Django (`make_password`, `check_password`). Elles garantissent qu'aucun mot de passe n'est stocké ou vérifié en clair.
-* **`verifier_expiration()`** : Une méthode vitale permettant de vérifier si la date actuelle dépasse la `date_expiration` définie pour un compte. 
-  * Si la date est dépassée et que le compte est encore marqué comme actif, la fonction passe automatiquement le flag `expire` à `True`, le sauvegarde dans la base de données via `update_fields`, et retourne `True` pour signaler que le compte est désuet.
