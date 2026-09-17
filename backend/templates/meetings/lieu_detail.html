@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lieu.nom_salle }} – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Salle de réunion{% endblock %}
+{% block page_sub %}{{ lieu.nom_salle }}{% endblock %}
+{% block nav_lieux %}active{% endblock %}
+
+{% block extra_style %}
+  .detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+  .card-detail { background: #fff; border-radius: 16px; border: 1px solid #e8edf5; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,.02); }
+  @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block topbar_action %}
+  <a href="{% url 'meetings:lieu_update' lieu.id %}" class="btn-upload">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/>
+    </svg>
+    Modifier
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div style="margin-bottom:18px; font-size:.8rem; color:#a0aec0; display:flex; align-items:center; gap:6px;" class="fade-in">
+  <a href="{% url 'meetings:lieu_list' %}" style="color:#2d5be3; text-decoration:none;">Salles</a>
+  <svg width="12" height="12" fill="none" stroke="#a0aec0" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+  <span>{{ lieu.nom_salle }}</span>
+</div>
+
+<div class="detail-grid">
+
+  <!-- Left -->
+  <div>
+    <div class="card-detail fade-in">
+      <div class="form-section-title" style="margin-bottom:14px;">
+        Fiche salle
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Nom</span>
+        <span class="info-value" style="font-size:1rem; font-weight:700;">{{ lieu.nom_salle }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Capacité</span>
+        <span class="info-value">
+          <span class="badge badge-blue">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            {{ lieu.capacite }} places
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Upcoming Reunions -->
+    <div class="card-detail fade-in delay-1" style="margin-top:20px;">
+      <div class="form-section-title" style="margin-bottom:14px;">
+        Réunions dans cette salle
+      </div>
+
+      {% if reunions %}
+      <div class="table-wrap" style="margin-top:4px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Objet</th>
+              <th>Date</th>
+              <th>Heure</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reunions %}
+            <tr>
+              <td><a href="{% url 'meetings:reunion_detail' r.id %}" style="font-weight:600; color:#0f1e45; text-decoration:none;">{{ r.objet }}</a></td>
+              <td style="font-size:.8rem; color:#4a5568;">{{ r.date }}</td>
+              <td style="font-size:.78rem; color:#718096;">{{ r.heure_debut }}</td>
+              <td>
+                {% if r.statut == 'PLANIFIEE' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>Planifiée</span>
+                {% elif r.statut == 'EN_COURS' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En cours</span>
+                {% elif r.statut == 'TERMINEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Terminée</span>
+                {% elif r.statut == 'ANNULEE' %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Annulée</span>
+                {% else %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>{{ r.statut }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p style="font-size:.85rem; color:#a0aec0; text-align:center; padding:24px 0;">Aucune réunion planifiée dans cette salle.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: Actions -->
+  <div>
+    <div class="card-detail fade-in delay-1">
+      <div class="form-section-title" style="margin-bottom:14px;">
+        Actions
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <a href="{% url 'meetings:lieu_update' lieu.id %}" class="btn-secondary" style="width:100%; justify-content:center;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>
+          Modifier la salle
+        </a>
+        <a href="{% url 'meetings:lieu_delete' lieu.id %}" class="btn-secondary" style="width:100%; justify-content:center; color:#c53030; background:#fff5f5; border-color:#fed7d7;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Supprimer la salle
+        </a>
+        <a href="{% url 'meetings:lieu_list' %}" class="btn-secondary" style="width:100%; justify-content:center; margin-top:4px;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Retour aux salles
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

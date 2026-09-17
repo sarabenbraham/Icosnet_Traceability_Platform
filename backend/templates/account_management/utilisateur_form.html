@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titre }} – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in" style="margin-bottom: 24px;">
+  <div class="page-header-left">
+    <a href="{% url 'account_management:utilisateurs_liste' %}" class="btn-secondary" style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; padding:6px 14px; font-size:0.875rem;">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Retour à la liste des comptes
+    </a>
+    <h1 style="display:flex; align-items:center; gap:12px; font-size:1.65rem; font-weight:700; color:var(--text-dark, #1e293b);">
+      <span style="display:inline-flex; align-items:center; justify-center:center; width:42px; height:42px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border-radius:10px; font-size:1.2rem; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+        👤
+      </span>
+      {{ titre }}
+    </h1>
+    <p style="color:var(--text-muted, #64748b); font-size:0.95rem; margin-top:4px;">{{ sous_titre }}</p>
+  </div>
+</div>
+
+<div class="form-card fade-in" style="max-width:850px; margin:0 auto; background:#ffffff; border-radius:16px; padding:28px; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">
+  
+  {% if form.errors %}
+    <div style="background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:14px 18px; border-radius:10px; margin-bottom:24px; font-size:0.9rem;">
+      <strong>⚠️ Attention :</strong> Veuillez corriger les erreurs ci-dessous avant de valider.
+      <ul style="margin:8px 0 0 20px; padding:0;">
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }} :</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" action="">
+    {% csrf_token %}
+
+    <!-- Section 1 : Identité & Poste -->
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:1.1rem; font-weight:600; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <span style="color:#2563eb;">①</span> Informations Personnelles & Poste
+      </h3>
+      
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:16px;">
+        <div class="form-group">
+          <label for="id_first_name" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Prénom <span style="color:#ef4444;">*</span></label>
+          {{ form.first_name }}
+        </div>
+        <div class="form-group">
+          <label for="id_last_name" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Nom <span style="color:#ef4444;">*</span></label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+        <div class="form-group">
+          <label for="{{ form.poste.id_for_label }}" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Poste / Fonction</label>
+          {{ form.poste }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.departement.id_for_label }}" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Département DSI</label>
+          {{ form.departement }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2 : Identifiants & Accès Compte -->
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:1.1rem; font-weight:600; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <span style="color:#2563eb;">②</span> Compte & Identifiants de Connexion DSI
+      </h3>
+
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:16px;">
+        <div class="form-group">
+          <label for="id_username" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Nom d'utilisateur <span style="color:#ef4444;">*</span></label>
+          {{ form.username }}
+          <small style="color:#64748b; font-size:0.775rem;">Utilisé pour la connexion au portail (ex: prenom.nom)</small>
+        </div>
+        <div class="form-group">
+          <label for="id_email" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Email professionnel <span style="color:#ef4444;">*</span></label>
+          {{ form.email }}
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="id_email_connexion" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Email de connexion au compte DSI <span style="color:#ef4444;">*</span></label>
+        {{ form.email_connexion }}
+        <small style="color:#64748b; font-size:0.775rem;">Adresse email spécifique associée à la table des comptes DSI (Backend)</small>
+      </div>
+
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+        <div class="form-group" style="position:relative;">
+          <label for="id_mot_de_passe" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Mot de passe <span style="color:#ef4444;">*</span></label>
+          <div style="position:relative;">
+            {{ form.mot_de_passe }}
+            <button type="button" onclick="togglePassword('id_mot_de_passe')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;">👁️</button>
+          </div>
+        </div>
+        <div class="form-group" style="position:relative;">
+          <label for="id_mot_de_passe_confirm" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Confirmer le mot de passe <span style="color:#ef4444;">*</span></label>
+          <div style="position:relative;">
+            {{ form.mot_de_passe_confirm }}
+            <button type="button" onclick="togglePassword('id_mot_de_passe_confirm')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;">👁️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 : Droits & Paramètres -->
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:1.1rem; font-weight:600; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <span style="color:#2563eb;">③</span> Droits & Validité du Compte
+      </h3>
+
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:18px;">
+        <div class="form-group">
+          <label for="id_role" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Rôle / Accès <span style="color:#ef4444;">*</span></label>
+          {{ form.role }}
+        </div>
+        <div class="form-group">
+          <label for="id_statut" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Statut initial</label>
+          {{ form.statut }}
+        </div>
+        <div class="form-group">
+          <label for="id_date_expiration" style="font-weight:600; font-size:0.875rem; color:#334155; display:block; margin-bottom:6px;">Date d'expiration</label>
+          {{ form.date_expiration }}
+          <small style="color:#64748b; font-size:0.75rem;">Laisser vide si illimité</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:20px; margin-top:10px;">
+      <button type="button" onclick="autoFillFields()" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:9px 16px; border-radius:8px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem;">
+        ⚡ Générer auto identifiants
+      </button>
+
+      <div style="display:flex; gap:12px;">
+        <a href="{% url 'account_management:utilisateurs_liste' %}" class="btn-secondary" style="padding:10px 20px; border-radius:8px;">Annuler</a>
+        <button type="submit" class="btn-submit" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.3); font-size:0.95rem;">
+          ✨ Créer le compte utilisateur
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  function togglePassword(id) {
+    const input = document.getElementById(id);
+    if (input) {
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  }
+
+  function autoFillFields() {
+    const fname = document.getElementById('id_first_name').value.trim().toLowerCase();
+    const lname = document.getElementById('id_last_name').value.trim().toLowerCase();
+    if (fname && lname) {
+      const username = (fname + '.' + lname).replace(/\s+/g, '');
+      const emailPro = (fname.charAt(0) + '.' + lname + '@icosnet.com').replace(/\s+/g, '');
+      const emailConn = (username + '@icosnet.com').replace(/\s+/g, '');
+      
+      const uField = document.getElementById('id_username');
+      const eField = document.getElementById('id_email');
+      const cField = document.getElementById('id_email_connexion');
+
+      if (uField && !uField.value) uField.value = username;
+      if (eField && !eField.value) eField.value = emailPro;
+      if (cField && !cField.value) cField.value = emailConn;
+    }
+  }
+
+  // Auto suggère username et email si prenom/nom saisis
+  document.getElementById('id_first_name')?.addEventListener('blur', autoFillFields);
+  document.getElementById('id_last_name')?.addEventListener('blur', autoFillFields);
+</script>
+
+{% endblock %}
+

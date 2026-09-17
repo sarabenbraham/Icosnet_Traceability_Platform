@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if reunion %}Modifier la réunion{% else %}Nouvelle réunion{% endif %} – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}{% if reunion %}Modifier la réunion{% else %}Nouvelle réunion{% endif %}{% endblock %}
+{% block page_sub %}{% if reunion %}Mise à jour des informations de la réunion{% else %}Planifier une nouvelle réunion{% endif %}{% endblock %}
+{% block nav_reunion_new %}{% if not reunion %}active{% endif %}{% endblock %}
+{% block nav_reunions %}{% if reunion %}active{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>{% if reunion %}Modifier : {{ reunion.objet }}{% else %}Nouvelle réunion{% endif %}</h1>
+    <p>{% if reunion %}Mettez à jour les informations de cette réunion.{% else %}Remplissez les informations pour planifier une nouvelle réunion.{% endif %}</p>
+  </div>
+</div>
+
+<div class="form-card fade-in" style="max-width:720px;">
+  <div class="form-section-title">
+    Informations de la réunion
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="form-grid">
+
+      <!-- Objet -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label for="{{ form.objet.id_for_label }}">Objet de la réunion *</label>
+        {{ form.objet }}
+        {% if form.objet.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.objet.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Type -->
+      <div class="form-group">
+        <label for="{{ form.type.id_for_label }}">Type de réunion *</label>
+        {{ form.type }}
+        {% if form.type.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.type.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Statut -->
+      <div class="form-group">
+        <label for="{{ form.statut.id_for_label }}">Statut *</label>
+        {{ form.statut }}
+        {% if form.statut.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.statut.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label for="{{ form.date.id_for_label }}">Date *</label>
+        {{ form.date }}
+        {% if form.date.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.date.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Heure début -->
+      <div class="form-group">
+        <label for="{{ form.heure_debut.id_for_label }}">Heure de début *</label>
+        {{ form.heure_debut }}
+        {% if form.heure_debut.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.heure_debut.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Heure fin -->
+      <div class="form-group">
+        <label for="{{ form.heure_fin.id_for_label }}">Heure de fin *</label>
+        {{ form.heure_fin }}
+        {% if form.heure_fin.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.heure_fin.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Salle -->
+      <div class="form-group">
+        <label for="{{ form.lieu_id.id_for_label }}">Salle de réunion *</label>
+        {{ form.lieu_id }}
+        {% if form.lieu_id.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.lieu_id.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Organisateur -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label for="{{ form.organisateur.id_for_label }}">Organisateur *</label>
+        {{ form.organisateur }}
+        {% if form.organisateur.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.organisateur.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label for="{{ form.description.id_for_label }}">Description & Ordre du jour</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.description.errors.0 }}</div>{% endif %}
+      </div>
+
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-top:24px;">
+      <button type="submit" class="btn-submit">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        {% if reunion %}Enregistrer les modifications{% else %}Créer la réunion{% endif %}
+      </button>
+      {% if reunion %}
+        <a href="{% url 'meetings:reunion_detail' reunion.id %}" class="btn-secondary">Annuler</a>
+      {% else %}
+        <a href="{% url 'meetings:reunion_list' %}" class="btn-secondary">Annuler</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer la salle – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Supprimer la salle{% endblock %}
+{% block page_sub %}Cette action est irréversible{% endblock %}
+{% block nav_lieux %}active{% endblock %}
+
+{% block content %}
+
+<div style="max-width:520px; margin:0 auto;" class="fade-in">
+
+  <div style="background:#fff5f5; border:1px solid #fed7d7; border-radius:16px; padding:28px;">
+    <div style="font-size:1.05rem; font-weight:700; color:#c53030; margin-bottom:16px; display:flex; align-items:center; gap:8px; font-family:'Quicksand',sans-serif;">
+      <svg width="20" height="20" fill="none" stroke="#c53030" stroke-width="1.8" viewBox="0 0 24 24">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      Confirmer la suppression
+    </div>
+
+    <p style="font-size:.88rem; color:#4a5568; line-height:1.7; margin-bottom:20px;">
+      Vous êtes sur le point de supprimer définitivement la salle :
+    </p>
+
+    <div style="background:#fff; border-radius:10px; padding:16px 20px; margin-bottom:24px; border:1px solid #fed7d7;">
+      <div style="font-size:1rem; font-weight:700; color:#0f1e45; margin-bottom:4px;">{{ lieu.nom_salle }}</div>
+      <div style="font-size:.82rem; color:#718096;">Capacité : {{ lieu.capacite }} places</div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <form method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="background:#c53030; color:#fff; padding:10px 22px; border-radius:10px; font-size:.82rem; font-weight:600; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Oui, supprimer
+        </button>
+      </form>
+      <a href="{% url 'meetings:lieu_detail' lieu.id %}" class="btn-secondary">Annuler</a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

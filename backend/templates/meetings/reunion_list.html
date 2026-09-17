@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Réunions – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Réunions{% endblock %}
+{% block page_sub %}Gestion et suivi des réunions planifiées{% endblock %}
+{% block nav_reunions %}active{% endblock %}
+
+{% block extra_style %}
+  .type-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+  .type-TECHNIQUE  { background: #eef2ff; color: #2d5be3; }
+  .type-PROJET     { background: #f0fff4; color: #276749; }
+  .type-FORMATION  { background: #f5f3ff; color: #5b21b6; }
+  .type-DIRECTION  { background: #fffaf0; color: #b7791f; }
+  .type-URGENCE    { background: #fff5f5; color: #c53030; }
+  .filter-select { padding: 8px 14px; border: 1.5px solid #e8edf5; border-radius: 8px; font-size: .8rem; color: #4a5568; background: #fff; font-family: 'Poppins', sans-serif; outline: none; cursor: pointer; transition: border-color .2s; }
+  .filter-select:focus { border-color: #2d5be3; }
+{% endblock %}
+
+{% block topbar_action %}
+  <a href="{% url 'meetings:reunion_create' %}" class="btn-upload">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+      <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Nouvelle réunion
+  </a>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>Réunions</h1>
+    <p>{{ reunions|length }} réunion{{ reunions|length|pluralize }} enregistrée{{ reunions|length|pluralize }}</p>
+  </div>
+</div>
+
+<!-- Filtres -->
+<form method="get" action="">
+  <div class="search-bar-card fade-in">
+    <div class="search-wrap">
+      <svg width="16" height="16" fill="none" stroke="#a0aec0" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Rechercher par objet ou description…" id="searchInput">
+    </div>
+
+    <div class="bar-separator"></div>
+
+    <select name="type" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous les types</option>
+      <option value="TECHNIQUE"  {% if filtre_type == 'TECHNIQUE'  %}selected{% endif %}>Technique</option>
+      <option value="PROJET"     {% if filtre_type == 'PROJET'     %}selected{% endif %}>Projet</option>
+      <option value="FORMATION"  {% if filtre_type == 'FORMATION'  %}selected{% endif %}>Formation</option>
+      <option value="DIRECTION"  {% if filtre_type == 'DIRECTION'  %}selected{% endif %}>Direction</option>
+      <option value="URGENCE"    {% if filtre_type == 'URGENCE'    %}selected{% endif %}>Urgence</option>
+    </select>
+
+    <select name="statut" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous les statuts</option>
+      <option value="CREEE"     {% if filtre_statut == 'CREEE'     %}selected{% endif %}>Créée</option>
+      <option value="PLANIFIEE" {% if filtre_statut == 'PLANIFIEE' %}selected{% endif %}>Planifiée</option>
+      <option value="EN_COURS"  {% if filtre_statut == 'EN_COURS'  %}selected{% endif %}>En cours</option>
+      <option value="TERMINEE"  {% if filtre_statut == 'TERMINEE'  %}selected{% endif %}>Terminée</option>
+      <option value="ANNULEE"   {% if filtre_statut == 'ANNULEE'   %}selected{% endif %}>Annulée</option>
+    </select>
+
+    {% if query or filtre_type or filtre_statut %}
+      <a href="{% url 'meetings:reunion_list' %}" class="bar-btn" title="Réinitialiser">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+        Réinitialiser
+      </a>
+    {% endif %}
+
+    <button type="submit" class="bar-btn bar-btn-search">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      Rechercher
+    </button>
+  </div>
+</form>
+
+<!-- Table -->
+<div class="table-wrap fade-in">
+  <table>
+    <thead>
+      <tr>
+        <th>Objet</th>
+        <th>Type</th>
+        <th>Statut</th>
+        <th>Date</th>
+        <th>Heure</th>
+        <th>Salle</th>
+        <th>Organisateur</th>
+        <th style="text-align:center;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for reunion in reunions %}
+      <tr>
+        <td>
+          <a href="{% url 'meetings:reunion_detail' reunion.id %}" style="font-weight:600; color:#0f1e45; text-decoration:none;">{{ reunion.objet }}</a>
+        </td>
+        <td>
+          <span class="type-badge type-{{ reunion.type }}">{{ reunion.type_display|default:reunion.type }}</span>
+        </td>
+        <td>
+          {% if reunion.statut == 'CREEE' %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Créée</span>
+          {% elif reunion.statut == 'PLANIFIEE' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>Planifiée</span>
+          {% elif reunion.statut == 'EN_COURS' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En cours</span>
+          {% elif reunion.statut == 'TERMINEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Terminée</span>
+          {% elif reunion.statut == 'ANNULEE' %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Annulée</span>
+          {% else %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>{{ reunion.statut }}</span>
+          {% endif %}
+        </td>
+        <td style="color:#4a5568; white-space:nowrap;">{{ reunion.date }}</td>
+        <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut }} – {{ reunion.heure_fin }}</td>
+        <td style="font-size:.82rem; color:#4a5568;">{{ reunion.lieu.nom_salle }}</td>
+        <td style="font-size:.82rem; color:#4a5568;">{{ reunion.organisateur }}</td>
+        <td>
+          <div style="display:flex; gap:6px; justify-content:center;">
+            <a href="{% url 'meetings:reunion_detail' reunion.id %}" class="icon-btn icon-btn-view" title="Voir le détail">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg>
+            </a>
+            <a href="{% url 'meetings:reunion_update' reunion.id %}" class="icon-btn icon-btn-edit" title="Modifier">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>
+            </a>
+            <a href="{% url 'meetings:reunion_delete' reunion.id %}" class="icon-btn icon-btn-delete" title="Supprimer">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            </a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center; padding:60px; color:#a0aec0;">
+          <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24" style="display:block;margin:0 auto 16px;">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div style="font-size:.9rem; font-weight:500; color:#718096; margin-bottom:8px;">Aucune réunion trouvée</div>
+          <div style="font-size:.8rem; margin-bottom:20px;">
+            {% if query or filtre_type or filtre_statut %}
+              Essayez de modifier vos critères de recherche.
+            {% else %}
+              Commencez par planifier votre première réunion.
+            {% endif %}
+          </div>
+          {% if not query and not filtre_type and not filtre_statut %}
+            <a href="{% url 'meetings:reunion_create' %}" class="btn-upload" style="display:inline-flex;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Créer la première réunion
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

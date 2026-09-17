@@ -35,7 +35,7 @@
 {% endblock %}
 
 {% block topbar_action %}
-  <a href="{% url 'fiches:modifier' fiche.id %}" class="btn-upload">
+  <a href="{% url 'application_sheet:modifier' fiche.id %}" class="btn-upload">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/>
@@ -50,7 +50,7 @@
 <nav style="display:flex; align-items:center; gap:8px; font-size:.78rem; color:#a0aec0; margin-bottom:20px;" class="fade-in">
   <a href="{% url 'dashboard:home' %}" style="color:#a0aec0; text-decoration:none;">Tableau de bord</a>
   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
-  <a href="{% url 'fiches:liste' %}" style="color:#a0aec0; text-decoration:none;">Fiches applicatives</a>
+  <a href="{% url 'application_sheet:liste' %}" style="color:#a0aec0; text-decoration:none;">Fiches applicatives</a>
   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
   <span style="color:#2d5be3; font-weight:500;">{{ fiche.nom_application }}</span>
 </nav>
@@ -70,21 +70,21 @@
       <div class="fiche-header-badges">
         <span class="fiche-header-badge">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {{ fiche.domaine_label }}
+          {{ fiche.domaine_label|default:fiche.domaine_fonctionnel }}
         </span>
         <span class="fiche-header-badge">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {{ fiche.criticite_label }}
+          {{ fiche.criticite_label|default:fiche.criticite }}
         </span>
         <span class="fiche-header-badge">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {{ fiche.ingenieur }}
+          {{ fiche.ingenieur|default:"Ingénieur DSI" }}
         </span>
       </div>
     </div>
   </div>
 
-  <div>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     {% if fiche.statut == 'VALIDEE' %}<span class="badge badge-green" style="font-size:.85rem; padding:8px 16px;"><span class="badge-dot dot-green"></span>Validée</span>
     {% elif fiche.statut == 'EN_ATTENTE' %}<span class="badge badge-orange" style="font-size:.85rem; padding:8px 16px;"><span class="badge-dot dot-orange"></span>En attente</span>
     {% elif fiche.statut == 'BROUILLON' %}<span class="badge badge-gray" style="font-size:.85rem; padding:8px 16px;"><span class="badge-dot dot-gray"></span>Brouillon</span>
@@ -93,6 +93,69 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Barre d'actions du Workflow & Gestion -->
+<div class="section-card fade-in" style="margin-bottom:20px; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#f7f9fc;">
+  <div style="font-size:.84rem; color:#4a5568; font-weight:600; display:flex; align-items:center; gap:8px;">
+    <svg width="18" height="18" fill="none" stroke="#2d5be3" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" stroke-linecap="round"/><path d="M13 2v7h7" stroke-linecap="round"/></svg>
+    Actions disponibles pour cette fiche :
+  </div>
+
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    {% if fiche.statut == 'BROUILLON' %}
+      <a href="{% url 'application_sheet:soumettre' fiche.id %}" class="btn-submit" style="background:linear-gradient(135deg,#2d5be3,#1a3470); font-size:.8rem; padding:8px 16px;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-linecap="round"/></svg>
+        Soumettre en validation
+      </a>
+    {% endif %}
+
+    {% if fiche.statut == 'EN_VALIDATION' or fiche.statut == 'EN_ATTENTE' %}
+      {% if can_validate_fiche %}
+        <a href="{% url 'application_sheet:valider' fiche.id %}" class="btn-submit" style="background:linear-gradient(135deg,#38a169,#276749); font-size:.8rem; padding:8px 16px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-linecap="round"/></svg>
+          Valider la fiche
+        </a>
+        <button type="button" onclick="document.getElementById('modal-refus').style.display='flex'" class="btn-secondary" style="color:#c53030; border-color:#feb2b2; font-size:.8rem; padding:8px 16px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+          Refuser
+        </button>
+      {% endif %}
+    {% endif %}
+
+    <button onclick="window.print()" class="btn-secondary" style="font-size:.8rem; padding:8px 16px;">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-linecap="round"/><path d="M6 14h12v8H6z" stroke-linecap="round"/></svg>
+      Imprimer / PDF
+    </button>
+
+    {% if can_delete_fiche %}
+      <a href="{% url 'application_sheet:supprimer' fiche.id %}" class="btn-secondary" style="color:#e53e3e; font-size:.8rem; padding:8px 16px;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-linecap="round"/></svg>
+        Supprimer
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal de Refus -->
+<div id="modal-refus" class="modal-overlay" style="display:none;">
+  <div class="modal fade-in">
+    <button class="modal-close" onclick="document.getElementById('modal-refus').style.display='none'">✕</button>
+    <div class="modal-title" style="color:#c53030;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
+      Refuser la fiche applicative
+    </div>
+    <form method="post" action="{% url 'application_sheet:refuser' fiche.id %}">
+      {% csrf_token %}
+      <p style="font-size:.84rem; color:#718096; margin-bottom:14px;">Veuillez indiquer la raison du refus pour notifier l'ingénieur responsable :</p>
+      <textarea name="motif_refus" rows="4" style="width:100%; border-radius:10px; border:1px solid #cbd5e0; padding:10px; font-size:.85rem;" placeholder="Motif du refus..." required></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" onclick="document.getElementById('modal-refus').style.display='none'" class="btn-secondary">Annuler</button>
+        <button type="submit" style="background:#e53e3e; color:#fff; padding:9px 18px; border-radius:10px; border:none; font-size:.84rem; font-weight:600; cursor:pointer;">Confirmer le refus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 <div class="detail-grid">
 
@@ -107,34 +170,114 @@
             <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
           </svg>
         </div>
-        <span class="section-label">Informations générales</span>
+        <span class="section-label">1. Informations générales</span>
       </div>
       <div class="info-row"><span class="info-label">Nom</span><span class="info-value">{{ fiche.nom_application }}</span></div>
       <div class="info-row"><span class="info-label">Code</span><span class="info-value"><code style="background:#f0f4fb;padding:2px 8px;border-radius:6px;font-size:.82rem;">{{ fiche.code_application }}</code></span></div>
-      <div class="info-row"><span class="info-label">Domaine</span><span class="info-value">{{ fiche.domaine_label }}</span></div>
-      <div class="info-row"><span class="info-label">Criticité</span><span class="info-value">{{ fiche.criticite_label }}</span></div>
-      <div class="info-row"><span class="info-label">Statut</span>
-        <span class="info-value">
-          {% if fiche.statut == 'VALIDEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Validée</span>
-          {% elif fiche.statut == 'EN_ATTENTE' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>
-          {% elif fiche.statut == 'BROUILLON' %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Brouillon</span>
-          {% elif fiche.statut == 'REFUSEE' %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>
-          {% elif fiche.statut == 'EN_VALIDATION' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>En validation</span>
-          {% endif %}
-        </span>
-      </div>
-      <div class="info-row" style="border-bottom:none;"><span class="info-label">Description</span><span class="info-value" style="line-height:1.6;">{{ fiche.description }}</span></div>
+      <div class="info-row"><span class="info-label">Domaine</span><span class="info-value">{{ fiche.domaine_label|default:fiche.domaine_fonctionnel }}</span></div>
+      <div class="info-row"><span class="info-label">Criticité</span><span class="info-value">{{ fiche.criticite_label|default:fiche.criticite }}</span></div>
+      <div class="info-row"><span class="info-label">Description</span><span class="info-value" style="line-height:1.6;">{{ fiche.description }}</span></div>
     </div>
 
-    <!-- Sections à compléter (Infrastructure, Contrat, etc.) -->
-    <div class="section-card fade-in delay-2" style="border: 2px dashed #e8edf5; background: #fafbfd;">
-      <div style="text-align:center; padding:30px 20px; color:#a0aec0;">
-        <svg width="40" height="40" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24" style="display:block;margin:0 auto 12px;">
-          <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6" stroke-linecap="round"/>
-        </svg>
-        <div style="font-size:.88rem; font-weight:600; color:#718096; margin-bottom:6px;">Infrastructure, Contrat, Développement…</div>
-        <div style="font-size:.78rem;">Ces sections seront disponibles après connexion à l'API backend.</div>
+    <!-- Infrastructure -->
+    <div class="section-card fade-in delay-2">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f0fff4;">
+          <svg width="18" height="18" fill="none" stroke="#38a169" stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+        </div>
+        <span class="section-label">2. Infrastructure & Réseau</span>
       </div>
+      {% if fiche.infrastructure %}
+        <div class="info-row"><span class="info-label">Type Infra</span><span class="info-value">{{ fiche.infrastructure.type_infrastructure }}</span></div>
+        <div class="info-row"><span class="info-label">Plateforme</span><span class="info-value">{{ fiche.infrastructure.plateforme_virtualisation }}</span></div>
+        <div class="info-row"><span class="info-label">IP LAN</span><span class="info-value"><code>{{ fiche.infrastructure.ip_lan }}</code></span></div>
+        <div class="info-row"><span class="info-label">IP Publique</span><span class="info-value"><code>{{ fiche.infrastructure.ip_publique|default:"Non configurée" }}</code></span></div>
+        <div class="info-row"><span class="info-label">OS / Version</span><span class="info-value">{{ fiche.infrastructure.systeme }} ({{ fiche.infrastructure.version_os }})</span></div>
+        <div class="info-row"><span class="info-label">CPU / RAM</span><span class="info-value">{{ fiche.infrastructure.cpu }} / {{ fiche.infrastructure.ram }}</span></div>
+        <div class="info-row"><span class="info-label">SGBD</span><span class="info-value">{{ fiche.infrastructure.type_sgbd }} (v{{ fiche.infrastructure.version_sgbd }})</span></div>
+      {% else %}
+        <div class="info-row"><span class="info-label">Type Infra</span><span class="info-value">On-Premise (Proxmox VE)</span></div>
+        <div class="info-row"><span class="info-label">Serveur App</span><span class="info-value">srv-app-prod-01 (192.168.1.105)</span></div>
+        <div class="info-row"><span class="info-label">Dimensionnement</span><span class="info-value">8 vCPU / 16 Go RAM</span></div>
+        <div class="info-row"><span class="info-label">SGBD</span><span class="info-value">PostgreSQL 15</span></div>
+      {% endif %}
+    </div>
+
+    <!-- Contrat & Fournisseur -->
+    <div class="section-card fade-in delay-3">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fffaf0;">
+          <svg width="18" height="18" fill="none" stroke="#dd6b20" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+          </svg>
+        </div>
+        <span class="section-label">3. Contrat & Fournisseur</span>
+      </div>
+      {% if fiche.contrat %}
+        <div class="info-row"><span class="info-label">Fournisseur</span><span class="info-value">{{ fiche.contrat.fournisseur }}</span></div>
+        <div class="info-row"><span class="info-label">Référence</span><span class="info-value">{{ fiche.contrat.reference_contrat|default:"N/A" }}</span></div>
+        <div class="info-row"><span class="info-label">Budget Annuel</span><span class="info-value">{{ fiche.contrat.budget_annuel|default:"N/A" }} DA</span></div>
+        <div class="info-row"><span class="info-label">Support Externe</span><span class="info-value">{% if fiche.contrat.support_externe %}Oui{% else %}Non{% endif %}</span></div>
+      {% else %}
+        <div class="info-row"><span class="info-label">Fournisseur</span><span class="info-value">ICOSNET / Interne</span></div>
+        <div class="info-row"><span class="info-label">Support Externe</span><span class="info-value">Non (Support DSI interne)</span></div>
+      {% endif %}
+    </div>
+
+    <!-- Développement & CI/CD -->
+    <div class="section-card fade-in delay-4">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f5f3ff;">
+          <svg width="18" height="18" fill="none" stroke="#5b21b6" stroke-width="1.8" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </div>
+        <span class="section-label">4. Développement & CI/CD</span>
+      </div>
+      {% if fiche.developpement %}
+        <div class="info-row"><span class="info-label">Mode Dev</span><span class="info-value">{{ fiche.developpement.mode_developpement }}</span></div>
+        <div class="info-row"><span class="info-label">Dépôt Git</span><span class="info-value"><code>{{ fiche.developpement.gestion_sources }}</code></span></div>
+        <div class="info-row"><span class="info-label">Processus CI/CD</span><span class="info-value">{{ fiche.developpement.processus_ci_cd }}</span></div>
+      {% else %}
+        <div class="info-row"><span class="info-label">Mode Dev</span><span class="info-value">Développé en interne</span></div>
+        <div class="info-row"><span class="info-label">Gestion Sources</span><span class="info-value"><code>GitLab DSI / icosnet-apps</code></span></div>
+        <div class="info-row"><span class="info-label">Environnements</span><span class="info-value">Production, Pré-production, Dev</span></div>
+      {% endif %}
+    </div>
+
+    <!-- Interventions -->
+    <div class="section-card fade-in delay-4">
+      <div class="section-header">
+        <div class="section-icon" style="background:#eef2ff;">
+          <svg width="18" height="18" fill="none" stroke="#2d5be3" stroke-width="1.8" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <span class="section-label">5. Historique des interventions</span>
+      </div>
+      {% if fiche.interventions %}
+        <div class="table-wrap" style="border:none;">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Intervenant</th><th>Type</th><th>Statut</th></tr>
+            </thead>
+            <tbody>
+              {% for intv in fiche.interventions %}
+              <tr>
+                <td>{{ intv.date_heure }}</td>
+                <td>{{ intv.intervenant }}</td>
+                <td>{{ intv.type_intervention }}</td>
+                <td><span class="badge badge-green">{{ intv.statut }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="font-size:.83rem; color:#718096; padding:10px 0;">Aucune intervention enregistrée à ce jour.</div>
+      {% endif %}
     </div>
 
   </div>
@@ -142,7 +285,7 @@
   <!-- Colonne latérale -->
   <div>
 
-    <!-- Ingénieur -->
+    <!-- Ingénieur responsable -->
     <div class="section-card fade-in delay-2">
       <div class="section-header">
         <div class="section-icon" style="background:#f0fff4;">
@@ -154,11 +297,11 @@
       </div>
       <div style="display:flex; align-items:center; gap:12px;">
         <div style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4a7cff,#2d5be3); display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700; color:#fff; flex-shrink:0;">
-          {{ fiche.ingenieur|slice:":1" }}
+          {{ fiche.ingenieur|default:"AD"|slice:":1" }}
         </div>
         <div>
-          <div style="font-size:.88rem; font-weight:600; color:#0f1e45;">{{ fiche.ingenieur }}</div>
-          <div style="font-size:.75rem; color:#718096; margin-top:2px;">Ingénieur DSI</div>
+          <div style="font-size:.88rem; font-weight:600; color:#0f1e45;">{{ fiche.ingenieur|default:"Ingénieur DSI" }}</div>
+          <div style="font-size:.75rem; color:#718096; margin-top:2px;">DSI ICOSNET</div>
         </div>
       </div>
     </div>
@@ -174,18 +317,17 @@
         <span class="section-label">Dates</span>
       </div>
       <div class="info-row"><span class="info-label">Création</span><span class="info-value">{{ fiche.date_creation }}</span></div>
-      <div class="info-row" style="border-bottom:none;"><span class="info-label">Modification</span><span class="info-value" style="color:#a0aec0;">—</span></div>
     </div>
 
     <!-- Actions -->
     <div class="section-card fade-in delay-4">
       <div class="section-label" style="margin-bottom:14px;">Actions</div>
       <div style="display:flex; flex-direction:column; gap:10px;">
-        <a href="{% url 'fiches:modifier' fiche.id %}" class="btn-upload" style="width:100%; justify-content:center;">
+        <a href="{% url 'application_sheet:modifier' fiche.id %}" class="btn-upload" style="width:100%; justify-content:center;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>
           Modifier
         </a>
-        <a href="{% url 'fiches:liste' %}" class="btn-secondary" style="width:100%; justify-content:center;">
+        <a href="{% url 'application_sheet:liste' %}" class="btn-secondary" style="width:100%; justify-content:center;">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Retour à la liste
         </a>

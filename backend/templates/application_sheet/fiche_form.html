@@ -28,7 +28,7 @@
 <nav style="display:flex; align-items:center; gap:8px; font-size:.78rem; color:#a0aec0; margin-bottom:20px;" class="fade-in">
   <a href="{% url 'dashboard:home' %}" style="color:#a0aec0; text-decoration:none;">Tableau de bord</a>
   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
-  <a href="{% url 'fiches:liste' %}" style="color:#a0aec0; text-decoration:none;">Fiches applicatives</a>
+  <a href="{% url 'application_sheet:liste' %}" style="color:#a0aec0; text-decoration:none;">Fiches applicatives</a>
   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
   <span style="color:#2d5be3; font-weight:500;">{% if mode == 'creer' %}Nouvelle fiche{% else %}Modifier{% endif %}</span>
 </nav>
@@ -92,11 +92,11 @@
           <label for="{{ form.nom_application.id_for_label }}">
             Nom de l'application <span class="required-mark">*</span>
           </label>
-          {{ form.fiche.nom_application }}
-          {% if form.fiche.nom_application.errors %}
+          {{ form.nom_application }}
+          {% if form.nom_application.errors %}
             <div class="field-error">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-              {{ form.fiche.nom_application.errors.0 }}
+              {{ form.nom_application.errors.0 }}
             </div>
           {% endif %}
         </div>
@@ -179,7 +179,7 @@
 
     <!-- Actions -->
     <div class="form-actions fade-in">
-      <a href="{% url 'fiches:liste' %}" class="btn-secondary">
+      <a href="{% url 'application_sheet:liste' %}" class="btn-secondary">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Annuler
       </a>

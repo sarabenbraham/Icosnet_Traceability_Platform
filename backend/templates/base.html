@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard – icoDoc</title>
+  <title>{% block title %}Plateforme DSI – ICOSNET{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -25,12 +25,10 @@
     .sidebar { position: fixed; top: 64px; left: 0; width: 248px; height: calc(100vh - 64px); background: linear-gradient(180deg,#1a3a8f 0%,#0f1e45 100%); display: flex; flex-direction: column; z-index: 100; border-top-right-radius: 28px; box-shadow: 6px 0 32px rgba(10,24,50,.35); transition: transform .3s; overflow: hidden; }
     #constellation-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
     .sidebar > * { position: relative; z-index: 1; }
-    .sidebar-plus { position: absolute; font-size: 1.1rem; font-weight: 300; color: rgba(255,255,255,.06); pointer-events: none; user-select: none; z-index: 0; line-height: 1; }
     .sidebar-nav { flex: 1; padding: 4px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent; position: relative; z-index: 1; }
     .sidebar-nav::-webkit-scrollbar { width: 4px; }
-    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 999px; }
-    .nav-section-label { font-size: .58rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.25); padding: 6px 12px 4px; }
+    .nav-section-label { font-size: .58rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.25); padding: 12px 12px 4px; }
     .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 999px; color: rgba(255,255,255,.6); text-decoration: none; font-size: .82rem; font-weight: 400; transition: background .18s, color .18s, box-shadow .18s; position: relative; }
     .nav-item:hover { background: rgba(255,255,255,.09); color: rgba(255,255,255,.95); }
     .nav-item.active { background: #fff; color: #1a3980; font-weight: 600; box-shadow: 0 3px 12px rgba(0,0,0,.2); }
@@ -38,36 +36,121 @@
     .nav-item:hover svg { opacity: 1; }
     .nav-item.active svg { opacity: 1; stroke: #1a3980; }
     .nav-badge { margin-left: auto; background: #e53e3e; color: #fff; font-size: .62rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
-    .nav-item.active .nav-badge { background: #1a3980; color: #fff; }
 
     /* ── Main ── */
     .main { margin-left: 248px; padding-top: 64px; min-height: 100vh; }
     .content { padding: 28px 32px 48px; }
 
-    /* Bouton nouveau doc */
-    .btn-upload { display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; padding: 9px 18px; border-radius: 10px; text-decoration: none; font-size: .82rem; font-weight: 600; box-shadow: 0 4px 14px rgba(45,91,227,.3); transition: opacity .2s, transform .15s; }
-    .btn-upload:hover { opacity: .9; transform: translateY(-1px); }
+    /* ── Buttons ── */
+    .btn-upload { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; padding: 9px 18px; border-radius: 10px; text-decoration: none; font-size: .82rem; font-weight: 600; box-shadow: 0 4px 14px rgba(45,91,227,.3); transition: opacity .2s, transform .15s; border: none; cursor: pointer; }
+    .btn-upload:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+    .btn-submit { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; padding: 10px 22px; border-radius: 10px; font-size: .85rem; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(45,91,227,.3); transition: opacity .2s, transform .15s; }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 7px; background: #f0f4fb; color: #4a5568; padding: 10px 18px; border-radius: 10px; font-size: .82rem; font-weight: 500; border: 1px solid #e8edf5; cursor: pointer; text-decoration: none; transition: background .2s; }
+    .btn-secondary:hover { background: #e8edf5; }
 
-    /* Notif bell */
+    /* ── Notifications ── */
     .notif-wrap { position: relative; }
     .notif-btn { width: 40px; height: 40px; border-radius: 10px; background: #f0f4fb; border: 1px solid #e8edf5; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s; position: relative; }
     .notif-btn:hover { background: #e8edf5; }
     .notif-count { position: absolute; top: 4px; right: 4px; background: #e53e3e; color: #fff; font-size: .55rem; font-weight: 700; padding: 1px 4px; border-radius: 10px; border: 1.5px solid #fff; min-width: 16px; text-align: center; }
-    .notif-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; background: #fff; border-radius: 14px; border: 1px solid #e8edf5; box-shadow: 0 8px 32px rgba(15,30,69,.12); z-index: 200; display: none; overflow: hidden; }
+    .notif-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: #fff; border-radius: 14px; border: 1px solid #e8edf5; box-shadow: 0 8px 32px rgba(15,30,69,.12); z-index: 400; display: none; overflow: hidden; }
     .notif-dropdown.open { display: block; animation: fadeIn .2s ease; }
 
-    /* Avatar dropdown */
+    /* ── Avatar dropdown ── */
     .avatar-wrap { position: relative; }
-    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#4a7cff,#2d5be3); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; color: #fff; cursor: pointer; border: none; transition: box-shadow .2s; }
+    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#4a7cff,#2d5be3); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; color: #fff; cursor: pointer; border: none; transition: box-shadow .2s; font-family: 'Poppins', sans-serif; }
     .topbar-avatar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 210px; background: #fff; border-radius: 14px; border: 1px solid #e8edf5; box-shadow: 0 8px 32px rgba(15,30,69,.14); z-index: 500; display: none; overflow: hidden; }
-    .topbar-avatar-dropdown.open { display: block; }
+    .topbar-avatar-dropdown.open { display: block; animation: fadeIn .2s ease; }
     .avatar-user-info { padding: 14px 16px; border-bottom: 1px solid #f0f4fb; }
     .avatar-username { font-size: .85rem; font-weight: 600; color: #0f1e45; }
     .avatar-role { font-size: .7rem; color: #718096; margin-top: 2px; }
     .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: .82rem; color: #2d3748; cursor: pointer; transition: background .15s; border: none; background: none; width: 100%; font-family: 'Poppins', sans-serif; text-decoration: none; }
     .avatar-menu-item:hover { background: #f7f9fc; color: #0f1e45; }
 
-    /* Mobile */
+    /* ── Sidebar footer ── */
+    .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,.1); position: relative; z-index: 1; }
+    .sidebar-user-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.08); width: 100%; }
+    .sidebar-user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#4a7cff,#2d5be3); display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .sidebar-user-name { font-size: .8rem; font-weight: 500; color: #fff; }
+    .sidebar-user-role { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 1px; }
+
+    /* ── Table ── */
+    .table-wrap { background: #fff; border-radius: 16px; border: 1px solid #e8edf5; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.02); }
+    .table-wrap table { width: 100%; border-collapse: collapse; }
+    .table-wrap thead th { background: #f7f9fc; padding: 11px 16px; font-size: .68rem; font-weight: 600; text-transform: uppercase; color: #718096; text-align: left; border-bottom: 1px solid #e8edf5; letter-spacing: .06em; }
+    .table-wrap tbody tr { border-bottom: 1px solid #f0f4fb; transition: background .15s; }
+    .table-wrap tbody tr:hover { background: #f7f9fc; }
+    .table-wrap tbody tr:last-child { border-bottom: none; }
+    .table-wrap td { padding: 12px 16px; font-size: .83rem; color: #2d3748; }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 500; padding: 4px 10px; border-radius: 6px; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .badge-green { background: #f0fff4; color: #276749; }
+    .dot-green { background: #38a169; }
+    .badge-orange { background: #fffaf0; color: #b7791f; }
+    .dot-orange { background: #dd6b20; }
+    .badge-red { background: #fff5f5; color: #c53030; }
+    .dot-red { background: #e53e3e; }
+    .badge-blue { background: #eef2ff; color: #2d5be3; }
+    .dot-blue { background: #2d5be3; }
+    .badge-gray { background: #f7f9fc; color: #718096; }
+    .dot-gray { background: #a0aec0; }
+
+    /* ── Forms ── */
+    .form-card { background: #fff; border-radius: 16px; border: 1px solid #e8edf5; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,.02); }
+    .form-section-title { font-size: .85rem; font-weight: 700; color: #0f1e45; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #f0f4fb; font-family: 'Quicksand', sans-serif; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: .72rem; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: .06em; }
+    .form-input { width: 100%; padding: 10px 14px; border: 1.5px solid #e8edf5; border-radius: 10px; font-size: .85rem; color: #2d3748; background: #fff; transition: border-color .2s, box-shadow .2s; font-family: 'Poppins', sans-serif; outline: none; }
+    .form-input:focus { border-color: #2d5be3; box-shadow: 0 0 0 3px rgba(45,91,227,.1); }
+    .form-input select, select.form-input { appearance: none; }
+
+    /* ── Search bar ── */
+    .search-bar-card { background: #fff; border-radius: 14px; border: 1px solid #e8edf5; padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; box-shadow: 0 1px 6px rgba(15,30,69,.05); }
+    .search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .search-input { border: none; outline: none; font-size: .85rem; color: #2d3748; width: 100%; font-family: 'Poppins', sans-serif; background: transparent; }
+    .bar-separator { width: 1px; height: 24px; background: #e8edf5; flex-shrink: 0; }
+    .bar-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: .8rem; font-weight: 500; border: 1px solid #e8edf5; background: #f7f9fc; color: #4a5568; cursor: pointer; transition: background .18s; font-family: 'Poppins', sans-serif; white-space: nowrap; }
+    .bar-btn:hover { background: #e8edf5; }
+    .bar-btn-search { background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(45,91,227,.25); }
+    .bar-btn-search:hover { opacity: .9; background: linear-gradient(135deg,#2d5be3,#1a3470); }
+
+    /* ── Messages Django ── */
+    .msg-success { background: #f0fff4; border: 1px solid #9ae6b4; color: #276749; padding: 12px 16px; border-radius: 10px; font-size: .85rem; margin-bottom: 16px; }
+    .msg-error { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 12px 16px; border-radius: 10px; font-size: .85rem; margin-bottom: 16px; }
+    .msg-warning { background: #fffaf0; border: 1px solid #fbd38d; color: #b7791f; padding: 12px 16px; border-radius: 10px; font-size: .85rem; margin-bottom: 16px; }
+    .msg-info { background: #eef2ff; border: 1px solid #c3dafe; color: #2d5be3; padding: 12px 16px; border-radius: 10px; font-size: .85rem; margin-bottom: 16px; }
+
+    /* ── Modals ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,30,69,.45); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+    .modal { background: #fff; border-radius: 18px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(15,30,69,.2); position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 1rem; font-weight: 700; color: #0f1e45; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; font-family: 'Quicksand', sans-serif; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: #f0f4fb; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #718096; transition: background .2s; }
+    .modal-close:hover { background: #e8edf5; color: #0f1e45; }
+    .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f4fb; }
+    .info-label { font-size: .72rem; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: .06em; width: 130px; flex-shrink: 0; padding-top: 1px; }
+    .info-value { font-size: .85rem; color: #0f1e45; font-weight: 500; flex: 1; }
+
+    /* ── Icon buttons (table actions) ── */
+    .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: background .15s; text-decoration: none; }
+    .icon-btn-view { background: #eef2ff; color: #2d5be3; }
+    .icon-btn-view:hover { background: #dbeafe; }
+    .icon-btn-edit { background: #fffaf0; color: #b7791f; }
+    .icon-btn-edit:hover { background: #fef3c7; }
+    .icon-btn-delete { background: #fff5f5; color: #c53030; }
+    .icon-btn-delete:hover { background: #fed7d7; }
+
+    /* ── Page header ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-header-left h1 { font-size: 1.35rem; font-weight: 700; color: #0f1e45; font-family: 'Quicksand', sans-serif; }
+    .page-header-left p { font-size: .82rem; color: #718096; margin-top: 3px; }
+
+    /* ── Mobile ── */
     .mobile-toggle { display: none; position: fixed; top: 14px; left: 16px; z-index: 300; background: #1e3f8a; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; align-items: center; justify-content: center; }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); top: 64px; height: calc(100vh - 64px); border-top-right-radius: 0; }
@@ -77,29 +160,24 @@
       .content { padding: 20px 16px 40px; }
       .topbar-brand { width: auto; min-width: 160px; }
       .topbar-center { padding: 0 12px; }
+      .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 1600px) {
+      .topbar { height: 80px; }
+      .sidebar { top: 80px; height: calc(100vh - 80px); }
+      .main { padding-top: 80px; }
     }
 
-    /* Modals */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(15,30,69,.45); z-index: 300; display: none; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
-    .modal { background: #fff; border-radius: 18px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(15,30,69,.2); position: relative; }
-    .modal-title { font-size: 1rem; font-weight: 700; color: #0f1e45; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-    .modal-close { position: absolute; top: 20px; right: 20px; background: #f0f4fb; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #718096; transition: background .2s; }
-    .modal-close:hover { background: #e8edf5; color: #0f1e45; }
-    .info-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f4fb; }
-    .info-label { font-size: .72rem; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: .06em; width: 110px; flex-shrink: 0; }
-    .info-value { font-size: .85rem; color: #0f1e45; font-weight: 500; }
-    
-    /* ── Sidebar footer user chip ── */
-    .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,.1); position: relative; z-index: 1; }
-    .sidebar-user-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.08); border: none; width: 100%; cursor: pointer; text-align: left; }
-    .sidebar-user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#4a7cff,#2d5be3); display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; color: #fff; flex-shrink: 0; }
-    .sidebar-user-name { font-size: .8rem; font-weight: 500; color: #fff; }
-    .sidebar-user-role { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 1px; }
-
-    /* General Animations */
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    /* ── Animations ── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn .4s ease both; }
+    .delay-1 { animation-delay: .07s; }
+    .delay-2 { animation-delay: .14s; }
+    .delay-3 { animation-delay: .21s; }
+    .delay-4 { animation-delay: .28s; }
+
+    {% block extra_style %}{% endblock %}
   </style>
 </head>
 <body>
@@ -109,56 +187,66 @@
   <div class="topbar-brand">
     <div class="topbar-brand-icon">
       <svg width="17" height="17" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M14 2v6h6M8 13h8M8 17h5" stroke-linecap="round"/>
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
     <div>
-      <div class="topbar-brand-name">IcoDoc</div>
-      <div class="topbar-brand-sub">Gestion documentaire</div>
+      <div class="topbar-brand-name">ICOSNET DSI</div>
+      <div class="topbar-brand-sub">Plateforme de traçabilité</div>
     </div>
   </div>
 
   <div class="topbar-center">
-    <div class="topbar-title">Dashboard</div>
-    <div class="topbar-sub">Overview of your activity</div>
+    <div class="topbar-title">{% block page_title %}Tableau de bord{% endblock %}</div>
+    <div class="topbar-sub">{% block page_sub %}Vue d'ensemble{% endblock %}</div>
   </div>
 
   <div class="topbar-right">
-    <a href="#" class="btn-upload">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-        <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Nouveau document
-    </a>
+    {% block topbar_action %}{% endblock %}
 
     <div class="notif-wrap">
       <button class="notif-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown', event)">
         <svg width="18" height="18" fill="none" stroke="#4a5568" stroke-width="1.8" viewBox="0 0 24 24">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="notif-count">2</span>
       </button>
       <div class="notif-dropdown" id="notifDropdown">
-        <div style="padding:16px; font-size:14px; text-align:center;">No new notifications</div>
+        <div style="padding:20px; text-align:center; font-size:.82rem; color:#a0aec0;">Aucune nouvelle notification</div>
       </div>
     </div>
 
     <div class="avatar-wrap">
       <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdown('topbarDropdown', event)">
-        JD
+        {% if request.user.is_authenticated %}
+          {{ request.user.first_name|first|default:request.user.username|first|upper }}
+        {% else %}
+          DSI
+        {% endif %}
       </button>
       <div class="topbar-avatar-dropdown" id="topbarDropdown">
         <div class="avatar-user-info">
-          <div class="avatar-username">John Doe</div>
-          <div class="avatar-role">Administrator</div>
+          <div class="avatar-username">
+            {% if request.user.is_authenticated %}
+              {{ request.user.get_full_name|default:request.user.username }}
+            {% else %}
+              Utilisateur DSI
+            {% endif %}
+          </div>
+          <div class="avatar-role">{{ user_role_label|default:"DSI ICOSNET" }}</div>
         </div>
-        <button class="avatar-menu-item" onclick="openModal('modalProfil'); closeDropdowns()">
+        <a href="{% url 'account_management:profil' %}" class="avatar-menu-item">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Mon profil
-        </button>
-        <a href="#" class="avatar-menu-item" style="color: #c53030;">
-          Se déconnecter
+          Mon Profil
+        </a>
+        {% if is_directeur or is_chef %}
+          <a href="{% url 'account_management:utilisateurs_liste' %}" class="avatar-menu-item">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Comptes DSI
+          </a>
+        {% endif %}
+        <a href="{% url 'account_management:logout' %}" class="avatar-menu-item" style="color:#c53030;">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Déconnexion
         </a>
       </div>
     </div>
@@ -172,30 +260,94 @@
 </button>
 
 <!-- ── SIDEBAR ── -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <canvas id="constellation-canvas"></canvas>
+
   <nav class="sidebar-nav">
-    <div class="nav-section-label">Navigation</div>
-    <a href="#" class="nav-item">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M3 7h18M3 12h18M3 17h12" stroke-linecap="round"/>
-      </svg>
-      Tous les documents
-    </a>
-    <a href="#" class="nav-item active">
+    <div class="nav-section-label">Navigation principale</div>
+
+    <a href="{% url 'dashboard:home' %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
       <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 22V12h6v10" stroke-linecap="round"/>
       </svg>
       Tableau de bord
     </a>
+
+    <div class="nav-section-label" style="margin-top:8px;">Gestion applicative</div>
+
+    <a href="{% url 'application_sheet:liste' %}" class="nav-item {% block nav_fiches %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 2v6h6M8 13h8M8 17h5" stroke-linecap="round"/>
+      </svg>
+      Fiches applicatives
+    </a>
+
+    <a href="{% url 'application_sheet:creer' %}" class="nav-item {% block nav_fiches_new %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Nouvelle fiche
+    </a>
+
+    <div class="nav-section-label" style="margin-top:8px;">Gestion des réunions</div>
+
+    <a href="{% url 'meetings:reunion_list' %}" class="nav-item {% block nav_reunions %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="16" y1="2" x2="16" y2="6" stroke-linecap="round"/>
+        <line x1="8" y1="2" x2="8" y2="6" stroke-linecap="round"/>
+        <line x1="3" y1="10" x2="21" y2="10" stroke-linecap="round"/>
+      </svg>
+      Réunions
+    </a>
+
+    <a href="{% url 'meetings:reunion_create' %}" class="nav-item {% block nav_reunion_new %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 8v8M8 12h8" stroke-linecap="round"/>
+      </svg>
+      Nouvelle réunion
+    </a>
+
+    <a href="{% url 'meetings:lieu_list' %}" class="nav-item {% block nav_lieux %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 22V12h6v10" stroke-linecap="round"/>
+      </svg>
+      Salles
+    </a>
+
+    {% if is_directeur or is_chef %}
+      <div class="nav-section-label" style="margin-top:8px;">Administration</div>
+      <a href="{% url 'account_management:utilisateurs_liste' %}" class="nav-item {% block nav_accounts %}{% endblock %}">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Comptes DSI
+      </a>
+    {% endif %}
   </nav>
 
   <div class="sidebar-footer">
     <div class="sidebar-user-btn">
-      <div class="sidebar-user-avatar">JD</div>
+      <div class="sidebar-user-avatar">
+        {% if request.user.is_authenticated %}
+          {{ request.user.first_name|first|default:request.user.username|first|upper }}
+        {% else %}
+          DSI
+        {% endif %}
+      </div>
       <div>
-        <div class="sidebar-user-name">John Doe</div>
-        <div class="sidebar-user-role">Administrator</div>
+        <div class="sidebar-user-name">
+          {% if request.user.is_authenticated %}
+            {{ request.user.get_full_name|default:request.user.username }}
+          {% else %}
+            Utilisateur DSI
+          {% endif %}
+        </div>
+        <div class="sidebar-user-role">{{ user_role_label|default:"DSI ICOSNET" }}</div>
       </div>
     </div>
   </div>
@@ -204,23 +356,40 @@
 <!-- ── MAIN ── -->
 <div class="main">
   <div class="content">
-    <!-- PLACE CONTENT HERE -->
-    <div style="padding:40px; text-align:center; color:#718096;">
-      This is the base layout. Inherit or copy this file to build pages.
-    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="{% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% elif message.tags == 'warning' %}msg-warning{% else %}msg-info{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
   </div>
 </div>
 
-<!-- ── MODAL PROFIL (Example) ── -->
-<div class="modal-overlay" id="modalProfil" onclick="closeModalOnOverlay(event, 'modalProfil')">
+<!-- ── MODAL PROFIL ── -->
+<div class="modal-overlay" id="modalProfil" onclick="closeModalOnOverlay(event,'modalProfil')">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modalProfil')">X</button>
-    <div class="modal-title">Mon profil</div>
-    <div class="info-row"><span class="info-label">Email</span><span class="info-value">john@example.com</span></div>
+    <button class="modal-close" onclick="closeModal('modalProfil')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+    </button>
+    <div class="modal-title">
+      <svg width="18" height="18" fill="none" stroke="#2d5be3" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Mon profil
+    </div>
+    <div class="info-row"><span class="info-label">Utilisateur</span><span class="info-value">Administrateur</span></div>
+    <div class="info-row"><span class="info-label">Rôle</span><span class="info-value">DSI ICOSNET</span></div>
   </div>
 </div>
+
+{% block extra_modals %}{% endblock %}
 
 <script>
+  // Dropdown toggle
   function toggleDropdown(id, event) {
     if (event) event.stopPropagation();
     const el = document.getElementById(id);
@@ -228,34 +397,65 @@
     closeDropdowns();
     if (!isOpen) el.classList.add('open');
   }
-
   function closeDropdowns() {
     document.querySelectorAll('.notif-dropdown, .topbar-avatar-dropdown').forEach(el => el.classList.remove('open'));
   }
-
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.notif-wrap') && !e.target.closest('.avatar-wrap')) closeDropdowns();
   });
 
+  // Modal helpers
   function openModal(id) { document.getElementById(id).classList.add('open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
   function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-  // Simple Constellation Canvas Example (stripped down for clarity)
+  // Constellation canvas
   (function() {
     const canvas = document.getElementById('constellation-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const sidebar = canvas.parentElement;
-    function resize() { canvas.width = sidebar.offsetWidth; canvas.height = sidebar.offsetHeight; }
-    resize();
-    ctx.fillStyle = "rgba(255,255,255,0.1)";
-    for(let i=0; i<30; i++) {
-        ctx.beginPath();
-        ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*2, 0, Math.PI*2);
-        ctx.fill();
+
+    function resize() {
+      canvas.width = sidebar.offsetWidth;
+      canvas.height = sidebar.offsetHeight;
+      drawConstellation();
     }
+
+    const dots = [];
+    function drawConstellation() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      dots.length = 0;
+      for (let i = 0; i < 40; i++) {
+        dots.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.6 + 0.4 });
+      }
+      dots.forEach(d => {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fill();
+      });
+      for (let i = 0; i < dots.length; i++) {
+        for (let j = i + 1; j < dots.length; j++) {
+          const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 70) {
+            ctx.beginPath();
+            ctx.moveTo(dots[i].x, dots[i].y);
+            ctx.lineTo(dots[j].x, dots[j].y);
+            ctx.strokeStyle = `rgba(255,255,255,${0.06 * (1 - dist/70)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    resize();
+    window.addEventListener('resize', resize);
   })();
 </script>
+
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>

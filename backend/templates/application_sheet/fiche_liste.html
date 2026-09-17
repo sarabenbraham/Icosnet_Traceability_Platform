@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block topbar_action %}
-  <a href="{% url 'fiches:creer' %}" class="btn-upload">
+  <a href="{% url 'application_sheet:creer' %}" class="btn-upload">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
       <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
@@ -69,7 +69,7 @@
       </select>
 
       {% if query or filtre_statut or filtre_domaine %}
-        <a href="{% url 'fiches:liste' %}" class="bar-btn" title="Effacer les filtres">
+        <a href="{% url 'application_sheet:liste' %}" class="bar-btn" title="Effacer les filtres">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
           Réinitialiser
         </a>
@@ -106,7 +106,7 @@
       {% for fiche in fiches %}
       <tr>
         <td>
-          <a href="{% url 'fiches:detail' fiche.id %}" class="app-name-link">{{ fiche.nom_application }}</a>
+          <a href="{% url 'application_sheet:detail' fiche.id %}" class="app-name-link">{{ fiche.nom_application }}</a>
         </td>
         <td>
           <code style="background:#f0f4fb; color:#4a5568; padding:2px 8px; border-radius:6px; font-size:.78rem;">{{ fiche.code_application }}</code>
@@ -138,10 +138,10 @@
         <td style="font-size:.82rem; color:#4a5568;">{{ fiche.ingenieur }}</td>
         <td>
           <div style="display:flex; gap:6px; justify-content:center;">
-            <a href="{% url 'fiches:detail' fiche.id %}" class="icon-btn icon-btn-view" title="Voir le détail">
+            <a href="{% url 'application_sheet:detail' fiche.id %}" class="icon-btn icon-btn-view" title="Voir le détail">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg>
             </a>
-            <a href="{% url 'fiches:modifier' fiche.id %}" class="icon-btn icon-btn-edit" title="Modifier">
+            <a href="{% url 'application_sheet:modifier' fiche.id %}" class="icon-btn icon-btn-edit" title="Modifier">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>
             </a>
           </div>
@@ -162,7 +162,7 @@
             {% endif %}
           </div>
           {% if not query and not filtre_statut and not filtre_domaine %}
-            <a href="{% url 'fiches:creer' %}" class="btn-upload" style="display:inline-flex;">
+            <a href="{% url 'application_sheet:creer' %}" class="btn-upload" style="display:inline-flex;">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Créer la première fiche
             </a>
