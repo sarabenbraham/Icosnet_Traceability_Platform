@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db import models
 
 from .forms import (
     LieuForm,
@@ -129,15 +130,33 @@ def lieu_delete(request, pk):
 # =========================================================
 
 def reunion_list(request):
-    reunions = Reunion.objects.select_related(
-        "lieu",
-    ).all()
+    reunions = Reunion.objects.select_related("lieu").all()
+
+    query = request.GET.get("q", "").strip()
+    filtre_type = request.GET.get("type", "").strip()
+    filtre_statut = request.GET.get("statut", "").strip()
+
+    if query:
+        reunions = reunions.filter(
+            models.Q(objet__icontains=query)
+            | models.Q(description__icontains=query)
+            | models.Q(organisateur__icontains=query)
+        )
+
+    if filtre_type:
+        reunions = reunions.filter(type=filtre_type)
+
+    if filtre_statut:
+        reunions = reunions.filter(statut=filtre_statut)
 
     return render(
         request,
         "meetings/reunion_list.html",
         {
             "reunions": reunions,
+            "query": query,
+            "filtre_type": filtre_type,
+            "filtre_statut": filtre_statut,
         },
     )
 

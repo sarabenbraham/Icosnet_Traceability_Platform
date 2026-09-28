@@ -17,12 +17,26 @@
 {% endblock %}
 
 {% block topbar_action %}
-  <a href="{% url 'meetings:reunion_create' %}" class="btn-upload">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-      <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Nouvelle réunion
-  </a>
+  <div style="display:flex; gap:8px; align-items:center;">
+
+    <a href="{% url 'meetings:lieu_list' %}" class="btn-secondary">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2"/>
+        <path d="M8 8h8M8 12h5"/>
+      </svg>
+      Lieux
+    </a>
+
+    <a href="{% url 'meetings:reunion_create' %}" class="btn-upload">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12l7-7 7 7"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+      Nouvelle réunion
+    </a>
+
+  </div>
 {% endblock %}
 
 {% block content %}
@@ -102,7 +116,7 @@
           <a href="{% url 'meetings:reunion_detail' reunion.id %}" style="font-weight:600; color:#0f1e45; text-decoration:none;">{{ reunion.objet }}</a>
         </td>
         <td>
-          <span class="type-badge type-{{ reunion.type }}">{{ reunion.type_display|default:reunion.type }}</span>
+          <span class="type-badge type-{{ reunion.type }}">{{ reunion.get_type_display }}</span>
         </td>
         <td>
           {% if reunion.statut == 'CREEE' %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Créée</span>
@@ -115,7 +129,16 @@
         </td>
         <td style="color:#4a5568; white-space:nowrap;">{{ reunion.date }}</td>
         <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut }} – {{ reunion.heure_fin }}</td>
-        <td style="font-size:.82rem; color:#4a5568;">{{ reunion.lieu.nom_salle }}</td>
+        <td style="font-size:.82rem; color:#4a5568;">
+          {% if reunion.lieu %}
+            <a href="{% url 'meetings:lieu_detail' reunion.lieu.id %}"
+              style="color:#2d5be3; text-decoration:none;">
+              {{ reunion.lieu.nom_salle }}
+            </a>
+          {% else %}
+            <span style="color:#a0aec0;">Aucun lieu</span>
+          {% endif %}
+       </td>
         <td style="font-size:.82rem; color:#4a5568;">{{ reunion.organisateur }}</td>
         <td>
           <div style="display:flex; gap:6px; justify-content:center;">

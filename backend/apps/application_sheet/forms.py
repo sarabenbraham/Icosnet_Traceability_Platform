@@ -15,10 +15,17 @@ from .models import (
 )
 
 
+# ============================================================
+# 1. FICHE APPLICATIVE
+# ============================================================
+
 class FicheApplicativeForm(forms.ModelForm):
 
     class Meta:
         model = FicheApplicative
+
+        # code_application n'est PAS dans les fields :
+        # il est généré automatiquement par le modèle.
         fields = [
             "nom_application",
             "domaine_fonctionnel",
@@ -29,12 +36,19 @@ class FicheApplicativeForm(forms.ModelForm):
         ]
 
         widgets = {
+            "domaine_fonctionnel": forms.CheckboxSelectMultiple(),
+
             "description": forms.Textarea(attrs={
-                "rows": 4
+                "rows": 4,
             }),
+
             "departements": forms.CheckboxSelectMultiple(),
         }
 
+
+# ============================================================
+# 2. CONTRAT
+# ============================================================
 
 class ContratForm(forms.ModelForm):
 
@@ -42,6 +56,24 @@ class ContratForm(forms.ModelForm):
         model = Contrat
         exclude = ["fiche"]
 
+        widgets = {
+            "date_debut": forms.DateInput(
+                attrs={"type": "date"}
+            ),
+
+            "date_fin": forms.DateInput(
+                attrs={"type": "date"}
+            ),
+
+            "budget_annuel": forms.NumberInput(
+                attrs={"step": "0.01"}
+            ),
+        }
+
+
+# ============================================================
+# 3. INFRASTRUCTURE
+# ============================================================
 
 class InfrastructureForm(forms.ModelForm):
 
@@ -49,14 +81,20 @@ class InfrastructureForm(forms.ModelForm):
         model = Infrastructure
         exclude = ["fiche"]
 
+        widgets = {
+            "ip_lan": forms.TextInput(),
+            "ip_publique": forms.TextInput(),
+            "ip_serveur_application": forms.TextInput(),
+            "ip_serveur_bd": forms.TextInput(),
+        }
+
+
+# ============================================================
+# 4. UTILISATEURS & ACCÈS
+# ============================================================
 
 class UtilisateurAccesForm(forms.ModelForm):
 
-    # canaux_acces est un JSONField dans le modèle, mais correspond en
-    # réalité à un choix fermé (UtilisateurAcces.Canal). On le déclare
-    # explicitement ici pour obtenir des cases à cocher plutôt que le
-    # widget Textarea par défaut d'un JSONField, qui obligerait
-    # l'utilisateur à saisir du JSON à la main.
     canaux_acces = forms.MultipleChoiceField(
         choices=UtilisateurAcces.Canal.choices,
         widget=forms.CheckboxSelectMultiple,
@@ -70,18 +108,44 @@ class UtilisateurAccesForm(forms.ModelForm):
 
         widgets = {
             "utilisateurs_cibles": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
+
             "profils_utilisateurs": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # JSONField -> liste pour les cases à cocher
+        if self.instance and self.instance.pk:
+            self.fields["canaux_acces"].initial = (
+                self.instance.canaux_acces or []
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Liste des cases cochées -> JSONField
+        instance.canaux_acces = self.cleaned_data.get(
+            "canaux_acces",
+            []
+        )
+
+        if commit:
+            instance.save()
+
+        return instance
+
+
+# ============================================================
+# 5. DÉVELOPPEMENT
+# ============================================================
 
 class DeveloppementForm(forms.ModelForm):
 
-    # environnements est un JSONField adossé à Developpement.Environnement :
-    # même correctif que pour canaux_acces ci-dessus.
     environnements = forms.MultipleChoiceField(
         choices=Developpement.Environnement.choices,
         widget=forms.CheckboxSelectMultiple,
@@ -95,19 +159,47 @@ class DeveloppementForm(forms.ModelForm):
 
         widgets = {
             "processus_ci_cd": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
+
             "methode_personnalisation": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
+
             "livrables_personnalisation": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
+
             "services": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk:
+            self.fields["environnements"].initial = (
+                self.instance.environnements or []
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        instance.environnements = self.cleaned_data.get(
+            "environnements",
+            []
+        )
+
+        if commit:
+            instance.save()
+
+        return instance
+
+
+# ============================================================
+# 6. MODULES MÉTIER
+# ============================================================
 
 class ModuleMetierForm(forms.ModelForm):
 
@@ -117,18 +209,21 @@ class ModuleMetierForm(forms.ModelForm):
 
         widgets = {
             "modules": forms.Textarea(attrs={
-                "rows": 4
+                "rows": 4,
             }),
+
             "description": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
         }
 
 
+# ============================================================
+# 7. STOCKAGE
+# ============================================================
+
 class StockageForm(forms.ModelForm):
 
-    # emplacements est un JSONField adossé à Stockage.Emplacement :
-    # même correctif que pour canaux_acces ci-dessus.
     emplacements = forms.MultipleChoiceField(
         choices=Stockage.Emplacement.choices,
         widget=forms.CheckboxSelectMultiple,
@@ -140,6 +235,31 @@ class StockageForm(forms.ModelForm):
         model = Stockage
         exclude = ["fiche"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk:
+            self.fields["emplacements"].initial = (
+                self.instance.emplacements or []
+            )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        instance.emplacements = self.cleaned_data.get(
+            "emplacements",
+            []
+        )
+
+        if commit:
+            instance.save()
+
+        return instance
+
+
+# ============================================================
+# 8. INTÉGRATION
+# ============================================================
 
 class IntegrationForm(forms.ModelForm):
 
@@ -149,10 +269,14 @@ class IntegrationForm(forms.ModelForm):
 
         widgets = {
             "groupes_ad": forms.Textarea(attrs={
-                "rows": 3
+                "rows": 3,
             }),
         }
 
+
+# ============================================================
+# 9. FLUX APPLICATION
+# ============================================================
 
 class FluxApplicationForm(forms.ModelForm):
 
@@ -161,12 +285,30 @@ class FluxApplicationForm(forms.ModelForm):
         exclude = ["fiche"]
 
 
+# ============================================================
+# 10. SAUVEGARDE / SUPERVISION
+# ============================================================
+
 class SauvegardeForm(forms.ModelForm):
 
     class Meta:
         model = Sauvegarde
         exclude = ["fiche"]
 
+        widgets = {
+            "emplacement_logs": forms.Textarea(attrs={
+                "rows": 3,
+            }),
+
+            "heure": forms.TimeInput(attrs={
+                "type": "time",
+            }),
+        }
+
+
+# ============================================================
+# 11. INTERVENTION
+# ============================================================
 
 class InterventionForm(forms.ModelForm):
 
@@ -175,99 +317,124 @@ class InterventionForm(forms.ModelForm):
         exclude = ["fiche"]
 
         widgets = {
+            "date_heure": forms.DateTimeInput(attrs={
+                "type": "datetime-local",
+            }),
+
             "description": forms.Textarea(attrs={
-                "rows": 4
+                "rows": 4,
             }),
         }
 
 
+# ============================================================
+# FORMULAIRE COMPLET
+# ============================================================
+
 class FicheApplicativeCompleteForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
-        instance = kwargs.pop('instance', None)
+
+        instance = kwargs.pop("instance", None)
+
         super().__init__(*args, **kwargs)
+
+        self.instance = instance
+
+        # --------------------------------------------------------
+        # Fiche principale
+        # --------------------------------------------------------
 
         self.fiche = FicheApplicativeForm(
             *args,
             prefix="fiche",
-            instance=instance
+            instance=instance,
         )
 
+        # --------------------------------------------------------
+        # Fonction pour récupérer les OneToOne
+        # --------------------------------------------------------
+
         def get_related(name):
-            if instance:
-                # Need to handle related objects correctly. If it's a related manager (e.g., intervention is a ForeignKey to fiche), 
-                # we just take the first one or a specific one for form editing?
-                # Actually, related_name might be a OneToOneField or a ForeignKey. Let's assume OneToOne or we just take the first.
-                manager_or_obj = getattr(instance, name, None)
-                if manager_or_obj:
-                    # If it's a manager (e.g. from ForeignKey)
-                    if hasattr(manager_or_obj, 'first'):
-                        return manager_or_obj.first()
-                    # If it's a OneToOne
-                    return manager_or_obj
-            return None
+
+            if not instance:
+                return None
+
+            try:
+                return getattr(instance, name)
+            except Exception:
+                return None
+
+        # --------------------------------------------------------
+        # Sections
+        # --------------------------------------------------------
 
         self.contrat = ContratForm(
             *args,
             prefix="contrat",
-            instance=get_related("contrat")
+            instance=get_related("contrat"),
         )
 
         self.infrastructure = InfrastructureForm(
             *args,
             prefix="infrastructure",
-            instance=get_related("infrastructure")
+            instance=get_related("infrastructure"),
         )
 
         self.acces = UtilisateurAccesForm(
             *args,
             prefix="acces",
-            instance=get_related("acces")
+            instance=get_related("acces"),
         )
 
         self.developpement = DeveloppementForm(
             *args,
             prefix="developpement",
-            instance=get_related("developpement")
+            instance=get_related("developpement"),
         )
 
         self.module_metier = ModuleMetierForm(
             *args,
             prefix="module_metier",
-            instance=get_related("module_metier")
+            instance=get_related("module_metier"),
         )
 
         self.stockage = StockageForm(
             *args,
             prefix="stockage",
-            instance=get_related("stockage")
+            instance=get_related("stockage"),
         )
 
         self.integration = IntegrationForm(
             *args,
             prefix="integration",
-            instance=get_related("integration")
+            instance=get_related("integration"),
         )
 
         self.flux = FluxApplicationForm(
             *args,
             prefix="flux",
-            instance=get_related("flux_application")
+            instance=get_related("flux_application"),
         )
 
         self.sauvegarde = SauvegardeForm(
             *args,
             prefix="sauvegarde",
-            instance=get_related("sauvegarde")
+            instance=get_related("sauvegarde"),
         )
 
         self.intervention = InterventionForm(
             *args,
             prefix="intervention",
-            instance=get_related("intervention")
+            instance=get_related("intervention"),
         )
 
+    # ============================================================
+    # VALIDATION
+    # ============================================================
+
     def is_valid(self):
+
         return all([
             self.fiche.is_valid(),
             self.contrat.is_valid(),
@@ -281,3 +448,66 @@ class FicheApplicativeCompleteForm(forms.Form):
             self.sauvegarde.is_valid(),
             self.intervention.is_valid(),
         ])
+
+    # ============================================================
+    # SAUVEGARDE COMPLÈTE
+    # ============================================================
+
+    def save(self):
+
+        # --------------------------------------------------------
+        # 1. Fiche principale
+        # --------------------------------------------------------
+
+        fiche = self.fiche.save(commit=False)
+
+        fiche.save()
+
+        # Important pour ManyToMany "departements"
+        self.fiche.save_m2m()
+
+        # --------------------------------------------------------
+        # 2. Sections OneToOne
+        # --------------------------------------------------------
+
+        contrat = self.contrat.save(commit=False)
+        contrat.fiche = fiche
+        contrat.save()
+
+        infrastructure = self.infrastructure.save(commit=False)
+        infrastructure.fiche = fiche
+        infrastructure.save()
+
+        acces = self.acces.save(commit=False)
+        acces.fiche = fiche
+        acces.save()
+
+        developpement = self.developpement.save(commit=False)
+        developpement.fiche = fiche
+        developpement.save()
+
+        module_metier = self.module_metier.save(commit=False)
+        module_metier.fiche = fiche
+        module_metier.save()
+
+        stockage = self.stockage.save(commit=False)
+        stockage.fiche = fiche
+        stockage.save()
+
+        integration = self.integration.save(commit=False)
+        integration.fiche = fiche
+        integration.save()
+
+        flux = self.flux.save(commit=False)
+        flux.fiche = fiche
+        flux.save()
+
+        sauvegarde = self.sauvegarde.save(commit=False)
+        sauvegarde.fiche = fiche
+        sauvegarde.save()
+
+        intervention = self.intervention.save(commit=False)
+        intervention.fiche = fiche
+        intervention.save()
+
+        return fiche

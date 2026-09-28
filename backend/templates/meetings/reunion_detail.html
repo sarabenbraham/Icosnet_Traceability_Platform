@@ -83,14 +83,21 @@
       </div>
 
       <div class="info-row">
-        <span class="info-label">Salle</span>
-        <span class="info-value">
-          <a href="{% url 'meetings:lieu_detail' reunion.lieu.id %}" style="color:#2d5be3; text-decoration:none; font-weight:500;">
-            {{ reunion.lieu.nom_salle }}
-          </a>
-          <span style="color:#a0aec0; font-size:.78rem; margin-left:6px;">({{ reunion.lieu.capacite }} places)</span>
-        </span>
-      </div>
+    <span class="info-label">Lieu</span>
+    <span class="info-value">
+        {% if reunion.lieu %}
+            <a href="{% url 'meetings:lieu_detail' reunion.lieu.id %}"
+                style="color:#2d5be3; text-decoration:none; font-weight:500;">
+                {{ reunion.lieu.nom_salle }}
+            </a>
+            <span style="color:#a0aec0; font-size:0.78rem; margin-left:6px;">
+                ({{ reunion.lieu.capacite }} places)
+            </span>
+        {% else %}
+            <span style="color:#a0aec0;">Aucun lieu défini</span>
+        {% endif %}
+    </span>
+</div>
 
       <div class="info-row">
         <span class="info-label">Organisateur</span>

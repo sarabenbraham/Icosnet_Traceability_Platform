@@ -284,12 +284,6 @@
       Fiches applicatives
     </a>
 
-    <a href="{% url 'application_sheet:creer' %}" class="nav-item {% block nav_fiches_new %}{% endblock %}">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Nouvelle fiche
-    </a>
 
     <div class="nav-section-label" style="margin-top:8px;">Gestion des réunions</div>
 
@@ -303,21 +297,8 @@
       Réunions
     </a>
 
-    <a href="{% url 'meetings:reunion_create' %}" class="nav-item {% block nav_reunion_new %}{% endblock %}">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 8v8M8 12h8" stroke-linecap="round"/>
-      </svg>
-      Nouvelle réunion
-    </a>
 
-    <a href="{% url 'meetings:lieu_list' %}" class="nav-item {% block nav_lieux %}{% endblock %}">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 22V12h6v10" stroke-linecap="round"/>
-      </svg>
-      Salles
-    </a>
+
 
     {% if is_directeur or is_chef %}
       <div class="nav-section-label" style="margin-top:8px;">Administration</div>
