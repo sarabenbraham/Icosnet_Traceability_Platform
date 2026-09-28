@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titre }} – ICOSNET DSI{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_accounts %}active{% endblock %}
+
+{% block content %}
+  <div class="page-header fade-in">
+    <div class="page-header-left">
+      <h1>{{ titre }}</h1>
+      <p>{{ sous_titre }}</p>
+    </div>
+  </div>
+
+  <div class="form-card fade-in delay-1" style="max-width:520px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+      <div style="width:42px; height:42px; border-radius:11px; background:#fff5f5; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg width="20" height="20" fill="none" stroke="#c53030" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div style="font-size:.95rem; font-weight:700; color:#0f1e45;">Confirmer la suppression</div>
+        <div style="font-size:.8rem; color:#718096; margin-top:2px;">Cette action est irréversible.</div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Utilisateur</span>
+      <span class="info-value">{{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Email de connexion</span>
+      <span class="info-value">{{ compte.email_connexion }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Statut</span>
+      <span class="info-value">
+        {% if compte.statut == "ACTIF" %}
+          <span class="badge badge-green"><span class="badge-dot dot-green"></span>Actif</span>
+        {% else %}
+          <span class="badge badge-red"><span class="badge-dot dot-red"></span>Désactivé</span>
+        {% endif %}
+      </span>
+    </div>
+
+    <form method="post" style="margin-top:24px; display:flex; gap:10px;">
+      {% csrf_token %}
+      <button type="submit" class="btn-submit" style="background:linear-gradient(135deg,#e53e3e,#c53030); box-shadow:0 4px 14px rgba(197,48,48,.3);">
+        <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Confirmer la suppression
+      </button>
+      <a href="{% url 'account_management:detail' pk=compte.pk %}" class="btn-secondary">Annuler</a>
+    </form>
+  </div>
+{% endblock %}

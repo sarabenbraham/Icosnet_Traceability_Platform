@@ -1,0 +1,170 @@
+{# Partiel réutilisé par fiche_form.html (création) et fiche_update.html (modification). #}
+{# Attend une variable "form" = instance de FicheApplicativeCompleteForm. #}
+
+{% csrf_token %}
+
+{% if form.fiche.non_field_errors or form.contrat.non_field_errors or form.infrastructure.non_field_errors or form.acces.non_field_errors or form.developpement.non_field_errors or form.module_metier.non_field_errors or form.stockage.non_field_errors or form.integration.non_field_errors or form.flux.non_field_errors or form.sauvegarde.non_field_errors or form.intervention.non_field_errors %}
+  <div class="msg-error">
+    Le formulaire contient des erreurs. Merci de corriger les champs signalés en rouge ci-dessous.
+  </div>
+{% endif %}
+
+<div style="display:flex; flex-direction:column; gap:20px;">
+
+  <!-- Informations générales -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Informations générales</div>
+    <div class="form-grid">
+      {% for field in form.fiche %}
+        <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.help_text %}<span style="font-size:.7rem; color:#a0aec0;">{{ field.help_text }}</span>{% endif %}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Contrat -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Contrat</div>
+    <div class="form-grid">
+      {% for field in form.contrat %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Infrastructure -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Infrastructure</div>
+    <div class="form-grid">
+      {% for field in form.infrastructure %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Accès utilisateurs -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Accès utilisateurs</div>
+    <div class="form-grid">
+      {% for field in form.acces %}
+        <div class="form-group" {% if field.name == "utilisateurs_cibles" or field.name == "profils_utilisateurs" or field.name == "canaux_acces" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Développement -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Développement</div>
+    <div class="form-grid">
+      {% for field in form.developpement %}
+        <div class="form-group" {% if field.name in "processus_ci_cd methode_personnalisation livrables_personnalisation services" or field.name == "environnements" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Modules métier -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Modules métier</div>
+    <div class="form-grid">
+      {% for field in form.module_metier %}
+        <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.name == "modules" %}<span style="font-size:.7rem; color:#a0aec0;">Format JSON, ex : ["Facturation", "Reporting"]</span>{% endif %}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Stockage -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Stockage</div>
+    <div class="form-grid">
+      {% for field in form.stockage %}
+        <div class="form-group" {% if field.name == "emplacements" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Intégration -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Intégration</div>
+    <div class="form-grid">
+      {% for field in form.integration %}
+        <div class="form-group" {% if field.name == "groupes_ad" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Flux applicatif -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Flux applicatif</div>
+    <div class="form-grid">
+      {% for field in form.flux %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Sauvegarde -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Sauvegarde</div>
+    <div class="form-grid">
+      {% for field in form.sauvegarde %}
+        <div class="form-group" {% if field.name == "emplacement_logs" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Intervention -->
+  <div class="form-card fade-in">
+    <div class="form-section-title">Intervention</div>
+    <div class="form-grid">
+      {% for field in form.intervention %}
+        <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>

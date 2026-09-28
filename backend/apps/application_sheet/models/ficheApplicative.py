@@ -27,7 +27,8 @@ class FicheApplicative(models.Model):
 
     code_application = models.CharField(
         max_length=50,
-        unique=True
+        unique=True,
+        blank=True
     )
 
     domaine_fonctionnel = MultiSelectField(
@@ -68,6 +69,12 @@ class FicheApplicative(models.Model):
         verbose_name = "Fiche applicative"
         verbose_name_plural = "Fiches applicatives"
         ordering = ["-date_creation"]
+
+    def save(self, *args, **kwargs):
+        if not self.code_application:
+            import uuid
+            self.code_application = "APP-" + str(uuid.uuid4())[:8].upper()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nom_application} ({self.code_application})"

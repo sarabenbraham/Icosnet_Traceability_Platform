@@ -3,87 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion – Plateforme DSI ICOSNET</title>
+  <title>Connexion – ICOSNET DSI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Poppins', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: linear-gradient(135deg, #1e3f8a 0%, #0f1e45 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; }
-    #bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-
-    .login-card { background: #ffffff; border-radius: 20px; width: 100%; max-width: 440px; padding: 40px 36px; box-shadow: 0 20px 60px rgba(10,24,50,.4); position: relative; z-index: 1; }
-    .brand-header { text-align: center; margin-bottom: 28px; }
-    .brand-icon { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg,#2d5be3,#1a3470); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; box-shadow: 0 4px 14px rgba(45,91,227,.35); }
-    .brand-title { font-size: 1.45rem; font-weight: 700; color: #0f1e45; font-family: 'Quicksand', sans-serif; line-height: 1.2; }
-    .brand-sub { font-size: .8rem; color: #718096; margin-top: 4px; }
-
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    body { background: linear-gradient(135deg,#0f1e45 0%,#1a3a8f 55%,#2d5be3 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-card { background: #fff; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(15,30,69,.35); animation: fadeInUp .4s ease both; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .brand-icon { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg,#2d5be3,#1a3470); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .brand-name { font-size: 1.3rem; font-weight: 700; color: #1e3f8a; font-family: 'Quicksand', sans-serif; line-height: 1.1; }
+    .brand-sub { font-size: .62rem; color: #a0aec0; text-transform: uppercase; letter-spacing: .05em; }
+    h1 { font-size: 1.05rem; font-weight: 700; color: #0f1e45; font-family: 'Quicksand', sans-serif; margin-bottom: 4px; }
+    p.lead { font-size: .82rem; color: #718096; margin-bottom: 24px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
     .form-group label { font-size: .72rem; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: .06em; }
-    .form-input { width: 100%; padding: 11px 16px; border: 1.5px solid #e8edf5; border-radius: 10px; font-size: .88rem; color: #2d3748; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; font-family: 'Poppins', sans-serif; }
-    .form-input:focus { border-color: #2d5be3; box-shadow: 0 0 0 3.5px rgba(45,91,227,.12); }
-
-    .btn-login { width: 100%; padding: 12px; border-radius: 10px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; font-size: .9rem; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(45,91,227,.35); transition: opacity .2s, transform .15s; font-family: 'Poppins', sans-serif; margin-top: 8px; }
-    .btn-login:hover { opacity: .92; transform: translateY(-1px); }
-
-    .msg-error { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 10px 14px; border-radius: 10px; font-size: .82rem; margin-bottom: 18px; text-align: center; }
+    .form-input { width: 100%; padding: 11px 14px; border: 1.5px solid #e8edf5; border-radius: 10px; font-size: .85rem; color: #2d3748; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .form-input:focus { border-color: #2d5be3; box-shadow: 0 0 0 3px rgba(45,91,227,.1); }
+    .btn-submit { width: 100%; margin-top: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; padding: 12px; border-radius: 10px; font-size: .85rem; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(45,91,227,.3); transition: opacity .2s, transform .15s; }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .msg-error { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 11px 14px; border-radius: 10px; font-size: .8rem; margin-bottom: 18px; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-
-<canvas id="bg-canvas"></canvas>
-
-<div class="login-card fade-in">
-  <div class="brand-header">
-    <div class="brand-icon">
-      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">ICOSNET DSI</div>
+        <div class="brand-sub">Plateforme de traçabilité</div>
+      </div>
     </div>
-    <div class="brand-title">ICOSNET DSI</div>
-    <div class="brand-sub">Connexion à la plateforme de traçabilité</div>
+
+    <h1>Connexion</h1>
+    <p class="lead">Accédez à votre espace DSI.</p>
+
+    {% if form.non_field_errors %}
+      <div class="msg-error">{{ form.non_field_errors|striptags }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'account_management:login' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_username">Identifiant</label>
+        <input class="form-input" type="text" name="username" id="id_username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="id_password">Mot de passe</label>
+        <input class="form-input" type="password" name="password" id="id_password" required>
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn-submit">
+        <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Se connecter
+      </button>
+    </form>
   </div>
-
-  {% if messages %}
-    {% for message in messages %}
-      <div class="msg-error">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-
-  <form method="post" action="">
-    {% csrf_token %}
-
-    <div class="form-group">
-      <label for="{{ form.username.id_for_label }}">Identifiant / Email</label>
-      {{ form.username }}
-    </div>
-
-    <div class="form-group">
-      <label for="{{ form.password.id_for_label }}">Mot de passe</label>
-      {{ form.password }}
-    </div>
-
-    <button type="submit" class="btn-login">
-      Se connecter
-    </button>
-  </form>
-</div>
-
-<script>
-  (function() {
-    const canvas = document.getElementById('bg-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize();
-    window.addEventListener('resize', resize);
-    for(let i=0; i<40; i++) {
-      ctx.beginPath();
-      ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.8, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.fill();
-    }
-  })();
-</script>
-
 </body>
 </html>

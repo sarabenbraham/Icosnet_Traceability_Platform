@@ -95,16 +95,16 @@ class Reunion(models.Model):
         default=StatutReunion.CREEE,
     )
 
-    organisateur = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="reunions_organisees",
+    organisateur = models.CharField(
+        max_length=255,
     )
 
     lieu = models.ForeignKey(
         Lieu,
         on_delete=models.PROTECT,
         related_name="reunions",
+        null=True,
+        blank=True,
     )
 
     def clean(self):
@@ -141,10 +141,8 @@ class Participation(models.Model):
         related_name="participations",
     )
 
-    participant = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="participations_reunions",
+    participant = models.CharField(
+        max_length=255,
     )
 
     date_confirmation = models.DateTimeField(

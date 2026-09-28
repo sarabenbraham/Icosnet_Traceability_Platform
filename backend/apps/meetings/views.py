@@ -130,7 +130,6 @@ def lieu_delete(request, pk):
 
 def reunion_list(request):
     reunions = Reunion.objects.select_related(
-        "organisateur",
         "lieu",
     ).all()
 
@@ -175,15 +174,12 @@ def reunion_create(request):
 def reunion_detail(request, pk):
     reunion = get_object_or_404(
         Reunion.objects.select_related(
-            "organisateur",
             "lieu",
         ),
         pk=pk,
     )
 
-    participations = reunion.participations.select_related(
-        "participant",
-    ).all()
+    participations = reunion.participations.all()
 
     return render(
         request,

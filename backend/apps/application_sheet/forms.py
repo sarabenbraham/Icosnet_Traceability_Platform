@@ -21,7 +21,6 @@ class FicheApplicativeForm(forms.ModelForm):
         model = FicheApplicative
         fields = [
             "nom_application",
-            "code_application",
             "domaine_fonctionnel",
             "criticite",
             "description",
@@ -53,6 +52,18 @@ class InfrastructureForm(forms.ModelForm):
 
 class UtilisateurAccesForm(forms.ModelForm):
 
+    # canaux_acces est un JSONField dans le modèle, mais correspond en
+    # réalité à un choix fermé (UtilisateurAcces.Canal). On le déclare
+    # explicitement ici pour obtenir des cases à cocher plutôt que le
+    # widget Textarea par défaut d'un JSONField, qui obligerait
+    # l'utilisateur à saisir du JSON à la main.
+    canaux_acces = forms.MultipleChoiceField(
+        choices=UtilisateurAcces.Canal.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Canaux d'accès",
+    )
+
     class Meta:
         model = UtilisateurAcces
         exclude = ["fiche"]
@@ -68,6 +79,15 @@ class UtilisateurAccesForm(forms.ModelForm):
 
 
 class DeveloppementForm(forms.ModelForm):
+
+    # environnements est un JSONField adossé à Developpement.Environnement :
+    # même correctif que pour canaux_acces ci-dessus.
+    environnements = forms.MultipleChoiceField(
+        choices=Developpement.Environnement.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Environnements",
+    )
 
     class Meta:
         model = Developpement
@@ -106,6 +126,15 @@ class ModuleMetierForm(forms.ModelForm):
 
 
 class StockageForm(forms.ModelForm):
+
+    # emplacements est un JSONField adossé à Stockage.Emplacement :
+    # même correctif que pour canaux_acces ci-dessus.
+    emplacements = forms.MultipleChoiceField(
+        choices=Stockage.Emplacement.choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Emplacements",
+    )
 
     class Meta:
         model = Stockage
@@ -155,61 +184,87 @@ class InterventionForm(forms.ModelForm):
 class FicheApplicativeCompleteForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
+        instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
 
         self.fiche = FicheApplicativeForm(
             *args,
-            prefix="fiche"
+            prefix="fiche",
+            instance=instance
         )
+
+        def get_related(name):
+            if instance:
+                # Need to handle related objects correctly. If it's a related manager (e.g., intervention is a ForeignKey to fiche), 
+                # we just take the first one or a specific one for form editing?
+                # Actually, related_name might be a OneToOneField or a ForeignKey. Let's assume OneToOne or we just take the first.
+                manager_or_obj = getattr(instance, name, None)
+                if manager_or_obj:
+                    # If it's a manager (e.g. from ForeignKey)
+                    if hasattr(manager_or_obj, 'first'):
+                        return manager_or_obj.first()
+                    # If it's a OneToOne
+                    return manager_or_obj
+            return None
 
         self.contrat = ContratForm(
             *args,
-            prefix="contrat"
+            prefix="contrat",
+            instance=get_related("contrat")
         )
 
         self.infrastructure = InfrastructureForm(
             *args,
-            prefix="infrastructure"
+            prefix="infrastructure",
+            instance=get_related("infrastructure")
         )
 
         self.acces = UtilisateurAccesForm(
             *args,
-            prefix="acces"
+            prefix="acces",
+            instance=get_related("acces")
         )
 
         self.developpement = DeveloppementForm(
             *args,
-            prefix="developpement"
+            prefix="developpement",
+            instance=get_related("developpement")
         )
 
         self.module_metier = ModuleMetierForm(
             *args,
-            prefix="module_metier"
+            prefix="module_metier",
+            instance=get_related("module_metier")
         )
 
         self.stockage = StockageForm(
             *args,
-            prefix="stockage"
+            prefix="stockage",
+            instance=get_related("stockage")
         )
 
         self.integration = IntegrationForm(
             *args,
-            prefix="integration"
+            prefix="integration",
+            instance=get_related("integration")
         )
 
         self.flux = FluxApplicationForm(
             *args,
-            prefix="flux"
+            prefix="flux",
+            instance=get_related("flux_application")
         )
 
         self.sauvegarde = SauvegardeForm(
             *args,
-            prefix="sauvegarde"
+            prefix="sauvegarde",
+            instance=get_related("sauvegarde")
         )
 
         self.intervention = InterventionForm(
             *args,
-            prefix="intervention"
+            prefix="intervention",
+            instance=get_related("intervention")
         )
 
     def is_valid(self):

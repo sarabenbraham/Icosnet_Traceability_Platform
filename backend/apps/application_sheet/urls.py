@@ -8,24 +8,30 @@ urlpatterns = [
     path(
         "",
         views.fiche_list,
-        name="fiche_list",
+        name="liste",
     ),
 
     path(
-        "create/",
+        "creer/",
         views.create_fiche_applicative,
-        name="fiche_create",
+        name="creer",
     ),
 
     path(
         "<int:pk>/",
         views.fiche_detail,
-        name="fiche_detail",
+        name="detail",
+    ),
+
+    path(
+        "<int:pk>/update/",
+        views.fiche_update,
+        name="modifier",
     ),
 
     path(
         "<int:pk>/delete/",
         views.fiche_delete,
-        name="fiche_delete",
+        name="supprimer",
     ),
 ]

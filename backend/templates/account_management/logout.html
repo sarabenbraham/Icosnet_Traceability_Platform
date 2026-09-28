@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Déconnexion – ICOSNET DSI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Poppins', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg,#0f1e45 0%,#1a3a8f 55%,#2d5be3 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #fff; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 20px 60px rgba(15,30,69,.35); animation: fadeInUp .4s ease both; }
+    .icon-wrap { width: 56px; height: 56px; border-radius: 50%; background: #eef2ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+    h1 { font-size: 1.1rem; font-weight: 700; color: #0f1e45; font-family: 'Quicksand', sans-serif; margin-bottom: 6px; }
+    p { font-size: .84rem; color: #718096; margin-bottom: 24px; }
+    .btn-submit { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg,#2d5be3,#1a3470); color: #fff; padding: 11px 22px; border-radius: 10px; font-size: .85rem; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(45,91,227,.3); transition: opacity .2s, transform .15s; }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrap">
+      <svg width="24" height="24" fill="none" stroke="#2d5be3" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>Vous êtes déconnecté</h1>
+    <p>Votre session ICOSNET DSI a été fermée en toute sécurité.</p>
+    <a href="{% url 'account_management:login' %}" class="btn-submit">Se reconnecter</a>
+  </div>
+</body>
+</html>

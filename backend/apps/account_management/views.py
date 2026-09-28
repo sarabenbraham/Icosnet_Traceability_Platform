@@ -1,7 +1,39 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import CompteForm, UtilisateurCompteForm
 from .models import Compte
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.utils.http import url_has_allowed_host_and_scheme
+from .forms import CompteForm, LoginForm, UtilisateurCompteForm
+
+
+def compte_login(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    next_url = request.POST.get("next") or request.GET.get("next", "")
+    form = LoginForm(request, data=request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        login(request, form.get_user())
+        if url_has_allowed_host_and_scheme(
+            next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return redirect(next_url)
+        return redirect("dashboard")
+
+    return render(
+        request,
+        "account_management/login.html",
+        {"form": form, "next": next_url},
+    )
+
+
+def compte_logout(request):
+    logout(request)
+    return render(request, "account_management/logout.html")
 
 
 def compte_list(request):
@@ -9,13 +41,14 @@ def compte_list(request):
 
     return render(
         request,
-        "account_management/compte_list.html",
+        "account_management/utilisateur_liste.html",
         {
-            "comptes": comptes,
+            "utilisateurs": [compte.utilisateur for compte in comptes],
+            "total": comptes.count(),
             "titre": "Comptes utilisateurs",
             "sous_titre": "Gestion des comptes d'accès",
         },
-    )
+)
 
 
 def compte_detail(request, pk):
@@ -26,7 +59,7 @@ def compte_detail(request, pk):
 
     return render(
         request,
-        "account_management/compte_detail.html",
+        "account_management/utilisateur_detail.html",
         {
             "compte": compte,
             "titre": "Détail du compte",
@@ -34,29 +67,6 @@ def compte_detail(request, pk):
         },
     )
 
-
-def compte_create(request):
-    if request.method == "POST":
-        form = CompteForm(request.POST)
-
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Le compte a été créé avec succès.")
-            return redirect("account_management:liste")
-
-    else:
-        form = CompteForm()
-
-    return render(
-        request,
-        "account_management/compte_form.html",
-        {
-            "form": form,
-            "titre": "Créer un compte",
-            "sous_titre": "Ajouter un compte utilisateur",
-            "mode": "creer",
-        },
-    )
 
 
 def compte_update(request, pk):
@@ -78,7 +88,7 @@ def compte_update(request, pk):
 
     return render(
         request,
-        "account_management/compte_form.html",
+        "account_management/utilisateur_update.html",
         {
             "form": form,
             "compte": compte,
@@ -99,7 +109,7 @@ def compte_delete(request, pk):
 
     return render(
         request,
-        "account_management/compte_confirm_delete.html",
+        "account_management/utilisateur_delete.html",
         {
             "compte": compte,
             "titre": "Supprimer le compte",
@@ -107,7 +117,7 @@ def compte_delete(request, pk):
         },
     )
 
-def utilisateur_compte_create(request):
+def compte_create(request):
     if request.method == "POST":
         form = UtilisateurCompteForm(request.POST)
 
@@ -129,10 +139,26 @@ def utilisateur_compte_create(request):
 
     return render(
         request,
-        "account_management/utilisateur_compte_form.html",
+        "account_management/utilisateur_form.html",
         {
             "form": form,
             "titre": "Créer un utilisateur",
             "sous_titre": "Créer un utilisateur et son compte",
+        },
+    )
+
+@login_required
+def mon_profil(request):
+    compte = get_object_or_404(
+        Compte.objects.select_related("utilisateur"),
+        utilisateur=request.user,
+    )
+    return render(
+        request,
+        "account_management/profil.html",
+        {
+            "compte": compte,
+            "titre": "Mon profil",
+            "sous_titre": "Informations de mon compte",
         },
     )

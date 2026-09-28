@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Compte
 
@@ -8,6 +9,22 @@ from .models import Compte
 User = get_user_model()
 
 
+class LoginForm(AuthenticationForm):
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
+
+        compte = getattr(user, "compte", None)
+        if compte is None:  # ex. superuser sans Compte
+            return
+
+        compte.verifier_expiration()
+        if compte.expire or compte.statut != Compte.Statut.ACTIF:
+            raise forms.ValidationError(
+                "Ce compte est désactivé ou expiré.",
+                code="compte_inactif",
+            )
+
+        
 class CompteForm(forms.ModelForm):
 
     mot_de_passe = forms.CharField(

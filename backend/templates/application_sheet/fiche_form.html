@@ -1,208 +1,36 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}{{ titre }} – Plateforme DSI ICOSNET{% endblock %}
+{% block title %}{{ titre }} – ICOSNET DSI{% endblock %}
 {% block page_title %}{{ titre }}{% endblock %}
 {% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_fiches_new %}active{% endblock %}
 
-{% block nav_fiches %}{% if mode == 'creer' %}active{% endif %}{% endblock %}
-
-{% block extra_style %}
-  .form-container { max-width: 860px; }
-  .step-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
-  .step { display: flex; align-items: center; gap: 8px; }
-  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
-  .step-num.active { background: #2d5be3; color: #fff; box-shadow: 0 3px 8px rgba(45,91,227,.3); }
-  .step-num.done { background: #38a169; color: #fff; }
-  .step-num.pending { background: #f0f4fb; color: #a0aec0; }
-  .step-text { font-size: .78rem; font-weight: 500; color: #718096; }
-  .step-text.active { color: #2d5be3; font-weight: 600; }
-  .step-sep { width: 24px; height: 2px; background: #e8edf5; border-radius: 1px; }
-  .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-top: 24px; border-top: 1px solid #f0f4fb; margin-top: 8px; }
-  .required-mark { color: #e53e3e; margin-left: 2px; }
-  .field-error { font-size: .75rem; color: #c53030; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+{% block topbar_action %}
+  <a href="{% url 'application_sheet:liste' %}" class="btn-secondary">Annuler</a>
 {% endblock %}
 
 {% block content %}
 
-<!-- Fil d'ariane -->
-<nav style="display:flex; align-items:center; gap:8px; font-size:.78rem; color:#a0aec0; margin-bottom:20px;" class="fade-in">
-  <a href="{% url 'dashboard:home' %}" style="color:#a0aec0; text-decoration:none;">Tableau de bord</a>
-  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
-  <a href="{% url 'application_sheet:liste' %}" style="color:#a0aec0; text-decoration:none;">Fiches applicatives</a>
-  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round"/></svg>
-  <span style="color:#2d5be3; font-weight:500;">{% if mode == 'creer' %}Nouvelle fiche{% else %}Modifier{% endif %}</span>
-</nav>
+  <form method="post" novalidate>
+    {% include "application_sheet/fiche_form_sections.html" %}
 
-<div class="form-container">
-
-  <div class="page-header fade-in">
-    <div class="page-header-left">
-      <h1>{{ titre }}</h1>
-      <p>{{ sous_titre }}</p>
-    </div>
-  </div>
-
-  <!-- Indicateur d'étapes -->
-  <div class="step-indicator fade-in">
-    <div class="step">
-      <div class="step-num active">1</div>
-      <span class="step-text active">Informations générales</span>
-    </div>
-    <div class="step-sep"></div>
-    <div class="step">
-      <div class="step-num pending">2</div>
-      <span class="step-text">Infrastructure</span>
-    </div>
-    <div class="step-sep"></div>
-    <div class="step">
-      <div class="step-num pending">3</div>
-      <span class="step-text">Contrat</span>
-    </div>
-    <div class="step-sep"></div>
-    <div class="step">
-      <div class="step-num pending">4</div>
-      <span class="step-text">Développement</span>
-    </div>
-    <div class="step-sep"></div>
-    <div class="step">
-      <div class="step-num pending">5</div>
-      <span class="step-text">Accès & Stockage</span>
-    </div>
-  </div>
-
-  <!-- Formulaire -->
-  <form method="post" action="" novalidate>
-    {% csrf_token %}
-
-    <!-- Erreurs globales -->
-    {% if form.non_field_errors %}
-      <div class="msg-error" style="margin-bottom:20px;">
-        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-      </div>
-    {% endif %}
-
-    <!-- Section : Identification -->
-    <div class="form-card fade-in delay-1" style="margin-bottom:20px;">
-      <div class="form-section-title">
-        <svg width="16" height="16" fill="none" stroke="#2d5be3" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:8px;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-        Identification de l'application
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="{{ form.nom_application.id_for_label }}">
-            Nom de l'application <span class="required-mark">*</span>
-          </label>
-          {{ form.nom_application }}
-          {% if form.nom_application.errors %}
-            <div class="field-error">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-              {{ form.nom_application.errors.0 }}
-            </div>
-          {% endif %}
-        </div>
-        <div class="form-group">
-          <label for="{{ form.code_application.id_for_label }}">
-            Code application <span class="required-mark">*</span>
-          </label>
-          {{ form.code_application }}
-          {% if form.code_application.errors %}
-            <div class="field-error">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/></svg>
-              {{ form.code_application.errors.0 }}
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Section : Classification -->
-    <div class="form-card fade-in delay-2" style="margin-bottom:20px;">
-      <div class="form-section-title">
-        <svg width="16" height="16" fill="none" stroke="#2d5be3" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:8px;vertical-align:middle;"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round"/><path d="M22 4L12 14.01l-3-3" stroke-linecap="round"/></svg>
-        Classification et criticité
-      </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="{{ form.domaine_fonctionnel.id_for_label }}">
-            Domaine fonctionnel <span class="required-mark">*</span>
-          </label>
-          {{ form.domaine_fonctionnel }}
-          {% if form.domaine_fonctionnel.errors %}
-            <div class="field-error">{{ form.domaine_fonctionnel.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <div class="form-group">
-          <label for="{{ form.criticite.id_for_label }}">
-            Criticité <span class="required-mark">*</span>
-          </label>
-          {{ form.criticite }}
-          {% if form.criticite.errors %}
-            <div class="field-error">{{ form.criticite.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <div class="form-group">
-          <label for="{{ form.statut.id_for_label }}">Statut</label>
-          {{ form.statut }}
-          {% if form.statut.errors %}
-            <div class="field-error">{{ form.statut.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Section : Description -->
-    <div class="form-card fade-in delay-3" style="margin-bottom:24px;">
-      <div class="form-section-title">
-        <svg width="16" height="16" fill="none" stroke="#2d5be3" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:8px;vertical-align:middle;"><path d="M3 7h18M3 12h18M3 17h12" stroke-linecap="round"/></svg>
-        Description fonctionnelle
-      </div>
-      <div class="form-group">
-        <label for="{{ form.description.id_for_label }}">
-          Description <span class="required-mark">*</span>
-        </label>
-        {{ form.description }}
-        {% if form.description.errors %}
-          <div class="field-error">{{ form.description.errors.0 }}</div>
-        {% endif %}
-        <div style="font-size:.72rem; color:#a0aec0; margin-top:6px;">Décrivez le rôle, les fonctionnalités et les utilisateurs de cette application.</div>
-      </div>
-    </div>
-
-    <!-- Sections verrouillées (prochaines étapes) -->
-    <div style="background:#fafbfd; border: 2px dashed #e8edf5; border-radius:14px; padding:24px; text-align:center; margin-bottom:24px; color:#a0aec0;" class="fade-in delay-4">
-      <svg width="36" height="36" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px;">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke-linecap="round"/>
-      </svg>
-      <div style="font-size:.85rem; font-weight:600; color:#718096;">Infrastructure, Contrat, Développement, Accès & Stockage</div>
-      <div style="font-size:.78rem; margin-top:4px;">Ces sections seront disponibles après enregistrement de cette étape.</div>
-    </div>
-
-    <!-- Actions -->
-    <div class="form-actions fade-in">
-      <a href="{% url 'application_sheet:liste' %}" class="btn-secondary">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Annuler
-      </a>
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M17 21v-8H7v8M7 3v5h8" stroke-linecap="round"/>
-        </svg>
-        {% if mode == 'creer' %}Enregistrer la fiche{% else %}Sauvegarder les modifications{% endif %}
+    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+      <a href="{% url 'application_sheet:liste' %}" class="btn-secondary">Annuler</a>
+      <button type="submit" class="btn-submit">
+        <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Créer la fiche
       </button>
     </div>
-
   </form>
-
-</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Feedback visuel au submit
-  document.getElementById('submitBtn').addEventListener('click', function() {
-    this.style.opacity = '0.8';
-  });
+  // Applique le style visuel commun (form-input) aux champs générés par Django,
+  // sans avoir à modifier les widgets déclarés dans forms.py.
+  document.querySelectorAll(
+    '.form-card input:not([type=checkbox]):not([type=radio]), .form-card select, .form-card textarea'
+  ).forEach(el => el.classList.add('form-input'));
 </script>
 {% endblock %}

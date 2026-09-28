@@ -1,27 +1,13 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Fiches applicatives – Plateforme DSI ICOSNET{% endblock %}
+{% block title %}Fiches applicatives – ICOSNET DSI{% endblock %}
 {% block page_title %}Fiches applicatives{% endblock %}
-{% block page_sub %}Liste de toutes les applications du parc applicatif{% endblock %}
-
+{% block page_sub %}Gestion et suivi des applications de la DSI{% endblock %}
 {% block nav_fiches %}active{% endblock %}
-
-{% block extra_style %}
-  .filters-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .filter-select { padding: 8px 14px; border: 1.5px solid #e8edf5; border-radius: 8px; font-size: .8rem; color: #4a5568; background: #fff; font-family: 'Poppins', sans-serif; outline: none; cursor: pointer; transition: border-color .2s; }
-  .filter-select:focus { border-color: #2d5be3; }
-  .results-count { font-size: .8rem; color: #a0aec0; margin-left: auto; white-space: nowrap; }
-  .app-name-link { font-weight: 600; color: #0f1e45; font-size: .85rem; text-decoration: none; transition: color .15s; }
-  .app-name-link:hover { color: #2d5be3; }
-  .crit-badge { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: .72rem; font-weight: 600; }
-  .crit-critique { background: #fff5f5; color: #c53030; }
-  .crit-majeure  { background: #fffaf0; color: #b7791f; }
-  .crit-mineure  { background: #f0fff4; color: #276749; }
-{% endblock %}
 
 {% block topbar_action %}
   <a href="{% url 'application_sheet:creer' %}" class="btn-upload">
-    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+    <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
       <path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     Nouvelle fiche
@@ -30,148 +16,101 @@
 
 {% block content %}
 
-<div class="page-header fade-in">
-  <div class="page-header-left">
-    <h1>Fiches applicatives</h1>
-    <p>{{ total }} application{{ total|pluralize }} enregistrée{{ total|pluralize }} dans le parc applicatif</p>
-  </div>
-</div>
-
-<!-- Barre de recherche et filtres -->
-<form method="get" action="">
   <div class="search-bar-card fade-in">
     <div class="search-wrap">
-      <svg width="16" height="16" fill="none" stroke="#a0aec0" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      <svg width="16" height="16" fill="none" stroke="#a0aec0" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
       </svg>
-      <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Rechercher par nom ou code application…" id="searchInput">
+      <input type="text" id="ficheSearch" class="search-input" placeholder="Rechercher une application, un code, un ingénieur...">
     </div>
-
     <div class="bar-separator"></div>
-
-    <div class="filters-row">
-      <select name="statut" class="filter-select" onchange="this.form.submit()">
-        <option value="">Tous les statuts</option>
-        <option value="BROUILLON" {% if filtre_statut == 'BROUILLON' %}selected{% endif %}>Brouillon</option>
-        <option value="EN_ATTENTE" {% if filtre_statut == 'EN_ATTENTE' %}selected{% endif %}>En attente</option>
-        <option value="EN_VALIDATION" {% if filtre_statut == 'EN_VALIDATION' %}selected{% endif %}>En validation</option>
-        <option value="VALIDEE" {% if filtre_statut == 'VALIDEE' %}selected{% endif %}>Validée</option>
-        <option value="REFUSEE" {% if filtre_statut == 'REFUSEE' %}selected{% endif %}>Refusée</option>
-      </select>
-
-      <select name="domaine" class="filter-select" onchange="this.form.submit()">
-        <option value="">Tous les domaines</option>
-        <option value="RH" {% if filtre_domaine == 'RH' %}selected{% endif %}>RH</option>
-        <option value="COMMERCIAL" {% if filtre_domaine == 'COMMERCIAL' %}selected{% endif %}>Commercial</option>
-        <option value="TECHNIQUE" {% if filtre_domaine == 'TECHNIQUE' %}selected{% endif %}>Technique / Telco</option>
-        <option value="MIDDLEWARE" {% if filtre_domaine == 'MIDDLEWARE' %}selected{% endif %}>Middleware</option>
-        <option value="BI" {% if filtre_domaine == 'BI' %}selected{% endif %}>Décisionnel</option>
-      </select>
-
-      {% if query or filtre_statut or filtre_domaine %}
-        <a href="{% url 'application_sheet:liste' %}" class="bar-btn" title="Effacer les filtres">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
-          Réinitialiser
-        </a>
-      {% endif %}
-    </div>
-
-    <button type="submit" class="bar-btn bar-btn-search">
-      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
-      </svg>
-      Rechercher
-    </button>
-
-    <span class="results-count">{{ fiches|length }} résultat{{ fiches|length|pluralize }}</span>
+    <span style="font-size:.78rem; color:#a0aec0;">{{ fiches|length }} fiche{{ fiches|length|pluralize }}</span>
   </div>
-</form>
 
-<!-- Tableau des fiches -->
-<div class="table-wrap fade-in">
-  <table>
-    <thead>
-      <tr>
-        <th>Application</th>
-        <th>Code</th>
-        <th>Domaine</th>
-        <th>Criticité</th>
-        <th>Statut</th>
-        <th>Date création</th>
-        <th>Ingénieur</th>
-        <th style="text-align:center;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for fiche in fiches %}
-      <tr>
-        <td>
-          <a href="{% url 'application_sheet:detail' fiche.id %}" class="app-name-link">{{ fiche.nom_application }}</a>
-        </td>
-        <td>
-          <code style="background:#f0f4fb; color:#4a5568; padding:2px 8px; border-radius:6px; font-size:.78rem;">{{ fiche.code_application }}</code>
-        </td>
-        <td>
-          {% if fiche.domaine_fonctionnel == 'RH' %}<span class="pill" style="background:#fce7f3;color:#9d174d;">RH</span>
-          {% elif fiche.domaine_fonctionnel == 'COMMERCIAL' %}<span class="pill" style="background:#eef2ff;color:#2d5be3;">Commercial</span>
-          {% elif fiche.domaine_fonctionnel == 'TECHNIQUE' %}<span class="pill" style="background:#f0fff4;color:#276749;">Technique</span>
-          {% elif fiche.domaine_fonctionnel == 'MIDDLEWARE' %}<span class="pill" style="background:#fffaf0;color:#b7791f;">Middleware</span>
-          {% elif fiche.domaine_fonctionnel == 'BI' %}<span class="pill" style="background:#f5f3ff;color:#5b21b6;">BI</span>
-          {% else %}<span class="pill" style="background:#f0f4fb;color:#718096;">{{ fiche.domaine_fonctionnel }}</span>
-          {% endif %}
-        </td>
-        <td>
-          {% if fiche.criticite == 'CRITIQUE' %}<span class="crit-badge crit-critique">Critique</span>
-          {% elif fiche.criticite == 'MAJEURE' %}<span class="crit-badge crit-majeure">Majeure</span>
-          {% elif fiche.criticite == 'MINEURE' %}<span class="crit-badge crit-mineure">Mineure</span>
-          {% endif %}
-        </td>
-        <td>
-          {% if fiche.statut == 'VALIDEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Validée</span>
-          {% elif fiche.statut == 'EN_ATTENTE' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>
-          {% elif fiche.statut == 'BROUILLON' %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Brouillon</span>
-          {% elif fiche.statut == 'REFUSEE' %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>
-          {% elif fiche.statut == 'EN_VALIDATION' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>En validation</span>
-          {% endif %}
-        </td>
-        <td style="font-size:.8rem; color:#a0aec0;">{{ fiche.date_creation }}</td>
-        <td style="font-size:.82rem; color:#4a5568;">{{ fiche.ingenieur }}</td>
-        <td>
-          <div style="display:flex; gap:6px; justify-content:center;">
-            <a href="{% url 'application_sheet:detail' fiche.id %}" class="icon-btn icon-btn-view" title="Voir le détail">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg>
-            </a>
-            <a href="{% url 'application_sheet:modifier' fiche.id %}" class="icon-btn icon-btn-edit" title="Modifier">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/></svg>
-            </a>
-          </div>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8" style="text-align:center; padding:60px; color:#a0aec0;">
-          <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1.2" viewBox="0 0 24 24" style="display:block;margin:0 auto 16px;">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div style="font-size:.9rem; font-weight:500; color:#718096; margin-bottom:8px;">Aucune fiche trouvée</div>
-          <div style="font-size:.8rem; margin-bottom:20px;">
-            {% if query or filtre_statut or filtre_domaine %}
-              Essayez de modifier vos critères de recherche.
-            {% else %}
-              Commencez par créer votre première fiche applicative.
-            {% endif %}
-          </div>
-          {% if not query and not filtre_statut and not filtre_domaine %}
-            <a href="{% url 'application_sheet:creer' %}" class="btn-upload" style="display:inline-flex;">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Créer la première fiche
-            </a>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+  <div class="table-wrap fade-in delay-1">
+    <table>
+      <thead>
+        <tr>
+          <th>Application</th>
+          <th>Domaine fonctionnel</th>
+          <th>Criticité</th>
+          <th>Statut</th>
+          <th>Ingénieur</th>
+          <th>Date de création</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ficheTableBody">
+        {% for fiche in fiches %}
+          <tr data-search="{{ fiche.nom_application|lower }} {{ fiche.code_application|lower }} {{ fiche.ingenieur|lower }}">
+            <td>
+              <div style="font-weight:600; color:#0f1e45;">{{ fiche.nom_application }}</div>
+              <div style="font-size:.72rem; color:#a0aec0;">{{ fiche.code_application }}</div>
+            </td>
+            <td>{{ fiche.get_domaine_fonctionnel_display }}</td>
+            <td>
+              {% if fiche.criticite == "CRITIQUE" %}
+                <span class="badge badge-red"><span class="badge-dot dot-red"></span>Critique</span>
+              {% elif fiche.criticite == "MAJEURE" %}
+                <span class="badge badge-orange"><span class="badge-dot dot-orange"></span>Majeure</span>
+              {% else %}
+                <span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Mineure</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if fiche.statut == "VALIDEE" %}
+                <span class="badge badge-green"><span class="badge-dot dot-green"></span>Validée</span>
+              {% elif fiche.statut == "REFUSEE" %}
+                <span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>
+              {% elif fiche.statut == "EN_VALIDATION" %}
+                <span class="badge badge-blue"><span class="badge-dot dot-blue"></span>En validation</span>
+              {% elif fiche.statut == "EN_ATTENTE" %}
+                <span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>
+              {% else %}
+                <span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Brouillon</span>
+              {% endif %}
+            </td>
+            <td>{{ fiche.ingenieur }}</td>
+            <td>{{ fiche.date_creation|date:"d/m/Y H:i" }}</td>
+            <td>
+              <div style="display:flex; gap:6px; justify-content:flex-end;">
+                <a href="{% url 'application_sheet:detail' pk=fiche.pk %}" class="icon-btn icon-btn-view" title="Voir">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></svg>
+                </a>
+                <a href="{% url 'application_sheet:modifier' pk=fiche.pk %}" class="icon-btn icon-btn-edit" title="Modifier">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <a href="{% url 'application_sheet:supprimer' pk=fiche.pk %}" class="icon-btn icon-btn-delete" title="Supprimer">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:40px; color:#a0aec0;">
+              Aucune fiche applicative pour le moment.
+              <a href="{% url 'application_sheet:creer' %}" style="color:#2d5be3; font-weight:600;">Créer la première fiche</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const ficheSearch = document.getElementById('ficheSearch');
+  if (ficheSearch) {
+    ficheSearch.addEventListener('input', function () {
+      const term = this.value.trim().toLowerCase();
+      document.querySelectorAll('#ficheTableBody tr[data-search]').forEach(row => {
+        row.style.display = row.dataset.search.includes(term) ? '' : 'none';
+      });
+    });
+  }
+</script>
 {% endblock %}
