@@ -9,7 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .notifications import notifier_invitation
-from .permissions import est_gestionnaire, gestionnaire_required
+from .permissions import est_gestionnaire, gestionnaire_required, reunion_permission_required
 
 from .forms import (
     LieuForm,
@@ -142,7 +142,9 @@ def reunion_list(request):
 
     if not est_gestionnaire(request.user):
         reunions = reunions.filter(
-            pk__in=Participation.objects.filter(utilisateur=request.user).values("reunion")
+            pk__in=Participation.objects.filter(
+                utilisateur=request.user
+            ).values("reunion")
         )
 
 
@@ -157,13 +159,20 @@ def reunion_list(request):
         },
     )
 
-@gestionnaire_required
+@reunion_permission_required
 def reunion_create(request):
     if request.method == "POST":
         form = ReunionForm(request.POST)
 
         if form.is_valid():
             reunion = form.save()
+
+            Participation.objects.create(
+                reunion=reunion,
+                utilisateur=request.user,
+                participant=nom_complet(request.user),
+                role="Organisateur",
+            )
 
             messages.success(
                 request,
@@ -212,7 +221,7 @@ def reunion_detail(request, pk):
         },
     )
 
-@gestionnaire_required
+@reunion_permission_required
 def reunion_update(request, pk):
     reunion = get_object_or_404(
         Reunion,
@@ -283,7 +292,7 @@ def reunion_delete(request, pk):
 # =========================================================
 # PARTICIPATIONS
 # =========================================================
-@gestionnaire_required
+@reunion_permission_required
 def participation_create(request, reunion_pk):
     reunion = get_object_or_404(Reunion.objects.select_related("lieu"), pk=reunion_pk)
 
