@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes invitations – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}Mes invitations{% endblock %}
+{% block page_sub %}Réunions auxquelles vous êtes invité(e){% endblock %}
+{% block nav_invitations %}active{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>Mes invitations</h1>
+    <p>{{ participations|length }} réunion{{ participations|length|pluralize }}</p>
+  </div>
+</div>
+
+<div class="table-wrap fade-in">
+  <table>
+    <thead>
+      <tr>
+        <th>Réunion</th><th>Date</th><th>Horaire</th><th>Lieu</th><th>Ma réponse</th>
+        <th style="text-align:center;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in participations %}
+      <tr>
+        <td><a href="{% url 'meetings:reunion_detail' p.reunion.id %}" style="font-weight:600; color:#0f1e45; text-decoration:none;">{{ p.reunion.objet }}</a></td>
+        <td style="white-space:nowrap;">{{ p.reunion.date|date:"d/m/Y" }}</td>
+        <td style="white-space:nowrap; font-size:.8rem; color:#718096;">{{ p.reunion.heure_debut|time:"H:i" }} – {{ p.reunion.heure_fin|time:"H:i" }}</td>
+        <td style="font-size:.82rem;">{% if p.reunion.lieu %}{{ p.reunion.lieu.nom_salle }}{% else %}<span style="color:#a0aec0;">À définir</span>{% endif %}</td>
+        <td>
+          {% if p.statut == 'EN_ATTENTE' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>
+          {% elif p.statut == 'CONFIRMEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Confirmée</span>
+          {% else %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex; gap:6px; justify-content:center;">
+            {% if p.statut != 'CONFIRMEE' %}
+            <form method="post" action="{% url 'meetings:participation_confirmer' p.id %}" style="margin:0;">
+              {% csrf_token %}<input type="hidden" name="next" value="{% url 'meetings:mes_invitations' %}">
+              <button type="submit" class="btn-submit" style="padding:7px 14px; font-size:.78rem;">Confirmer</button>
+            </form>
+            {% endif %}
+            {% if p.statut != 'REFUSEE' %}
+            <form method="post" action="{% url 'meetings:participation_refuser' p.id %}" style="margin:0;">
+              {% csrf_token %}<input type="hidden" name="next" value="{% url 'meetings:mes_invitations' %}">
+              <button type="submit" class="btn-secondary" style="padding:7px 14px; font-size:.78rem; color:#c53030;">Refuser</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center; padding:48px; color:#a0aec0;">Vous n'avez aucune invitation.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

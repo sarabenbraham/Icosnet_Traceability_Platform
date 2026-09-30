@@ -1,289 +1,1079 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Tableau de bord – Plateforme DSI ICOSNET{% endblock %}
-
-{% block page_title %}Tableau de bord{% endblock %}
-{% block page_sub %}Vue d'ensemble de la plateforme de traçabilité{% endblock %}
-
-{% block nav_dashboard %}active{% endblock %}
-
-{% block extra_style %}
-  .welcome-banner {
-    background: linear-gradient(135deg, #1e3f8a 0%, #0f1e45 100%);
-    border-radius: 18px;
-    padding: 28px 32px;
-    margin-bottom: 28px;
-    position: relative;
-    overflow: hidden;
-  }
-  .welcome-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .welcome-text { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
-  .welcome-icon { width: 50px; height: 50px; border-radius: 14px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .welcome-text h2 { font-size: 1.35rem; font-weight: 700; color: #fff; font-family: 'Quicksand', sans-serif; }
-  .welcome-text p  { font-size: .88rem; color: rgba(255,255,255,.6); margin-top: 4px; font-family: 'Quicksand', sans-serif; }
-  .welcome-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); color: rgba(255,255,255,.8); font-size: .72rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; margin-top: 10px; border: 1px solid rgba(255,255,255,.15); letter-spacing: .04em; }
-
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: #fff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #e8edf5; box-shadow: 0 2px 10px rgba(0,0,0,.02); transition: transform .2s, box-shadow .2s; }
-  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,30,69,.08); }
-  .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-  .stat-num  { font-size: 2.1rem; font-weight: 700; color: #0f1e45; line-height: 1; font-family: 'Quicksand', sans-serif; }
-  .stat-label { font-size: .75rem; color: #718096; font-weight: 400; }
-  .stat-sub   { font-size: .68rem; color: #a0aec0; margin-top: 2px; }
-
-  .dash-grid { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
-  .section-title { font-size: 1rem; font-weight: 700; color: #0f1e45; font-family: 'Quicksand', sans-serif; margin-bottom: 14px; }
-
-  .domain-card { background: #fff; border-radius: 16px; border: 1px solid #e8edf5; padding: 20px; }
-  .domain-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f4fb; }
-  .domain-item:last-child { border-bottom: none; }
-  .domain-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .domain-name { font-size: .82rem; color: #2d3748; flex: 1; font-weight: 500; }
-  .domain-count { font-size: .78rem; font-weight: 700; color: #0f1e45; background: #f0f4fb; padding: 3px 10px; border-radius: 999px; }
-
-  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
-  .pill-rh { background: #fce7f3; color: #9d174d; }
-  .pill-com { background: #eef2ff; color: #2d5be3; }
-  .pill-tech { background: #f0fff4; color: #276749; }
-  .pill-mid { background: #fffaf0; color: #b7791f; }
-  .pill-bi { background: #f5f3ff; color: #5b21b6; }
-
-  @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+{% block title %}
+Tableau de bord – Plateforme DSI ICOSNET
 {% endblock %}
 
+{% block page_title %}
+Tableau de bord
+{% endblock %}
+
+{% block page_sub %}
+Vue d'ensemble de votre activité
+{% endblock %}
+
+{% block nav_dashboard %}
+active
+{% endblock %}
+
+
+{% block extra_style %}
+
+<style>
+/* =========================================================
+   DASHBOARD — BANNIÈRE DE BIENVENUE
+   ========================================================= */
+
+.welcome-banner {
+    position: relative;
+    overflow: hidden;
+    min-height: 150px;
+    border-radius: 18px;
+    padding: 26px 30px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #173b91 0%, #2858c7 100%);
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.12);
+}
+
+.welcome-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.welcome-text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.welcome-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    color:  #2858c7;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+}
+
+.welcome-text h2 {
+    margin: 0;
+    color:  #2858c7;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.welcome-text p {
+    margin: 5px 0 0;
+    color:  #2858c7;
+    font-size: .82rem;
+}
+
+
+/* =========================================================
+   STATISTIQUES
+   ========================================================= */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 18px;
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 16px;
+    box-shadow: 0 3px 12px rgba(15, 30, 69, 0.03);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 30, 69, 0.07);
+}
+
+.stat-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+}
+
+.stat-num {
+    font-size: 1.45rem;
+    line-height: 1.1;
+    font-weight: 700;
+    color: #0f1e45;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.stat-label {
+    margin-top: 4px;
+    font-size: .76rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.stat-sub {
+    margin-top: 2px;
+    font-size: .65rem;
+    color: #a0aec0;
+}
+
+
+/* =========================================================
+   DASHBOARD — RÔLE, SECTIONS, CARTES
+   ========================================================= */
+
+.dashboard-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.15);
+    color:  #2858c7;
+    font-size: .72rem;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.dashboard-role-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: color:  #2858c7;;
+}
+
+.dashboard-section {
+    margin-top: 28px;
+}
+
+.dashboard-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f1e45;
+    font-family: 'Quicksand', sans-serif;
+    margin-bottom: 14px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.dashboard-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8edf5;
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid color:  #2858c7;;
+}
+
+.dashboard-card-title {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #0f1e45;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.dashboard-card-sub {
+    font-size: .72rem;
+    color: #a0aec0;
+    margin-top: 2px;
+}
+
+.dashboard-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.dashboard-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid #e8edf5;
+    background: #fff;
+    text-decoration: none;
+    color: #2d3748;
+    transition: all .2s ease;
+}
+
+.dashboard-action:hover {
+    background: #f7f9fc;
+    border-color: #d8e1f0;
+    transform: translateY(-1px);
+}
+
+.dashboard-action-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dashboard-action-title {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.dashboard-action-sub {
+    font-size: .68rem;
+    color: #a0aec0;
+    margin-top: 2px;
+}
+
+.dashboard-empty {
+    text-align: center;
+    padding: 35px 20px;
+    color: #a0aec0;
+    font-size: .8rem;
+}
+
+
+/* =========================================================
+   TABLEAUX
+   ========================================================= */
+
+.dashboard-table-wrap {
+    overflow-x: auto;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th {
+    background: #f7f9fc;
+    padding: 11px 16px;
+    font-size: .65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #718096;
+    text-align: left;
+    border-bottom: 1px solid #e8edf5;
+}
+
+.dashboard-table td {
+    padding: 13px 16px;
+    font-size: .78rem;
+    color: #2d3748;
+    border-bottom: 1px solid #f0f4fb;
+    vertical-align: middle;
+}
+
+.dashboard-table tbody tr:hover {
+    background: #f7f9fc;
+}
+
+.dashboard-app-link {
+    color: #0f1e45;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dashboard-app-link:hover {
+    color: #2d5be3;
+}
+
+.dashboard-code {
+    font-family: monospace;
+    color: #718096;
+    font-size: .72rem;
+}
+
+
+/* =========================================================
+   STATUTS
+   ========================================================= */
+
+.dashboard-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: .68rem;
+    font-weight: 600;
+}
+
+.dashboard-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.status-green {
+    background: #f0fff4;
+    color: #276749;
+}
+
+.status-green .dashboard-status-dot {
+    background: #38a169;
+}
+
+.status-orange {
+    background: #fffaf0;
+    color: #b7791f;
+}
+
+.status-orange .dashboard-status-dot {
+    background: #dd6b20;
+}
+
+.status-blue {
+    background: #eef2ff;
+    color: #2d5be3;
+}
+
+.status-blue .dashboard-status-dot {
+    background: #2d5be3;
+}
+
+.status-red {
+    background: #fff5f5;
+    color: #c53030;
+}
+
+.status-red .dashboard-status-dot {
+    background: #e53e3e;
+}
+
+.status-gray {
+    background: #f7f9fc;
+    color: #718096;
+}
+
+.status-gray .dashboard-status-dot {
+    background: #a0aec0;
+}
+
+
+/* =========================================================
+   DOMAINES
+   ========================================================= */
+
+.domain-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8edf5;
+    padding: 18px 20px;
+}
+
+.domain-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0f4fb;
+}
+
+.domain-item:last-child {
+    border-bottom: none;
+}
+
+.domain-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.domain-name {
+    flex: 1;
+    font-size: .78rem;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+.domain-count {
+    font-size: .72rem;
+    font-weight: 700;
+    color: #0f1e45;
+    background: #f0f4fb;
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
+
+/* =========================================================
+   INVITATIONS
+   ========================================================= */
+
+.invitation-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f0f4fb;
+}
+
+.invitation-item:last-child {
+    border-bottom: none;
+}
+
+.invitation-title {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #0f1e45;
+}
+
+.invitation-meta {
+    font-size: .7rem;
+    color: #a0aec0;
+    margin-top: 3px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1000px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-banner {
+        padding: 22px;
+    }
+
+    .welcome-text {
+        align-items: flex-start;
+    }
+}
+</style>
+
+{% endblock %}
 
 
 {% block content %}
 
-<!-- Bannière de bienvenue -->
+<!-- BIENVENUE -->
 <div class="welcome-banner fade-in">
-  <canvas class="welcome-canvas" id="welcome-canvas"></canvas>
-  <div class="welcome-text">
-    <div class="welcome-icon">
-      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <canvas class="welcome-canvas" id="welcome-canvas"></canvas>
+    <div class="welcome-text">
+        <div class="welcome-icon">
+            <svg width="24"
+                 height="24"
+                 fill="none"
+                 stroke="#fff"
+                 stroke-width="1.8"
+                 viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M2 17l10 5 10-5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M2 12l10 5 10-5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div>
+            <h2>
+                Bonjour {{ user.first_name|default:user.username }}
+            </h2>
+            <p>
+                Voici la vue d'ensemble de votre activité sur la plateforme DSI.
+            </p>
+            <span class="dashboard-role">
+                <span class="dashboard-role-dot"></span>
+                {{ role }}
+            </span>
+        </div>
     </div>
-    <div>
-      <h2>Plateforme de traçabilité DSI</h2>
-      <p>Gérez, suivez et historisez les processus IT internes d'ICOSNET</p>
-      <div>
-        <span class="welcome-badge">
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Système de traçabilité interne
-        </span>
-        <span class="welcome-badge" style="margin-left: 8px;">
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round"/></svg>
-          Mis à jour aujourd'hui
-        </span>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- Statistiques -->
+<!-- STATISTIQUES -->
 <div class="stats-grid">
-  <div class="stat-card fade-in delay-1">
-    <div class="stat-icon" style="background:#eef2ff;">
-      <svg width="20" height="20" fill="none" stroke="#2d5be3" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <div>
-      <div class="stat-num">{{ stats.total|default:"—" }}</div>
-      <div class="stat-label">Fiches applicatives</div>
-      <div class="stat-sub">total enregistré</div>
-    </div>
-  </div>
 
-  <div class="stat-card fade-in delay-2">
-    <div class="stat-icon" style="background:#f0fff4;">
-      <svg width="20" height="20" fill="none" stroke="#38a169" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M22 4L12 14.01l-3-3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <!-- Total -->
+    <div class="stat-card fade-in delay-1">
+        <div class="stat-icon" style="background:#eef2ff;">
+            <svg width="20"
+                 height="20"
+                 fill="none"
+                 stroke="#2d5be3"
+                 stroke-width="1.8"
+                 viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M14 2v6h6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-num">
+                {{ stats.total|default:0 }}
+            </div>
+            <div class="stat-label">
+                Fiches applicatives
+            </div>
+            <div class="stat-sub">
+                visibles pour votre rôle
+            </div>
+        </div>
     </div>
-    <div>
-      <div class="stat-num" style="color:#276749;">{{ stats.validees|default:"—" }}</div>
-      <div class="stat-label">Fiches validées</div>
-      <div class="stat-sub">statut confirmé</div>
-    </div>
-  </div>
 
-  <div class="stat-card fade-in delay-3">
-    <div class="stat-icon" style="background:#fffaf0;">
-      <svg width="20" height="20" fill="none" stroke="#dd6b20" stroke-width="1.8" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round"/>
-      </svg>
+    <!-- Validées -->
+    <div class="stat-card fade-in delay-2">
+        <div class="stat-icon" style="background:#f0fff4;">
+            <svg width="20"
+                 height="20"
+                 fill="none"
+                 stroke="#38a169"
+                 stroke-width="1.8"
+                 viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M22 4L12 14.01l-3-3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-num" style="color:#276749;">
+                {{ stats.validees|default:0 }}
+            </div>
+            <div class="stat-label">
+                Fiches validées
+            </div>
+            <div class="stat-sub">
+                statut confirmé
+            </div>
+        </div>
     </div>
-    <div>
-      <div class="stat-num" style="color:#b7791f;">{{ stats.en_attente|default:"—" }}</div>
-      <div class="stat-label">En attente</div>
-      <div class="stat-sub">en cours de validation</div>
-    </div>
-  </div>
 
-  <div class="stat-card fade-in delay-4">
-    <div class="stat-icon" style="background:#f7f9fc;">
-      <svg width="20" height="20" fill="none" stroke="#718096" stroke-width="1.8" viewBox="0 0 24 24">
-        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round"/>
-      </svg>
+    <!-- En attente -->
+    <div class="stat-card fade-in delay-3">
+        <div class="stat-icon" style="background:#fffaf0;">
+            <svg width="20"
+                 height="20"
+                 fill="none"
+                 stroke="#dd6b20"
+                 stroke-width="1.8"
+                 viewBox="0 0 24 24">
+                <circle cx="12"
+                        cy="12"
+                        r="10"/>
+                <path d="M12 6v6l4 2"
+                      stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-num" style="color:#b7791f;">
+                {{ stats.en_attente|default:0 }}
+            </div>
+            <div class="stat-label">
+                À traiter
+            </div>
+            <div class="stat-sub">
+                en attente / validation
+            </div>
+        </div>
     </div>
-    <div>
-      <div class="stat-num" style="color:#718096;">{{ stats.brouillons|default:"—" }}</div>
-      <div class="stat-label">Brouillons</div>
-      <div class="stat-sub">en cours de saisie</div>
+
+    <!-- Réunions -->
+    <div class="stat-card fade-in delay-4">
+        <div class="stat-icon" style="background:#f7f9fc;">
+            <svg width="20"
+                 height="20"
+                 fill="none"
+                 stroke="#718096"
+                 stroke-width="1.8"
+                 viewBox="0 0 24 24">
+                <rect x="3"
+                      y="4"
+                      width="18"
+                      height="18"
+                      rx="2"/>
+                <path d="M16 2v4M8 2v4M3 10h18"
+                      stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-num">
+                {{ reunions_count|default:0 }}
+            </div>
+            <div class="stat-label">
+                Réunions
+            </div>
+            <div class="stat-sub">
+                enregistrées
+            </div>
+        </div>
     </div>
-  </div>
+
 </div>
 
-<!-- Tableau principal + Domaines -->
-<div class="dash-grid">
+<!-- CONTENU PRINCIPAL -->
+<div class="dashboard-grid dashboard-section">
 
-  <!-- Dernières fiches -->
-  <div>
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-      <h3 class="section-title" style="margin-bottom:0;">Dernières fiches applicatives</h3>
-      <a href="{% url 'application_sheet:liste' %}" class="btn-secondary" style="font-size:.78rem; padding:7px 14px;">
-        Voir toutes
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
+    <!-- FICHES RÉCENTES -->
+    <div>
+        <div class="dashboard-section-title">
+            {% if is_directeur %}
+                Vue globale des fiches
+            {% elif is_chef %}
+                Fiches de votre département
+            {% else %}
+                Mes fiches applicatives
+            {% endif %}
+        </div>
+        <div class="dashboard-card">
+            <div class="dashboard-card-header">
+                <div>
+                    <div class="dashboard-card-title">
+                        Fiches récentes
+                    </div>
+                    <div class="dashboard-card-sub">
+                        Dernières fiches enregistrées
+                    </div>
+                </div>
+                <a href="{% url 'application_sheet:liste' %}"
+                   class="btn-secondary"
+                   style="font-size:.72rem;">
+                    Voir toutes
+                </a>
+            </div>
+            <div class="dashboard-table-wrap">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Code</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for fiche in fiches_recentes %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'application_sheet:fiche_detail' fiche.pk %}"
+                                   class="dashboard-app-link">
+                                    {{ fiche.nom_application }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="dashboard-code">
+                                    {{ fiche.code_application|default:"—" }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if fiche.statut == "VALIDEE" %}
+                                    <span class="dashboard-status status-green">
+                                        <span class="dashboard-status-dot"></span>
+                                        Validée
+                                    </span>
+                                {% elif fiche.statut == "EN_VALIDATION" %}
+                                    <span class="dashboard-status status-blue">
+                                        <span class="dashboard-status-dot"></span>
+                                        En validation
+                                    </span>
+                                {% elif fiche.statut == "EN_ATTENTE" %}
+                                    <span class="dashboard-status status-orange">
+                                        <span class="dashboard-status-dot"></span>
+                                        En attente
+                                    </span>
+                                {% elif fiche.statut == "REFUSEE" %}
+                                    <span class="dashboard-status status-red">
+                                        <span class="dashboard-status-dot"></span>
+                                        Refusée
+                                    </span>
+                                {% else %}
+                                    <span class="dashboard-status status-gray">
+                                        <span class="dashboard-status-dot"></span>
+                                        Brouillon
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ fiche.date_creation|date:"d/m/Y" }}
+                            </td>
+                            <td style="text-align:right;">
+                                <a href="{% url 'application_sheet:fiche_detail' fiche.pk %}"
+                                   class="icon-btn icon-btn-view"
+                                   title="Consulter">
+                                    <svg width="14"
+                                         height="14"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         viewBox="0 0 24 24">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                              stroke-linecap="round"/>
+                                        <circle cx="12"
+                                                cy="12"
+                                                r="3"/>
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="dashboard-empty">
+                                    Aucune fiche applicative à afficher.
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="table-wrap fade-in">
-      <table>
-        <thead>
-          <tr>
-            <th>Application</th>
-            <th>Domaine</th>
-            <th>Criticité</th>
-            <th>Statut</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for fiche in fiches_recentes %}
-          <tr>
-            <td>
-              <div style="font-weight:600; color:#0f1e45; font-size:.85rem;">{{ fiche.nom_application }}</div>
-              <div style="font-size:.72rem; color:#a0aec0; margin-top:2px;">{{ fiche.code_application }}</div>
-            </td>
-            <td>
-              {% if fiche.domaine == 'RH' %}<span class="pill pill-rh">RH</span>
-              {% elif fiche.domaine == 'Commercial' %}<span class="pill pill-com">Commercial</span>
-              {% elif 'Technique' in fiche.domaine %}<span class="pill pill-tech">Technique</span>
-              {% elif fiche.domaine == 'Middleware' %}<span class="pill pill-mid">Middleware</span>
-              {% elif 'cisionnel' in fiche.domaine %}<span class="pill pill-bi">BI</span>
-              {% else %}<span class="pill" style="background:#f0f4fb;color:#718096;">{{ fiche.domaine }}</span>
-              {% endif %}
-            </td>
-            <td style="font-size:.82rem; color:#4a5568;">{{ fiche.criticite }}</td>
-            <td>
-              {% if fiche.statut == 'VALIDEE' %}
-                <span class="badge badge-green"><span class="badge-dot dot-green"></span>Validée</span>
-              {% elif fiche.statut == 'EN_ATTENTE' %}
-                <span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>
-              {% elif fiche.statut == 'BROUILLON' %}
-                <span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Brouillon</span>
-              {% elif fiche.statut == 'REFUSEE' %}
-                <span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>
-              {% elif fiche.statut == 'EN_VALIDATION' %}
-                <span class="badge badge-blue"><span class="badge-dot dot-blue"></span>En validation</span>
-              {% endif %}
-            </td>
-            <td style="font-size:.8rem; color:#a0aec0;">{{ fiche.date }}</td>
-            <td>
-              {% if fiche.id %}
-              <a href="/fiches/{{ fiche.id }}/" class="icon-btn icon-btn-view" title="Voir la fiche">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg>
-              </a>
-              {% else %}
-              <a href="{% url 'application_sheet:liste' %}" class="icon-btn icon-btn-view" title="Voir">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg>
-              </a>
-              {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" style="text-align:center; padding:40px; color:#a0aec0; font-size:.85rem;">
-              Aucune fiche applicative enregistrée pour le moment.
-              <br><a href="{% url 'application_sheet:creer' %}" style="color:#2d5be3; font-weight:600;">Créer la première fiche →</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- Répartition par domaine -->
-  <div>
-    <h3 class="section-title">Répartition par domaine</h3>
-    <div class="domain-card fade-in">
-      <div class="domain-item">
-        <div class="domain-dot" style="background:#9d174d;"></div>
-        <span class="domain-name">RH</span>
-        <span class="domain-count">{{ domaines_counts.RH|default:0 }}</span>
-      </div>
-      <div class="domain-item">
-        <div class="domain-dot" style="background:#2d5be3;"></div>
-        <span class="domain-name">Commercial</span>
-        <span class="domain-count">{{ domaines_counts.Commercial|default:0 }}</span>
-      </div>
-      <div class="domain-item">
-        <div class="domain-dot" style="background:#38a169;"></div>
-        <span class="domain-name">Technique / Telco</span>
-        <span class="domain-count">{{ domaines_counts.Technique|default:0 }}</span>
-      </div>
-      <div class="domain-item">
-        <div class="domain-dot" style="background:#dd6b20;"></div>
-        <span class="domain-name">Middleware</span>
-        <span class="domain-count">{{ domaines_counts.Middleware|default:0 }}</span>
-      </div>
-      <div class="domain-item">
-        <div class="domain-dot" style="background:#5b21b6;"></div>
-        <span class="domain-name">Décisionnel (BI)</span>
-        <span class="domain-count">{{ domaines_counts.BI|default:0 }}</span>
-      </div>
+    <!-- ACTIONS RAPIDES -->
+    <div>
+        <div class="dashboard-section-title">
+            Actions rapides
+        </div>
+        <div class="dashboard-card">
+            <div class="dashboard-actions">
+
+                {% if is_ingenieur %}
+                    <a href="{% url 'application_sheet:creer' %}"
+                       class="dashboard-action">
+                        <div class="dashboard-action-icon"
+                             style="background:#eef2ff; color:#2d5be3;">
+                            <svg width="17"
+                                 height="17"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 viewBox="0 0 24 24">
+                                <path d="M12 5v14M5 12h14"
+                                      stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="dashboard-action-title">
+                                Nouvelle fiche
+                            </div>
+                            <div class="dashboard-action-sub">
+                                Créer une fiche applicative
+                            </div>
+                        </div>
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'application_sheet:liste' %}"
+                   class="dashboard-action">
+                    <div class="dashboard-action-icon"
+                         style="background:#f0fff4; color:#276749;">
+                        <svg width="17"
+                             height="17"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             viewBox="0 0 24 24">
+                            <path d="M4 6h16M4 12h16M4 18h16"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="dashboard-action-title">
+                            Fiches applicatives
+                        </div>
+                        <div class="dashboard-action-sub">
+                            Consulter les fiches
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{% url 'meetings:reunion_list' %}"
+                   class="dashboard-action">
+                    <div class="dashboard-action-icon"
+                         style="background:#fffaf0; color:#b7791f;">
+                        <svg width="17"
+                             height="17"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             viewBox="0 0 24 24">
+                            <rect x="3"
+                                  y="4"
+                                  width="18"
+                                  height="18"
+                                  rx="2"/>
+                            <path d="M16 2v4M8 2v4M3 10h18"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="dashboard-action-title">
+                            Réunions
+                        </div>
+                        <div class="dashboard-action-sub">
+                            Consulter les réunions
+                        </div>
+                    </div>
+                </a>
+
+                {% if is_directeur or is_chef %}
+                    <a href="{% url 'account_management:liste' %}"
+                       class="dashboard-action">
+                        <div class="dashboard-action-icon"
+                             style="background:#f7f9fc; color:#718096;">
+                            <svg width="17"
+                                 height="17"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9"
+                                        cy="7"
+                                        r="4"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="dashboard-action-title">
+                                Comptes DSI
+                            </div>
+                            <div class="dashboard-action-sub">
+                                Gestion des utilisateurs
+                            </div>
+                        </div>
+                    </a>
+                {% endif %}
+
+            </div>
+        </div>
     </div>
 
-    <div style="margin-top:20px;">
-      <h3 class="section-title">Actions rapides</h3>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <a href="{% url 'application_sheet:creer' %}" class="btn-upload" style="width:100%; justify-content:center;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Nouvelle fiche applicative
-        </a>
-        <a href="{% url 'application_sheet:liste' %}" class="btn-secondary" style="width:100%; justify-content:center;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h12" stroke-linecap="round"/></svg>
-          Voir toutes les fiches
-        </a>
-      </div>
+</div>
+
+<!-- FICHES À TRAITER -->
+{% if is_chef or is_directeur %}
+<div class="dashboard-section">
+    <div class="dashboard-section-title">
+        {% if is_directeur %}
+            Fiches en attente de validation
+        {% else %}
+            Fiches à valider
+        {% endif %}
     </div>
-  </div>
+    <div class="dashboard-card">
+        <div class="dashboard-table-wrap">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Ingénieur</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for fiche in fiches_a_traiter %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'application_sheet:fiche_detail' fiche.pk %}"
+                               class="dashboard-app-link">
+                                {{ fiche.nom_application }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ fiche.ingenieur.get_full_name|default:fiche.ingenieur.username }}
+                        </td>
+                        <td>
+                            <span class="dashboard-status status-blue">
+                                <span class="dashboard-status-dot"></span>
+                                En validation
+                            </span>
+                        </td>
+                        <td>
+                            {{ fiche.date_creation|date:"d/m/Y" }}
+                        </td>
+                        <td style="text-align:right;">
+                            <a href="{% url 'application_sheet:fiche_detail' fiche.pk %}"
+                               class="btn-secondary"
+                               style="font-size:.7rem;">
+                                Consulter
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="dashboard-empty">
+                                Aucune fiche en attente de validation.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- RÉPARTITION PAR DOMAINE + INVITATIONS -->
+<div class="dashboard-grid dashboard-section">
+
+    <!-- Domaines -->
+    <div>
+        <div class="dashboard-section-title">
+            Répartition par domaine
+        </div>
+        <div class="domain-card">
+            <div class="domain-item">
+                <span class="domain-dot" style="background:#9d174d;"></span>
+                <span class="domain-name">RH</span>
+                <span class="domain-count">{{ domaines_counts.RH|default:0 }}</span>
+            </div>
+            <div class="domain-item">
+                <span class="domain-dot" style="background:#2d5be3;"></span>
+                <span class="domain-name">Commercial</span>
+                <span class="domain-count">{{ domaines_counts.Commercial|default:0 }}</span>
+            </div>
+            <div class="domain-item">
+                <span class="domain-dot" style="background:#38a169;"></span>
+                <span class="domain-name">Technique / Telco</span>
+                <span class="domain-count">{{ domaines_counts.Technique|default:0 }}</span>
+            </div>
+            <div class="domain-item">
+                <span class="domain-dot" style="background:#dd6b20;"></span>
+                <span class="domain-name">Middleware</span>
+                <span class="domain-count">{{ domaines_counts.Middleware|default:0 }}</span>
+            </div>
+            <div class="domain-item">
+                <span class="domain-dot" style="background:#5b21b6;"></span>
+                <span class="domain-name">Décisionnel (BI)</span>
+                <span class="domain-count">{{ domaines_counts.BI|default:0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invitations -->
+    <div>
+        <div class="dashboard-section-title">
+            Mes invitations
+        </div>
+        <div class="dashboard-card">
+            {% if invitations_recentes %}
+                {% for invitation in invitations_recentes %}
+                    <div class="invitation-item">
+                        <div class="invitation-title">
+                            {{ invitation.reunion.objet }}
+                        </div>
+                        <div class="invitation-meta">
+                            {{ invitation.reunion.date|date:"d/m/Y" }}
+                            ·
+                            {{ invitation.reunion.heure_debut|time:"H:i" }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="dashboard-empty">
+                    Aucune invitation en attente.
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
 </div>
 
 {% endblock %}
 
+
 {% block extra_js %}
 <script>
-  // Mini constellation dans le welcome banner
-  (function() {
-    const canvas = document.getElementById('welcome-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const banner = canvas.parentElement;
-    canvas.width = banner.offsetWidth;
-    canvas.height = banner.offsetHeight;
-    for (let i = 0; i < 25; i++) {
-      ctx.beginPath();
-      ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.5+0.4, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(255,255,255,0.12)';
-      ctx.fill();
+(function () {
+    const canvas = document.getElementById("welcome-canvas");
+    if (!canvas) {
+        return;
     }
-  })();
+
+    const banner = canvas.parentElement;
+    const ctx = canvas.getContext("2d");
+
+    function draw() {
+        canvas.width = banner.offsetWidth;
+        canvas.height = banner.offsetHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+
+        for (let i = 0; i < 25; i++) {
+            ctx.beginPath();
+            ctx.arc(
+                Math.random() * canvas.width,
+                Math.random() * canvas.height,
+                Math.random() * 1.5 + 0.4,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+    }
+
+    draw();
+
+    let timer;
+    window.addEventListener("resize", function () {
+        clearTimeout(timer);
+        timer = setTimeout(draw, 150);
+    });
+})();
 </script>
 {% endblock %}

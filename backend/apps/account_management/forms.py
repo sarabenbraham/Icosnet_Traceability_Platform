@@ -3,11 +3,19 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.contrib.auth.forms import AuthenticationForm
 
+from apps.organization.models import Departement, Direction
+from apps.users.models import ChefDepartement, Directeur, Ingenieur
 from .models import Compte
 
 
 User = get_user_model()
 
+CLASSES_PAR_POSTE = {
+    "directeur": Directeur,
+    "chefdepartement": ChefDepartement,
+    "ingenieur": Ingenieur,
+    
+}
 
 class LoginForm(AuthenticationForm):
     def confirm_login_allowed(self, user):
@@ -66,56 +74,73 @@ class CompteForm(forms.ModelForm):
 
 
 class UtilisateurCompteForm(forms.ModelForm):
-
-    email_connexion = forms.EmailField(
-        required=True,
+    poste = forms.ChoiceField(
+        choices=[
+            ("directeur", "Directeur"),
+            ("chefdepartement", "Chef de département"),
+            ("ingenieur", "Ingénieur"),
+        ]
     )
-
-    mot_de_passe = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
+    direction = forms.ModelChoiceField(
+        queryset=Direction.objects.all(), required=False
     )
-
+    departement = forms.ModelChoiceField(
+        queryset=Departement.objects.all(), required=False
+    )
+    email_connexion = forms.EmailField(required=True)
+    mot_de_passe = forms.CharField(widget=forms.PasswordInput, required=True)
     date_expiration = forms.DateField(
         required=False,
-        widget=forms.DateInput(
-            attrs={
-                "type": "date",
-            }
-        ),
+        widget=forms.DateInput(attrs={"type": "date"}),
     )
 
     class Meta:
         model = User
-        fields = [
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "poste",
-        ]
+        fields = ["username", "first_name", "last_name", "email", "poste"]
+
+    def clean(self):
+        cleaned = super().clean()
+        poste = cleaned.get("poste")
+        if poste == "directeur" and not cleaned.get("direction"):
+            self.add_error("direction", "Choisis la direction de ce directeur.")
+        if poste in ("chefdepartement", "ingenieur") and not cleaned.get("departement"):
+            self.add_error("departement", "Choisis le département.")
+        return cleaned
 
     @transaction.atomic
     def save(self, commit=True):
-        utilisateur = super().save(commit=False)
+        cd = self.cleaned_data
+        classe = CLASSES_PAR_POSTE[cd["poste"]]
 
-        utilisateur.set_password(
-            self.cleaned_data["mot_de_passe"]
+        utilisateur = classe(
+            username=cd["username"],
+            first_name=cd["first_name"],
+            last_name=cd["last_name"],
+            email=cd["email"],
+            poste=cd["poste"],
         )
+        utilisateur.set_password(cd["mot_de_passe"])
+        utilisateur.save()
 
-        if commit:
-            utilisateur.save()
+        # Lien avec l'organisation
+        if classe is Directeur:
+            direction = cd["direction"]
+            direction.directeur = utilisateur
+            direction.save(update_fields=["directeur"])
+        elif classe is ChefDepartement:
+            dep = cd["departement"]
+            dep.chef_departement = utilisateur
+            dep.save(update_fields=["chef_departement"])
+        elif classe is Ingenieur:
+            utilisateur.departement = cd["departement"]
+            utilisateur.save(update_fields=["departement"])
 
-            compte = Compte(
-                utilisateur=utilisateur,
-                email_connexion=self.cleaned_data["email_connexion"],
-                date_expiration=self.cleaned_data["date_expiration"],
-            )
-
-            compte.set_password(
-                self.cleaned_data["mot_de_passe"]
-            )
-
-            compte.save()
+        compte = Compte(
+            utilisateur=utilisateur,
+            email_connexion=cd["email_connexion"],
+            date_expiration=cd["date_expiration"],
+        )
+        compte.set_password(cd["mot_de_passe"])
+        compte.save()
 
         return utilisateur

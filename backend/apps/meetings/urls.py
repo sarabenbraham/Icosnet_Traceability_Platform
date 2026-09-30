@@ -103,4 +103,6 @@ urlpatterns = [
         views.participation_refuser,
         name="participation_refuser",
     ),
+
+        path("mes-invitations/", views.mes_invitations, name="mes_invitations"),
 ]

@@ -69,10 +69,13 @@
 
       <!-- Salle -->
       <div class="form-group">
-        <label for="{{ form.lieu_id.id_for_label }}">Salle de réunion *</label>
-        {{ form.lieu_id }}
-        {% if form.lieu_id.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.lieu_id.errors.0 }}</div>{% endif %}
+        <label for="{{ form.lieu.id_for_label }}">Lieu (facultatif)</label>
+        {{ form.lieu }}
+        {% if form.lieu.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.lieu.errors.0 }}</div>{% endif %}
       </div>
+      {% if form.non_field_errors %}
+        <div class="msg-error" style="grid-column:1/-1;">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
 
       <!-- Organisateur -->
       <div class="form-group" style="grid-column: 1 / -1;">

@@ -1,23 +1,27 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import models
+from django.db.models import ProtectedError
+from .models import Lieu, Reunion, Participation, nom_complet, StatutParticipation
+
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.utils.http import url_has_allowed_host_and_scheme
+
+from .notifications import notifier_invitation
+from .permissions import est_gestionnaire, gestionnaire_required
 
 from .forms import (
     LieuForm,
     ReunionForm,
     ParticipationForm,
 )
-from .models import (
-    Lieu,
-    Reunion,
-    Participation,
-)
 
 
 # =========================================================
 # LIEUX
 # =========================================================
-
+@gestionnaire_required
 def lieu_list(request):
     lieux = Lieu.objects.all()
 
@@ -29,7 +33,7 @@ def lieu_list(request):
         },
     )
 
-
+@gestionnaire_required
 def lieu_create(request):
     if request.method == "POST":
         form = LieuForm(request.POST)
@@ -39,7 +43,7 @@ def lieu_create(request):
 
             messages.success(
                 request,
-                "La salle a été créée avec succès."
+                "Le lieu a été créée avec succès."
             )
 
             return redirect("meetings:lieu_list")
@@ -55,19 +59,15 @@ def lieu_create(request):
         },
     )
 
-
+@gestionnaire_required
 def lieu_detail(request, pk):
     lieu = get_object_or_404(Lieu, pk=pk)
+    return render(request, "meetings/lieu_detail.html", {
+        "lieu": lieu,
+        "reunions": lieu.reunions.order_by("-date", "-heure_debut"),  # manquait
+    })
 
-    return render(
-        request,
-        "meetings/lieu_detail.html",
-        {
-            "lieu": lieu,
-        },
-    )
-
-
+@gestionnaire_required
 def lieu_update(request, pk):
     lieu = get_object_or_404(Lieu, pk=pk)
 
@@ -82,7 +82,7 @@ def lieu_update(request, pk):
 
             messages.success(
                 request,
-                "La salle a été modifiée avec succès."
+                "Le lieu a été modifiée avec succès."
             )
 
             return redirect(
@@ -102,33 +102,24 @@ def lieu_update(request, pk):
         },
     )
 
-
+@gestionnaire_required
 def lieu_delete(request, pk):
     lieu = get_object_or_404(Lieu, pk=pk)
-
     if request.method == "POST":
-        lieu.delete()
-
-        messages.success(
-            request,
-            "La salle a été supprimée avec succès."
-        )
-
-        return redirect("meetings:lieu_list")
-
-    return render(
-        request,
-        "meetings/lieu_confirm_delete.html",
-        {
-            "lieu": lieu,
-        },
-    )
+        try:
+            lieu.delete()
+            messages.success(request, "Le lieu a été supprimé avec succès.")
+            return redirect("meetings:lieu_list")
+        except ProtectedError:
+            messages.error(request, "Ce lieu est utilisé par des réunions : suppression impossible.")
+            return redirect("meetings:lieu_detail", pk=lieu.pk)
+    return render(request, "meetings/lieu_confirm_delete.html", {"lieu": lieu})
 
 
 # =========================================================
 # REUNIONS
 # =========================================================
-
+@login_required
 def reunion_list(request):
     reunions = Reunion.objects.select_related("lieu").all()
 
@@ -149,6 +140,12 @@ def reunion_list(request):
     if filtre_statut:
         reunions = reunions.filter(statut=filtre_statut)
 
+    if not est_gestionnaire(request.user):
+        reunions = reunions.filter(
+            pk__in=Participation.objects.filter(utilisateur=request.user).values("reunion")
+        )
+
+
     return render(
         request,
         "meetings/reunion_list.html",
@@ -160,7 +157,7 @@ def reunion_list(request):
         },
     )
 
-
+@gestionnaire_required
 def reunion_create(request):
     if request.method == "POST":
         form = ReunionForm(request.POST)
@@ -189,7 +186,7 @@ def reunion_create(request):
         },
     )
 
-
+@login_required
 def reunion_detail(request, pk):
     reunion = get_object_or_404(
         Reunion.objects.select_related(
@@ -198,7 +195,13 @@ def reunion_detail(request, pk):
         pk=pk,
     )
 
-    participations = reunion.participations.all()
+    if not est_gestionnaire(request.user) and not reunion.participations.filter(
+        utilisateur=request.user
+    ).exists():
+        raise PermissionDenied
+
+    participations = reunion.participations.select_related("utilisateur")
+
 
     return render(
         request,
@@ -209,7 +212,7 @@ def reunion_detail(request, pk):
         },
     )
 
-
+@gestionnaire_required
 def reunion_update(request, pk):
     reunion = get_object_or_404(
         Reunion,
@@ -249,7 +252,7 @@ def reunion_update(request, pk):
         },
     )
 
-
+@gestionnaire_required
 def reunion_delete(request, pk):
     reunion = get_object_or_404(
         Reunion,
@@ -280,46 +283,69 @@ def reunion_delete(request, pk):
 # =========================================================
 # PARTICIPATIONS
 # =========================================================
-
+@gestionnaire_required
 def participation_create(request, reunion_pk):
-    reunion = get_object_or_404(
-        Reunion,
-        pk=reunion_pk,
-    )
+    reunion = get_object_or_404(Reunion.objects.select_related("lieu"), pk=reunion_pk)
 
     if request.method == "POST":
-        form = ParticipationForm(request.POST)
-
+        form = ParticipationForm(request.POST, reunion=reunion)
         if form.is_valid():
-            participation = form.save(commit=False)
-            participation.reunion = reunion
+            utilisateurs = list(form.cleaned_data["participants"])
+            externes = list(dict.fromkeys(
+                l.strip() for l in form.cleaned_data["externes"].splitlines() if l.strip()
+            ))
 
-            participation.full_clean()
-            participation.save()
-
-            messages.success(
-                request,
-                "Le participant a été ajouté à la réunion."
+            deja_utilisateurs = set(
+                reunion.participations.filter(utilisateur__isnull=False)
+                .values_list("utilisateur_id", flat=True)
             )
-
-            return redirect(
-                "meetings:reunion_detail",
-                pk=reunion.pk,
+            deja_externes = set(
+                reunion.participations.filter(utilisateur__isnull=True)
+                .values_list("participant", flat=True)
             )
+            utilisateurs = [u for u in utilisateurs if u.pk not in deja_utilisateurs]
+            externes = [n for n in externes if n not in deja_externes]
+            total = len(utilisateurs) + len(externes)
 
+            lieu = reunion.lieu
+            if total == 0:
+                form.add_error(None, "Aucun nouveau participant sélectionné.")
+            elif (
+                lieu
+                and not lieu.places_illimitees
+                and lieu.capacite is not None
+                and reunion.nb_participants + total > lieu.capacite
+            ):
+                restantes = max(lieu.capacite - reunion.nb_participants, 0)
+                form.add_error(None, f"Capacité dépassée : il reste {restantes} place(s).")
+            else:
+                role = form.cleaned_data["role"]
+                for u in utilisateurs:
+                    p = Participation.objects.create(
+                        reunion=reunion,
+                        utilisateur=u,
+                        participant=nom_complet(u),
+                        role=role,
+                    )
+                    notifier_invitation(request, p)
+                for nom in externes:
+                    Participation.objects.create(
+                        reunion=reunion,
+                        participant=nom,
+                        role=role,
+                    )
+                messages.success(request, f"{total} participant(s) ajouté(s).")
+                return redirect("meetings:reunion_detail", pk=reunion.pk)
     else:
-        form = ParticipationForm()
+        form = ParticipationForm(reunion=reunion)
 
     return render(
         request,
         "meetings/participation_form.html",
-        {
-            "form": form,
-            "reunion": reunion,
-        },
+        {"form": form, "reunion": reunion},
     )
 
-
+@gestionnaire_required
 def participation_delete(request, pk):
     participation = get_object_or_404(
         Participation,
@@ -349,42 +375,41 @@ def participation_delete(request, pk):
         },
     )
 
+def _repondre(request, pk, action, message):
+    participation = get_object_or_404(
+        Participation.objects.select_related("reunion", "utilisateur"), pk=pk
+    )
+    # Seul l'invité lui-même ou un gestionnaire (pour les externes) peut répondre
+    if not (
+        est_gestionnaire(request.user)
+        or participation.utilisateur_id == request.user.pk
+    ):
+        raise PermissionDenied
 
+    if request.method == "POST":
+        getattr(participation, action)()
+        messages.success(request, message)
+
+    suivant = request.POST.get("next", "")
+    if suivant and url_has_allowed_host_and_scheme(suivant, allowed_hosts={request.get_host()}):
+        return redirect(suivant)
+    return redirect("meetings:reunion_detail", pk=participation.reunion.pk)
+
+
+@login_required
 def participation_confirmer(request, pk):
-    participation = get_object_or_404(
-        Participation,
-        pk=pk,
-    )
-
-    if request.method == "POST":
-        participation.confirmer()
-
-        messages.success(
-            request,
-            "La participation a été confirmée."
-        )
-
-    return redirect(
-        "meetings:reunion_detail",
-        pk=participation.reunion.pk,
-    )
+    return _repondre(request, pk, "confirmer", "La participation a été confirmée.")
 
 
+@login_required
 def participation_refuser(request, pk):
-    participation = get_object_or_404(
-        Participation,
-        pk=pk,
+    return _repondre(request, pk, "refuser", "La participation a été refusée.")
+
+@login_required
+def mes_invitations(request):
+    participations = (
+        Participation.objects.filter(utilisateur=request.user)
+        .select_related("reunion", "reunion__lieu")
+        .order_by("reunion__date", "reunion__heure_debut")
     )
-
-    if request.method == "POST":
-        participation.refuser()
-
-        messages.success(
-            request,
-            "La participation a été refusée."
-        )
-
-    return redirect(
-        "meetings:reunion_detail",
-        pk=participation.reunion.pk,
-    )
+    return render(request, "meetings/mes_invitations.html", {"participations": participations})

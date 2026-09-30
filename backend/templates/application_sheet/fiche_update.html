@@ -12,7 +12,7 @@
 {% block content %}
 
   <form method="post" novalidate>
-    {% include "application_sheet/_fiche_form_sections.html" %}
+    {% include "application_sheet/fiche_form_sections.html" %}
 
     <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
       <a href="{% url 'application_sheet:detail' pk=fiche.pk %}" class="btn-secondary">Annuler</a>

@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+def nom_complet(user):
+        return user.get_full_name() or user.get_username()
 
 class TypeReunion(models.TextChoices):
     TECHNIQUE = "TECHNIQUE", "Technique"
@@ -36,13 +38,38 @@ class Lieu(models.Model):
     )
 
     nom_salle = models.CharField(
+        "Nom du lieu",
         max_length=150,
     )
 
-    capacite = models.PositiveIntegerField()
+    places_illimitees = models.BooleanField(
+        "Places illimitées",
+        default=False,
+    )
+
+    capacite = models.PositiveIntegerField(
+        "Capacité",
+        null=True,
+        blank=True,
+    )
+
+    @property
+    def capacite_label(self):
+        if self.places_illimitees or self.capacite is None:
+            return "Places illimitées"
+        return f"{self.capacite} places"
+
 
     def __str__(self):
-        return f"{self.nom_salle} ({self.capacite} places)"
+        return f"{self.nom_salle} ({self.capacite_label})"
+
+    def clean(self):
+        if self.places_illimitees:
+            self.capacite = None
+        elif not self.capacite:
+            raise ValidationError(
+                {"capacite": "Indiquez une capacité ou cochez « Places illimitées »."}
+            )
 
     def est_disponible(self, date, heure_debut, heure_fin, reunion_id=None):
         conflits = Reunion.objects.filter(
@@ -108,32 +135,37 @@ class Reunion(models.Model):
     )
 
     def clean(self):
-        if self.heure_fin <= self.heure_debut:
-            raise ValidationError(
-                "L'heure de fin doit être après l'heure de début."
-            )
+        if self.heure_debut and self.heure_fin and self.heure_fin <= self.heure_debut:
+            raise ValidationError("L'heure de fin doit être après l'heure de début.")
 
-        if self.lieu_id and self.date:
+        if self.lieu_id and self.date and self.heure_debut and self.heure_fin:
             if not self.lieu.est_disponible(
-                self.date,
-                self.heure_debut,
-                self.heure_fin,
-                self.pk,
+                self.date, self.heure_debut, self.heure_fin, self.pk
             ):
-                raise ValidationError(
-                    "La salle est déjà occupée pendant cette période."
-                )
+                raise ValidationError("Ce lieu est déjà occupé pendant cette période.")
+
+    @property
+    def nb_participants(self):
+        return self.participations.exclude(
+            statut=StatutParticipation.REFUSEE
+        ).count()
+
+    @property
+    def est_complete(self):
+        lieu = self.lieu
+        return bool(
+            lieu
+            and not lieu.places_illimitees
+            and lieu.capacite is not None
+            and self.nb_participants >= lieu.capacite
+        )
 
     def __str__(self):
         return f"{self.objet} - {self.date}"
 
 
 class Participation(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     reunion = models.ForeignKey(
         Reunion,
@@ -141,19 +173,20 @@ class Participation(models.Model):
         related_name="participations",
     )
 
-    participant = models.CharField(
-        max_length=255,
-    )
-
-    date_confirmation = models.DateTimeField(
+    # Utilisateur de la plateforme (vide pour un invité externe)
+    utilisateur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name="participations_reunions",
     )
 
-    role = models.CharField(
-        max_length=100,
-        blank=True,
-    )
+    # Nom affiché : copie du nom de l'utilisateur, ou nom/email de l'externe
+    participant = models.CharField(max_length=255)
+
+    date_confirmation = models.DateTimeField(null=True, blank=True)
+    role = models.CharField(max_length=100, blank=True)
 
     statut = models.CharField(
         max_length=20,
@@ -163,11 +196,28 @@ class Participation(models.Model):
 
     class Meta:
         constraints = [
+            # Un utilisateur ne peut être invité qu'une fois par réunion
+            models.UniqueConstraint(
+                fields=["reunion", "utilisateur"],
+                condition=models.Q(utilisateur__isnull=False),
+                name="unique_utilisateur_reunion",
+            ),
+            # Un externe (même nom) ne peut être ajouté qu'une fois par réunion
             models.UniqueConstraint(
                 fields=["reunion", "participant"],
-                name="unique_participant_reunion",
-            )
+                condition=models.Q(utilisateur__isnull=True),
+                name="unique_externe_reunion",
+            ),
         ]
+
+    @property
+    def est_externe(self):
+        return self.utilisateur_id is None
+
+    def save(self, *args, **kwargs):
+        if self.utilisateur_id and not self.participant:
+            self.participant = nom_complet(self.utilisateur)
+        super().save(*args, **kwargs)
 
     def confirmer(self):
         self.statut = StatutParticipation.CONFIRMEE
@@ -191,4 +241,5 @@ class Participation(models.Model):
 
     def __str__(self):
         return f"{self.participant} - {self.reunion}"
+    
     

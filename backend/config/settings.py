@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.account_management",
     "multiselectfield",
+    "apps.dashboard",
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "apps.meetings.context_processors.meetings",
             ],
         },
     },
@@ -128,3 +130,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = "users.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

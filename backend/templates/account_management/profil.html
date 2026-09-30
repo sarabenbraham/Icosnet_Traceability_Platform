@@ -16,7 +16,11 @@
     <div class="form-section-title">Identité</div>
     <div class="info-row">
       <span class="info-label">Nom complet</span>
-      <span class="info-value">{{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}</span>
+      <span class="info-value">{{ user.first_name }}
+                                {{ user.last_name }}
+                                {{ user.username }}
+                                {{ user.email }}
+      </span>
     </div>
     <div class="info-row">
       <span class="info-label">Identifiant</span>
