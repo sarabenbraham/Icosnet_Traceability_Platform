@@ -1,10 +1,3 @@
-{# 
-  Ce template est dédié à l'édition d'un Compte existant.
-  Note : CompteForm inclut le champ "utilisateur" (réassignation possible du propriétaire
-  du compte). En édition ce n'est en principe pas souhaitable : ce template affiche donc
-  l'utilisateur associé en lecture seule au lieu du <select> généré par le formulaire,
-  sans qu'il soit nécessaire de modifier forms.py.
-#}
 {% extends "base.html" %}
 
 {% block title %}{{ titre }} – ICOSNET DSI{% endblock %}
@@ -13,58 +6,157 @@
 {% block nav_accounts %}active{% endblock %}
 
 {% block extra_style %}
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 14px; border: 1.5px solid #e8edf5; border-radius: 10px;
-    font-size: .85rem; color: #2d3748; background: #fff; font-family: 'Poppins', sans-serif;
-    outline: none; transition: border-color .2s, box-shadow .2s;
+<style>
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e8edf5;
+    border-radius: 10px;
+    font-size: .85rem;
+    color: #2d3748;
+    background: #fff;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
   }
-  .form-group input:focus, .form-group select:focus { border-color: #2d5be3; box-shadow: 0 0 0 3px rgba(45,91,227,.1); }
-  .form-group .field-errors { color: #c53030; font-size: .75rem; margin-top: 2px; }
-  .read-only-value { padding: 10px 14px; border: 1.5px solid #e8edf5; border-radius: 10px; background: #f7f9fc; font-size: .85rem; color: #718096; }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #2d5be3;
+    box-shadow: 0 0 0 3px rgba(45, 91, 227, .1);
+  }
+
+  .form-group .field-errors {
+    color: #c53030;
+    font-size: .75rem;
+    margin-top: 4px;
+  }
+
+  .read-only-value {
+    padding: 10px 14px;
+    border: 1.5px solid #e8edf5;
+    border-radius: 10px;
+    background: #f7f9fc;
+    font-size: .85rem;
+    color: #4a5568;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+
+</style>
 {% endblock %}
 
 {% block content %}
-  <div class="page-header fade-in">
-    <div class="page-header-left">
-      <h1>{{ titre }}</h1>
-      <p>{{ sous_titre }}</p>
-    </div>
+<div class="page-header fade-in" style="margin-bottom: 24px;">
+  <div class="page-header-left">
+    <a href="{% url 'account_management:liste' %}" class="btn-secondary"
+      style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; padding:6px 14px; font-size:0.875rem;">
+      ← Retour à la liste des comptes
+    </a>
+    <h1 style="display:flex; align-items:center; gap:12px;">
+      ✏️ Modifier le compte de {{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}
+    </h1>
+    <p>Identifiant : <strong>@{{ compte.utilisateur.username }}</strong> · Email connexion : <strong>{{ compte.email_connexion }}</strong></p>
   </div>
+</div>
 
-  <div class="form-card fade-in delay-1" style="max-width:720px;">
-    {% if form.non_field_errors %}
-      <div class="msg-error">{{ form.non_field_errors|striptags }}</div>
-    {% endif %}
+<div class="form-card fade-in delay-1"
+  style="max-width:800px; margin:0 auto; background:#fff; border-radius:16px; padding:28px; box-shadow:0 6px 24px rgba(0,0,0,0.04); border:1px solid #e8edf5;">
 
-    <form method="post" novalidate>
-      {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="msg-error"
+    style="background:#fee2e2; color:#991b1b; padding:12px; border-radius:8px; margin-bottom:20px;">
+    {{ form.non_field_errors|striptags }}
+  </div>
+  {% endif %}
 
-      <div class="form-section-title">Modifier le compte</div>
+  <form method="post" novalidate>
+    {% csrf_token %}
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Utilisateur associé</label>
-          <div class="read-only-value">{{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}</div>
+    <!-- Section 1 : Informations Utilisateur -->
+    <div style="margin-bottom:24px;">
+      <div class="form-section-title">① Informations personnelles & Poste</div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Utilisateur associé (Compte propriétaire)</label>
+        <div class="read-only-value">
+          {{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}
         </div>
-
-        {% for field in form %}
-          {% if field.name != "utilisateur" %}
-            <div class="form-group">
-              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
       </div>
 
-      <div style="display:flex; gap:10px; margin-top:26px;">
-        <button type="submit" class="btn-submit">
-          <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Enregistrer les modifications
-        </button>
-        <a href="{% url 'account_management:detail' pk=compte.pk %}" class="btn-secondary">Annuler</a>
+      <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div class="form-group">
+          <label for="{{ form.first_name.id_for_label }}">Prénom</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<div class="field-errors">{{ form.first_name.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.last_name.id_for_label }}">Nom</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}<div class="field-errors">{{ form.last_name.errors|striptags }}</div>{% endif %}
+        </div>
       </div>
-    </form>
-  </div>
+
+      <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group">
+          <label for="{{ form.email.id_for_label }}">Email professionnel</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="field-errors">{{ form.email.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.poste.id_for_label }}">Poste / Fonction</label>
+          {{ form.poste }}
+          {% if form.poste.errors %}<div class="field-errors">{{ form.poste.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2 : Identifiants & Modification du Mot de passe -->
+    <div style="margin-bottom:24px;">
+      <div class="form-section-title">② Connexion</div>
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label for="{{ form.email_connexion.id_for_label }}">Email de connexion DSI</label>
+        {{ form.email_connexion }}
+        {% if form.email_connexion.errors %}<div class="field-errors">{{ form.email_connexion.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+
+    <!-- Section 3 : Statut & Expiration -->
+    <div style="margin-bottom:28px;">
+      <div class="form-section-title">③ Statut & Expiration</div>
+
+      <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group">
+          <label for="{{ form.statut.id_for_label }}">Statut du compte</label>
+          {{ form.statut }}
+          {% if form.statut.errors %}<div class="field-errors">{{ form.statut.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.date_expiration.id_for_label }}">Date d'expiration</label>
+          {{ form.date_expiration }}
+          {% if form.date_expiration.errors %}<div class="field-errors">{{ form.date_expiration.errors|striptags }}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; gap:12px; justify-content:flex-end; border-top:1px solid #e8edf5; padding-top:20px;">
+      <a href="{% url 'account_management:detail' pk=compte.pk %}" class="btn-secondary"
+        style="padding:10px 20px; border-radius:10px;">Annuler</a>
+      <button type="submit" class="btn-submit"
+        style="background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; border:none; padding:10px 24px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.3);">
+        ✨ Enregistrer les modifications
+      </button>
+    </div>
+  </form>
+</div>
+
 {% endblock %}

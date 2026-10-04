@@ -34,23 +34,25 @@ class LoginForm(AuthenticationForm):
 
         
 class CompteForm(forms.ModelForm):
-
-    mot_de_passe = forms.CharField(
-        widget=forms.PasswordInput,
-        required=True,
-    )
+    first_name = forms.CharField(label="Prénom", max_length=100, required=False)
+    last_name = forms.CharField(label="Nom", max_length=100, required=False)
+    email = forms.EmailField(label="Email professionnel", required=False)
+    poste = forms.CharField(label="Poste / Fonction", max_length=100, required=False)
 
     class Meta:
         model = Compte
         fields = [
-            "utilisateur",
             "email_connexion",
-            "mot_de_passe",
             "date_expiration",
             "expire",
             "statut",
         ]
-
+        labels = {
+            "email_connexion": "Email de connexion DSI",
+            "date_expiration": "Date d'expiration",
+            "statut": "Statut du compte",
+            "expire": "Marquer comme expiré",
+        }
         widgets = {
             "date_expiration": forms.DateInput(
                 attrs={
@@ -59,13 +61,32 @@ class CompteForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk and self.instance.utilisateur:
+            u = self.instance.utilisateur
+            self.fields["first_name"].initial = u.first_name
+            self.fields["last_name"].initial = u.last_name
+            self.fields["email"].initial = u.email
+            self.fields["poste"].initial = getattr(u, "poste", "")
+
     def save(self, commit=True):
         compte = super().save(commit=False)
 
-        mot_de_passe = self.cleaned_data.get("mot_de_passe")
+        # Mettre à jour l'utilisateur associé (Nom, Prénom, Email, Poste)
+        if compte.utilisateur:
+            u = compte.utilisateur
+            if self.cleaned_data.get("first_name"):
+                u.first_name = self.cleaned_data["first_name"]
+            if self.cleaned_data.get("last_name"):
+                u.last_name = self.cleaned_data["last_name"]
+            if self.cleaned_data.get("email"):
+                u.email = self.cleaned_data["email"]
+            if self.cleaned_data.get("poste") is not None and hasattr(u, "poste"):
+                u.poste = self.cleaned_data["poste"]
 
-        if mot_de_passe:
-            compte.set_password(mot_de_passe)
+
+            u.save()
 
         if commit:
             compte.save()
@@ -97,15 +118,6 @@ class UtilisateurCompteForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "email", "poste"]
-
-    def clean(self):
-        cleaned = super().clean()
-        poste = cleaned.get("poste")
-        if poste == "directeur" and not cleaned.get("direction"):
-            self.add_error("direction", "Choisis la direction de ce directeur.")
-        if poste in ("chefdepartement", "ingenieur") and not cleaned.get("departement"):
-            self.add_error("departement", "Choisis le département.")
-        return cleaned
 
     @transaction.atomic
     def save(self, commit=True):

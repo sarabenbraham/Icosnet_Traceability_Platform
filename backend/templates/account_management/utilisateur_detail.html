@@ -16,9 +16,9 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Modifier
       </a>
-      <a href="{% url 'account_management:delete' pk=compte.pk %}" class="btn-secondary" style="color:#c53030;">
-        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Supprimer
+      <a href="{% url 'account_management:archiver' pk=compte.pk %}" class="btn-secondary" style="color:#ea580c;">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 8v13a1 1 0 01-1 1H4a1 1 0 01-1-1V8M1 3h22v5H1zM10 12h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        📦 Archiver
       </a>
       <a href="{% url 'account_management:liste' %}" class="btn-submit">
         <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>

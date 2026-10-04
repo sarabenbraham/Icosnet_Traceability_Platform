@@ -34,6 +34,9 @@ class Compte(models.Model):
 
     expire = models.BooleanField(default=False)
 
+    archive = models.BooleanField(default=False, verbose_name="Archivé")
+    date_archivage = models.DateTimeField(null=True, blank=True, verbose_name="Date d'archivage")
+
     def set_password(self, raw_password):
         from django.contrib.auth.hashers import make_password
         self.mot_de_passe = make_password(raw_password)
