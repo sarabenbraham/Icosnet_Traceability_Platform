@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titre }} – ICOSNET DSI{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_accounts %}active{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in" style="margin-bottom:24px;">
+  <div class="page-header-left">
+    <a href="{% url 'account_management:detail' pk=compte.pk %}" class="btn-secondary"
+      style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; padding:6px 14px; font-size:0.875rem;">
+      ← Retour au détail
+    </a>
+    <h1 style="display:flex; align-items:center; gap:12px;">
+      📦 Archiver le compte de {{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}
+    </h1>
+    <p>Cette action désactivera le compte et le placera dans les archives. Il ne sera plus actif.</p>
+  </div>
+</div>
+
+<div class="form-card fade-in delay-1"
+  style="max-width:600px; margin:0 auto; background:#fff; border-radius:16px; padding:28px; box-shadow:0 6px 24px rgba(0,0,0,0.06); border:1px solid #fde8d0;">
+
+  <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:24px;">
+    <div style="width:48px; height:48px; border-radius:12px; background:#fff3e0; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.4rem;">📦</div>
+    <div>
+      <div style="font-weight:700; font-size:1rem; color:#0f1e45; margin-bottom:4px;">
+        Confirmer l'archivage
+      </div>
+      <div style="color:#718096; font-size:0.875rem;">
+        Vous êtes sur le point d'archiver le compte de
+        <strong>{{ compte.utilisateur.get_full_name|default:compte.utilisateur.username }}</strong>
+        (<em>{{ compte.email_connexion }}</em>).
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff8f0; border:1px solid #fde8d0; border-radius:10px; padding:16px; margin-bottom:24px;">
+    <div style="font-size:0.8rem; color:#92400e; font-weight:600; margin-bottom:6px;">⚠️ Ce qui se passera :</div>
+    <ul style="font-size:0.8rem; color:#78350f; margin:0; padding-left:18px; line-height:1.8;">
+      <li>Le compte sera marqué comme <strong>archivé</strong></li>
+      <li>Le statut passera automatiquement à <strong>Désactivé</strong></li>
+      <li>Le compte apparaîtra dans la liste des <strong>comptes archivés</strong></li>
+      <li>L'utilisateur ne pourra <strong>plus se connecter</strong></li>
+    </ul>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:flex; gap:12px; justify-content:flex-end;">
+      <a href="{% url 'account_management:detail' pk=compte.pk %}" class="btn-secondary"
+        style="padding:10px 20px; border-radius:10px;">Annuler</a>
+      <button type="submit"
+        style="background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border:none; padding:10px 24px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(249,115,22,0.35); font-family:'Poppins',sans-serif; font-size:.875rem;">
+        📦 Confirmer l'archivage
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

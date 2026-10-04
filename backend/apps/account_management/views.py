@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Compte
 from django.contrib.auth import login, logout
@@ -37,7 +38,39 @@ def compte_logout(request):
 
 
 def compte_list(request):
-    comptes = Compte.objects.select_related("utilisateur").all()
+    from django.db.models import Q
+
+    comptes = Compte.objects.select_related("utilisateur").filter(archive=False)
+
+    # --- Recherche & Filtres ---
+    q         = request.GET.get("q", "").strip()
+    statut    = request.GET.get("statut", "").strip()
+    poste     = request.GET.get("poste", "").strip()
+
+    if q:
+        comptes = comptes.filter(
+            Q(utilisateur__first_name__icontains=q) |
+            Q(utilisateur__last_name__icontains=q)  |
+            Q(utilisateur__username__icontains=q)   |
+            Q(email_connexion__icontains=q)
+        )
+
+    if statut in ("ACTIF", "DESACTIVE"):
+        comptes = comptes.filter(statut=statut)
+
+    if poste:
+        comptes = comptes.filter(utilisateur__poste__iexact=poste)
+
+    # Postes distincts pour le filtre
+    postes_dispo = (
+        Compte.objects.select_related("utilisateur")
+        .filter(archive=False)
+        .exclude(utilisateur__poste__isnull=True)
+        .exclude(utilisateur__poste="")
+        .values_list("utilisateur__poste", flat=True)
+        .distinct()
+        .order_by("utilisateur__poste")
+    )
 
     return render(
         request,
@@ -47,6 +80,11 @@ def compte_list(request):
             "total": comptes.count(),
             "titre": "Comptes utilisateurs",
             "sous_titre": "Gestion des comptes d'accès",
+            # filtres
+            "q": q,
+            "filtre_statut": statut,
+            "filtre_poste": poste,
+            "postes_dispo": postes_dispo,
         },
 )
 
@@ -99,21 +137,39 @@ def compte_update(request, pk):
     )
 
 
-def compte_delete(request, pk):
+def compte_archiver(request, pk):
     compte = get_object_or_404(Compte, pk=pk)
 
     if request.method == "POST":
-        compte.delete()
-        messages.success(request, "Le compte a été supprimé avec succès.")
+        from django.utils import timezone as tz
+        compte.archive = True
+        compte.date_archivage = tz.now()
+        compte.statut = Compte.Statut.DESACTIVE
+        compte.save(update_fields=["archive", "date_archivage", "statut"])
+        messages.success(request, "Le compte a été archivé avec succès.")
         return redirect("account_management:liste")
 
     return render(
         request,
-        "account_management/utilisateur_delete.html",
+        "account_management/utilisateur_archiver.html",
         {
             "compte": compte,
-            "titre": "Supprimer le compte",
-            "sous_titre": "Confirmation de suppression",
+            "titre": "Archiver le compte",
+            "sous_titre": "Confirmation d'archivage",
+        },
+    )
+
+
+def comptes_archives(request):
+    comptes = Compte.objects.select_related("utilisateur").filter(archive=True)
+    return render(
+        request,
+        "account_management/utilisateur_archives.html",
+        {
+            "comptes": comptes,
+            "total": comptes.count(),
+            "titre": "Comptes archivés",
+            "sous_titre": "Historique des comptes désactivés",
         },
     )
 
@@ -162,3 +218,38 @@ def mon_profil(request):
             "sous_titre": "Informations de mon compte",
         },
     )
+
+def compte_autocomplete(request):
+    """Retourne des suggestions JSON pour l'autocomplétion de la recherche."""
+    from django.db.models import Q, Value
+    from django.db.models.functions import Concat
+    import json
+
+    q = request.GET.get("q", "").strip()
+    results = []
+
+    if len(q) >= 2:
+        comptes = (
+            Compte.objects
+            .select_related("utilisateur")
+            .filter(archive=False)
+            .filter(
+                Q(utilisateur__first_name__icontains=q) |
+                Q(utilisateur__last_name__icontains=q)  |
+                Q(utilisateur__username__icontains=q)   |
+                Q(email_connexion__icontains=q)
+            )[:8]  # max 8 suggestions
+        )
+
+        for c in comptes:
+            u = c.utilisateur
+            full_name = u.get_full_name() or u.username
+            results.append({
+                "label": full_name,
+                "sub": f"@{u.username} · {c.email_connexion}",
+                "initial": (u.first_name[:1] or u.username[:1]).upper(),
+                "value": full_name,
+                "url": f"/account_management/{c.pk}/detail/",
+            })
+
+    return JsonResponse({"results": results})

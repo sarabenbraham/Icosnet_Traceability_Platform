@@ -5,92 +5,494 @@
 {% block page_sub %}{{ sous_titre }}{% endblock %}
 {% block nav_accounts %}active{% endblock %}
 
+{% block extra_style %}
+<style>
+  /* ── Filter bar ── */
+  .filter-bar {
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .filter-bar form { display: contents; }
+
+  /* ── Search field with autocomplete ── */
+  .search-field {
+    flex: 1;
+    min-width: 220px;
+    position: relative;
+  }
+  .search-field .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #a0aec0;
+  }
+  .search-field input {
+    width: 100%;
+    padding: 9px 14px 9px 38px;
+    border: 1.5px solid #e8edf5;
+    border-radius: 10px;
+    font-size: .85rem;
+    color: #2d3748;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+  }
+  .search-field input:focus {
+    border-color: #2d5be3;
+    box-shadow: 0 0 0 3px rgba(45,91,227,.1);
+  }
+
+  /* ── Autocomplete dropdown ── */
+  .ac-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid #e8edf5;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    z-index: 1000;
+    overflow: hidden;
+    display: none;
+  }
+  .ac-dropdown.visible { display: block; }
+  .ac-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background .15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .ac-item:hover, .ac-item.ac-active {
+    background: #f0f5ff;
+  }
+  .ac-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4a7cff, #2d5be3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .ac-label {
+    font-size: .84rem;
+    font-weight: 600;
+    color: #0f1e45;
+  }
+  .ac-sub {
+    font-size: .72rem;
+    color: #a0aec0;
+  }
+  .ac-highlight {
+    background: #fef08a;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+  .ac-footer {
+    padding: 8px 14px;
+    font-size: .75rem;
+    color: #a0aec0;
+    border-top: 1px solid #f0f4f8;
+    text-align: center;
+  }
+  .ac-empty {
+    padding: 14px;
+    text-align: center;
+    font-size: .82rem;
+    color: #a0aec0;
+  }
+  .ac-loading {
+    padding: 12px 14px;
+    text-align: center;
+    font-size: .8rem;
+    color: #718096;
+  }
+
+  /* ── Filter selects ── */
+  .filter-select {
+    padding: 9px 34px 9px 12px;
+    border: 1.5px solid #e8edf5;
+    border-radius: 10px;
+    font-size: .82rem;
+    color: #4a5568;
+    font-family: 'Poppins', sans-serif;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+    min-width: 150px;
+  }
+  .filter-select:focus {
+    border-color: #2d5be3;
+    box-shadow: 0 0 0 3px rgba(45,91,227,.1);
+  }
+  .filter-btn-search {
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: .82rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 10px rgba(37,99,235,.3);
+    transition: opacity .2s;
+  }
+  .filter-btn-search:hover { opacity: .88; }
+  .filter-btn-reset {
+    padding: 9px 14px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: .82rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background .2s;
+  }
+  .filter-btn-reset:hover { background: #e2e8f0; }
+
+  .result-info {
+    font-size: .8rem;
+    color: #718096;
+    padding: 0 4px 8px;
+  }
+  .result-info strong { color: #2d5be3; }
+
+  .icon-btn-archive {
+    color: #ea580c;
+    background: #fff7ed;
+    border: 1.5px solid #fed7aa;
+  }
+  .icon-btn-archive:hover { background: #ffedd5; }
+</style>
+{% endblock %}
+
 {% block topbar_action %}
   <a href="{% url 'account_management:create' %}" class="btn-upload">
-    <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
     Nouvel utilisateur
   </a>
 {% endblock %}
 
 {% block content %}
-  <div class="page-header fade-in">
-    <div class="page-header-left">
-      <h1>{{ titre }}</h1>
-      <p>{{ sous_titre }} · {{ total }} compte{{ total|pluralize }}</p>
-    </div>
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>{{ titre }}</h1>
+    <p>{{ sous_titre }} · <strong>{{ total }}</strong> compte{{ total|pluralize }}</p>
   </div>
+</div>
 
-  <div class="search-bar-card fade-in delay-1">
-    <div class="search-wrap">
-      <svg width="16" height="16" fill="none" stroke="#a0aec0" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
-      <input type="text" class="search-input" placeholder="Rechercher un utilisateur…">
+<!-- ── Barre de recherche & filtres ──────────────────────────────────────── -->
+<div class="filter-bar fade-in delay-1">
+  <form method="get" action="" id="search-form" style="display:contents;">
+
+    <!-- Champ de recherche avec autocomplétion -->
+    <div class="search-field">
+      <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" id="search-q"
+             value="{{ q }}"
+             placeholder="Nom, identifiant, email…"
+             autocomplete="off"
+             aria-label="Rechercher un utilisateur"
+             aria-autocomplete="list"
+             aria-controls="ac-dropdown">
+
+      <!-- Dropdown autocomplétion -->
+      <div class="ac-dropdown" id="ac-dropdown" role="listbox"></div>
     </div>
-    <div class="bar-separator"></div>
-    <button class="bar-btn bar-btn-search">
-      <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+
+    <!-- Filtre statut -->
+    <select name="statut" class="filter-select">
+      <option value="">— Tous les statuts —</option>
+      <option value="ACTIF"     {% if filtre_statut == "ACTIF" %}selected{% endif %}>✅ Actif</option>
+      <option value="DESACTIVE" {% if filtre_statut == "DESACTIVE" %}selected{% endif %}>🔴 Désactivé</option>
+    </select>
+
+    <!-- Filtre poste -->
+    <select name="poste" class="filter-select">
+      <option value="">— Tous les postes —</option>
+      {% for p in postes_dispo %}
+        <option value="{{ p }}" {% if filtre_poste == p %}selected{% endif %}>{{ p|capfirst }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Rechercher -->
+    <button type="submit" class="filter-btn-search">
+      <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
       Rechercher
     </button>
-  </div>
 
-  <div class="table-wrap fade-in delay-2">
-    <table>
-      <thead>
+    <!-- Réinitialiser -->
+    {% if q or filtre_statut or filtre_poste %}
+    <a href="{% url 'account_management:liste' %}" class="filter-btn-reset">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/>
+      </svg>
+      Réinitialiser
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Info résultats -->
+{% if q or filtre_statut or filtre_poste %}
+<div class="result-info fade-in">
+  <strong>{{ total }}</strong> résultat{{ total|pluralize }} trouvé{{ total|pluralize }}
+  {% if q %} pour « <em>{{ q }}</em> »{% endif %}
+  {% if filtre_statut %} · statut <em>{{ filtre_statut|capfirst }}</em>{% endif %}
+  {% if filtre_poste %} · poste <em>{{ filtre_poste|capfirst }}</em>{% endif %}
+</div>
+{% endif %}
+
+<!-- ── Tableau ──────────────────────────────────────────────────────────── -->
+<div class="table-wrap fade-in delay-2">
+  <table>
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Poste</th>
+        <th>Email de connexion</th>
+        <th>Statut</th>
+        <th>Expiration</th>
+        <th style="text-align:right;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for utilisateur in utilisateurs %}
         <tr>
-          <th>Utilisateur</th>
-          <th>Poste</th>
-          <th>Email de connexion</th>
-          <th>Statut</th>
-          <th>Expiration</th>
-          <th style="text-align:right;">Actions</th>
+          <td>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4a7cff,#2d5be3);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;flex-shrink:0;">
+                {{ utilisateur.first_name|first|default:utilisateur.username|first|upper }}
+              </div>
+              <div>
+                <div style="font-weight:600;color:#0f1e45;">{{ utilisateur.get_full_name|default:utilisateur.username }}</div>
+                <div style="font-size:.72rem;color:#a0aec0;">@{{ utilisateur.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ utilisateur.poste|default:"—" }}</td>
+          <td>{{ utilisateur.compte.email_connexion }}</td>
+          <td>
+            {% if utilisateur.compte.statut == "ACTIF" %}
+              <span class="badge badge-green"><span class="badge-dot dot-green"></span>Actif</span>
+            {% else %}
+              <span class="badge badge-red"><span class="badge-dot dot-red"></span>Désactivé</span>
+            {% endif %}
+            {% if utilisateur.compte.expire %}
+              <span class="badge badge-orange" style="margin-left:4px;"><span class="badge-dot dot-orange"></span>Expiré</span>
+            {% endif %}
+          </td>
+          <td>{{ utilisateur.compte.date_expiration|date:"d/m/Y"|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <a href="{% url 'account_management:detail' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-view" title="Voir">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+              <a href="{% url 'account_management:update' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-edit" title="Modifier">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+              <a href="{% url 'account_management:archiver' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-archive" title="Archiver">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 8v13a1 1 0 01-1 1H4a1 1 0 01-1-1V8M1 3h22v5H1zM10 12h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </div>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {% for utilisateur in utilisateurs %}
-          <tr>
-            <td>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#4a7cff,#2d5be3); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; color:#fff; flex-shrink:0;">
-                  {{ utilisateur.first_name|first|default:utilisateur.username|first|upper }}
-                </div>
-                <div>
-                  <div style="font-weight:600; color:#0f1e45;">{{ utilisateur.get_full_name|default:utilisateur.username }}</div>
-                  <div style="font-size:.72rem; color:#a0aec0;">@{{ utilisateur.username }}</div>
-                </div>
-              </div>
-            </td>
-            <td>{{ utilisateur.poste|default:"—" }}</td>
-            <td>{{ utilisateur.compte.email_connexion }}</td>
-            <td>
-              {% if utilisateur.compte.statut == "ACTIF" %}
-                <span class="badge badge-green"><span class="badge-dot dot-green"></span>Actif</span>
-              {% else %}
-                <span class="badge badge-red"><span class="badge-dot dot-red"></span>Désactivé</span>
-              {% endif %}
-              {% if utilisateur.compte.expire %}
-                <span class="badge badge-orange" style="margin-left:4px;"><span class="badge-dot dot-orange"></span>Expiré</span>
-              {% endif %}
-            </td>
-            <td>{{ utilisateur.compte.date_expiration|date:"d/m/Y"|default:"—" }}</td>
-            <td>
-              <div style="display:flex; gap:6px; justify-content:flex-end;">
-                <a href="{% url 'account_management:detail' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-view" title="Voir">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3"/></svg>
-                </a>
-                <a href="{% url 'account_management:update' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-edit" title="Modifier">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
-                <a href="{% url 'account_management:delete' pk=utilisateur.compte.pk %}" class="icon-btn icon-btn-delete" title="Supprimer">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </a>
-              </div>
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" style="text-align:center; padding:32px; color:#a0aec0;">Aucun compte utilisateur pour le moment.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+      {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center;padding:48px;color:#a0aec0;">
+            {% if q or filtre_statut or filtre_poste %}
+              <div style="font-size:2rem;margin-bottom:8px;">🔍</div>
+              Aucun compte ne correspond à votre recherche.
+            {% else %}
+              <div style="font-size:2rem;margin-bottom:8px;">👤</div>
+              Aucun compte utilisateur pour le moment.
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Script d'autocomplétion ──────────────────────────────────────────── -->
+<script>
+(function () {
+  const input     = document.getElementById('search-q');
+  const dropdown  = document.getElementById('ac-dropdown');
+  const AC_URL    = "{% url 'account_management:autocomplete' %}";
+
+  let debounceTimer = null;
+  let currentQuery  = '';
+  let activeIndex   = -1;
+  let items         = [];
+
+  /* ── Utilitaire : surligneur ── */
+  function highlight(text, q) {
+    if (!q) return text;
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    return text.replace(re, '<mark class="ac-highlight">$1</mark>');
+  }
+
+  /* ── Fermer le dropdown ── */
+  function close() {
+    dropdown.classList.remove('visible');
+    dropdown.innerHTML = '';
+    activeIndex = -1;
+    items = [];
+  }
+
+  /* ── Rendre les suggestions ── */
+  function render(results, q) {
+    dropdown.innerHTML = '';
+    activeIndex = -1;
+
+    if (results.length === 0) {
+      dropdown.innerHTML = '<div class="ac-empty">Aucun résultat pour « ' + q + ' »</div>';
+      dropdown.classList.add('visible');
+      return;
+    }
+
+    items = results;
+    results.forEach(function (r, i) {
+      const a = document.createElement('a');
+      a.className = 'ac-item';
+      a.href = r.url;
+      a.setAttribute('role', 'option');
+      a.innerHTML =
+        '<div class="ac-avatar">' + r.initial + '</div>' +
+        '<div>' +
+          '<div class="ac-label">' + highlight(r.label, q) + '</div>' +
+          '<div class="ac-sub">'   + highlight(r.sub,   q) + '</div>' +
+        '</div>';
+
+      a.addEventListener('mousedown', function (e) {
+        e.preventDefault();           // évite le blur avant le clic
+        window.location.href = r.url; // navigation directe vers le détail
+      });
+      a.addEventListener('mouseenter', function () {
+        setActive(i);
+      });
+      dropdown.appendChild(a);
+    });
+
+    const footer = document.createElement('div');
+    footer.className = 'ac-footer';
+    footer.textContent = 'Appuyez sur Entrée pour rechercher · ↑↓ pour naviguer';
+    dropdown.appendChild(footer);
+
+    dropdown.classList.add('visible');
+  }
+
+  /* ── Navigation clavier dans le dropdown ── */
+  function setActive(idx) {
+    const nodes = dropdown.querySelectorAll('.ac-item');
+    nodes.forEach(function (n) { n.classList.remove('ac-active'); });
+    activeIndex = idx;
+    if (idx >= 0 && idx < nodes.length) {
+      nodes[idx].classList.add('ac-active');
+      nodes[idx].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  /* ── Fetch avec debounce ── */
+  function fetchSuggestions(q) {
+    if (q.length < 2) { close(); return; }
+    currentQuery = q;
+
+    dropdown.innerHTML = '<div class="ac-loading">Recherche…</div>';
+    dropdown.classList.add('visible');
+
+    fetch(AC_URL + '?q=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (input.value.trim() === q) {   // réponse toujours valide ?
+          render(data.results, q);
+        }
+      })
+      .catch(function () { close(); });
+  }
+
+  /* ── Événements sur l'input ── */
+  input.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    if (q.length < 2) { close(); return; }
+    debounceTimer = setTimeout(function () { fetchSuggestions(q); }, 250);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (!dropdown.classList.contains('visible')) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive(Math.min(activeIndex + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive(Math.max(activeIndex - 1, -1));
+      if (activeIndex === -1) input.value = currentQuery;
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      window.location.href = items[activeIndex].url;
+    } else if (e.key === 'Escape') {
+      close();
+    }
+
+    /* Met à jour l'input si on navigue */
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && activeIndex >= 0) {
+      input.value = items[activeIndex].label;
+    }
+  });
+
+  /* ── Fermer en cliquant ailleurs ── */
+  document.addEventListener('click', function (e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+      close();
+    }
+  });
+
+  /* ── Rouvrir si le champ a déjà du texte ── */
+  input.addEventListener('focus', function () {
+    const q = input.value.trim();
+    if (q.length >= 2) fetchSuggestions(q);
+  });
+})();
+</script>
 {% endblock %}
