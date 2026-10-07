@@ -26,7 +26,7 @@
       <tr>
         <td><a href="{% url 'meetings:reunion_detail' p.reunion.id %}" style="font-weight:600; color:#0f1e45; text-decoration:none;">{{ p.reunion.objet }}</a></td>
         <td style="white-space:nowrap;">{{ p.reunion.date|date:"d/m/Y" }}</td>
-        <td style="white-space:nowrap; font-size:.8rem; color:#718096;">{{ p.reunion.heure_debut|time:"H:i" }} – {{ p.reunion.heure_fin|time:"H:i" }}</td>
+        <td style="white-space:nowrap; font-size:.8rem; color:#718096;">{{ p.reunion.heure_debut|time:"H:i" }}{% if p.reunion.heure_fin %} – {{ p.reunion.heure_fin|time:"H:i" }}{% endif %}</td>
         <td style="font-size:.82rem;">{% if p.reunion.lieu %}{{ p.reunion.lieu.nom_salle }}{% else %}<span style="color:#a0aec0;">À définir</span>{% endif %}</td>
         <td>
           {% if p.statut == 'EN_ATTENTE' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En attente</span>

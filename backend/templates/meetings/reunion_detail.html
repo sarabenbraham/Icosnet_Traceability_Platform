@@ -58,7 +58,6 @@
       <div class="info-row">
         <span class="info-label">Statut</span>
         <span class="info-value">
-          {% if reunion.statut == 'CREEE' %}<span class="badge badge-gray"><span class="badge-dot dot-gray"></span>Créée</span>
           {% elif reunion.statut == 'PLANIFIEE' %}<span class="badge badge-blue"><span class="badge-dot dot-blue"></span>Planifiée</span>
           {% elif reunion.statut == 'EN_COURS' %}<span class="badge badge-orange"><span class="badge-dot dot-orange"></span>En cours</span>
           {% elif reunion.statut == 'TERMINEE' %}<span class="badge badge-green"><span class="badge-dot dot-green"></span>Terminée</span>
@@ -75,7 +74,7 @@
 
       <div class="info-row">
         <span class="info-label">Horaire</span>
-        <span class="info-value">{{ reunion.heure_debut }} – {{ reunion.heure_fin }}</span>
+        <span class="info-value">{{ reunion.heure_debut|time:"H:i" }}{% if reunion.heure_fin %} – {{ reunion.heure_fin|time:"H:i" }}{% endif %}</span>
       </div>
 
       <div class="info-row">

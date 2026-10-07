@@ -296,6 +296,14 @@ def reunion_delete(request, pk):
 def participation_create(request, reunion_pk):
     reunion = get_object_or_404(Reunion.objects.select_related("lieu"), pk=reunion_pk)
 
+    if reunion.est_cloturee:
+        messages.error(
+            request,
+            "Impossible d'ajouter des participants : la réunion est terminée ou annulée."
+        )
+        return redirect("meetings:reunion_detail", pk=reunion.pk)
+
+
     if request.method == "POST":
         form = ParticipationForm(request.POST, reunion=reunion)
         if form.is_valid():
@@ -363,6 +371,13 @@ def participation_delete(request, pk):
 
     reunion_pk = participation.reunion.pk
 
+    if participation.reunion.est_cloturee:
+        messages.error(
+            request,
+            "Impossible de retirer un participant : la réunion est terminée ou annulée."
+        )
+        return redirect("meetings:reunion_detail", pk=reunion_pk)
+
     if request.method == "POST":
         participation.delete()
 
@@ -394,6 +409,13 @@ def _repondre(request, pk, action, message):
         or participation.utilisateur_id == request.user.pk
     ):
         raise PermissionDenied
+
+    if participation.reunion.est_cloturee:
+        messages.error(
+            request,
+            "Cette réunion est terminée ou annulée : la réponse n'est plus modifiable."
+        )
+        return redirect("meetings:reunion_detail", pk=participation.reunion.pk)
 
     if request.method == "POST":
         getattr(participation, action)()

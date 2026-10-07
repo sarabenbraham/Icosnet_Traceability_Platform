@@ -1,12 +1,18 @@
 import uuid
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.db import models
 from django.utils import timezone
+from datetime import datetime, time, timedelta
 
 def nom_complet(user):
         return user.get_full_name() or user.get_username()
+
+def fin_par_defaut(date, heure_debut):
+    """Heure de fin supposée (début + 1 h) pour une réunion sans heure de fin."""
+    fin = datetime.combine(date, heure_debut) + timedelta(hours=1)
+    return fin.time() if fin.date() == date else time(23, 59)
 
 class TypeReunion(models.TextChoices):
     TECHNIQUE = "TECHNIQUE", "Technique"
@@ -17,7 +23,6 @@ class TypeReunion(models.TextChoices):
 
 
 class StatutReunion(models.TextChoices):
-    CREEE = "CREEE", "Créée"
     PLANIFIEE = "PLANIFIEE", "Planifiée"
     EN_COURS = "EN_COURS", "En cours"
     TERMINEE = "TERMINEE", "Terminée"
@@ -71,24 +76,25 @@ class Lieu(models.Model):
                 {"capacite": "Indiquez une capacité ou cochez « Places illimitées »."}
             )
 
-    def est_disponible(self, date, heure_debut, heure_fin, reunion_id=None):
-        conflits = Reunion.objects.filter(
+    def est_disponible(self, date, heure_debut, heure_fin=None, reunion_id=None):
+        fin = heure_fin or fin_par_defaut(date, heure_debut)
+
+        candidats = Reunion.objects.filter(
             lieu=self,
             date=date,
             statut__in=[
-                StatutReunion.CREEE,
                 StatutReunion.PLANIFIEE,
                 StatutReunion.EN_COURS,
             ],
-            heure_debut__lt=heure_fin,
-            heure_fin__gt=heure_debut,
         )
 
         if reunion_id:
-            conflits = conflits.exclude(pk=reunion_id)
+            candidats = candidats.exclude(pk=reunion_id)
 
-        return not conflits.exists()
-
+        return not any(
+            r.heure_debut < fin and r.fin_effective() > heure_debut
+            for r in candidats
+        )
 
 class Reunion(models.Model):
     id = models.UUIDField(
@@ -109,7 +115,10 @@ class Reunion(models.Model):
 
     heure_debut = models.TimeField()
 
-    heure_fin = models.TimeField()
+    heure_fin = models.TimeField(
+        null=True,
+        blank=True,
+    )
 
     type = models.CharField(
         max_length=20,
@@ -119,7 +128,7 @@ class Reunion(models.Model):
     statut = models.CharField(
         max_length=20,
         choices=StatutReunion.choices,
-        default=StatutReunion.CREEE,
+        default=StatutReunion.PLANIFIEE,
     )
 
     organisateur = models.CharField(
@@ -134,15 +143,38 @@ class Reunion(models.Model):
         blank=True,
     )
 
-    def clean(self):
-        if self.heure_debut and self.heure_fin and self.heure_fin <= self.heure_debut:
-            raise ValidationError("L'heure de fin doit être après l'heure de début.")
+    def fin_effective(self):
+        return self.heure_fin or fin_par_defaut(self.date, self.heure_debut)
 
-        if self.lieu_id and self.date and self.heure_debut and self.heure_fin:
+    def clean(self):
+        errors = {}
+
+        # 1) Nom déjà utilisé par une autre réunion
+        if self.objet:
+            doublon = Reunion.objects.filter(
+                objet__iexact=self.objet.strip(),
+                date=self.date
+            ).exclude(pk=self.pk)
+            if doublon.exists():
+                errors["objet"] = "Une réunion avec ce nom existe déjà."
+
+        # 2) Heures cohérentes (inchangé)
+        if self.heure_debut and self.heure_fin and self.heure_fin <= self.heure_debut:
+            errors["heure_fin"] = "L'heure de fin doit être après l'heure de début."
+
+        # 3) Lieu disponible (inchangé)
+        elif self.lieu_id and self.date and self.heure_debut:
             if not self.lieu.est_disponible(
                 self.date, self.heure_debut, self.heure_fin, self.pk
             ):
-                raise ValidationError("Ce lieu est déjà occupé pendant cette période.")
+                errors[NON_FIELD_ERRORS] = "Ce lieu est déjà occupé pendant cette période."
+
+        if errors:
+            raise ValidationError(errors)
+
+    @property
+    def est_cloturee(self):
+        return self.statut in (StatutReunion.TERMINEE, StatutReunion.ANNULEE)
 
     @property
     def nb_participants(self):

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if lieu %}Modifier la salle{% else %}Nouvelle salle{% endif %} – Plateforme DSI ICOSNET{% endblock %}
-{% block page_title %}{% if lieu %}Modifier la salle{% else %}Nouvelle salle{% endif %}{% endblock %}
+{% block title %}{% if lieu %}Modifier la salle{% else %}Nouveau lieu{% endif %} – Plateforme DSI ICOSNET{% endblock %}
+{% block page_title %}{% if lieu %}Modifier la salle{% else %}Nouveau lieu{% endif %}{% endblock %}
 {% block page_sub %}{% if lieu %}Mise à jour de {{ lieu.nom_salle }}{% else %}Ajouter un nouvel espace de réunion{% endif %}{% endblock %}
 {% block nav_lieux %}active{% endblock %}
 
@@ -9,7 +9,7 @@
 
 <div class="page-header fade-in">
   <div class="page-header-left">
-    <h1>{% if lieu %}Modifier : {{ lieu.nom_salle }}{% else %}Nouvelle salle{% endif %}</h1>
+    <h1>{% if lieu %}Modifier : {{ lieu.nom_salle }}{% else %}Nouveau lieu{% endif %}</h1>
     <p>{% if lieu %}Mettez à jour les informations de cette salle.{% else %}Enregistrez un nouvel espace de réunion.{% endif %}</p>
   </div>
 </div>

@@ -70,8 +70,6 @@
     </select>
 
     <select name="statut" class="filter-select" onchange="this.form.submit()">
-      <option value="">Tous les statuts</option>
-      <option value="CREEE"     {% if filtre_statut == 'CREEE'     %}selected{% endif %}>Créée</option>
       <option value="PLANIFIEE" {% if filtre_statut == 'PLANIFIEE' %}selected{% endif %}>Planifiée</option>
       <option value="EN_COURS"  {% if filtre_statut == 'EN_COURS'  %}selected{% endif %}>En cours</option>
       <option value="TERMINEE"  {% if filtre_statut == 'TERMINEE'  %}selected{% endif %}>Terminée</option>
@@ -128,7 +126,7 @@
           {% endif %}
         </td>
         <td style="color:#4a5568; white-space:nowrap;">{{ reunion.date }}</td>
-        <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut }} – {{ reunion.heure_fin }}</td>
+        <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut|time:"H:i" }}{% if reunion.heure_fin %} – {{ reunion.heure_fin|time:"H:i" }}{% endif %}</td>
         <td style="font-size:.82rem; color:#4a5568;">
           {% if reunion.lieu %}
             <a href="{% url 'meetings:lieu_detail' reunion.lieu.id %}"
