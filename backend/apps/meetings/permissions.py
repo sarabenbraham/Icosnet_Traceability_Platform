@@ -1,6 +1,32 @@
 from functools import wraps
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from .models import StatutParticipation, StatutReunion
+
+
+from .models import StatutParticipation, StatutReunion
+
+
+def est_participant_actif(user, reunion):
+    """Invité n'ayant pas refusé."""
+    return reunion.participations.filter(utilisateur=user).exclude(
+        statut=StatutParticipation.REFUSEE
+    ).exists()
+
+
+def peut_editer_pv(user, reunion, pv=None):
+    """
+    - la réunion doit être terminée
+    - création : gestionnaire ou participant (non refusé)
+    - modification : gestionnaire ou auteur du PV
+    """
+    if not user.is_authenticated or reunion.statut != StatutReunion.TERMINEE:
+        return False
+    if est_gestionnaire(user):
+        return True
+    if not est_participant_actif(user, reunion):
+        return False
+    return pv is None or pv.redacteur_id == user.pk
 
 
 def roles_utilisateur(user):

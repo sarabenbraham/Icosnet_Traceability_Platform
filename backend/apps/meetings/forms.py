@@ -1,9 +1,13 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 
-from .models import Lieu, Reunion, nom_complet
+from .models import Lieu, Reunion, ProcesVerbal, nom_complet
 
 User = get_user_model()
+
+TAILLE_MAX_PV = 10 * 1024 * 1024  # 10 Mo
 
 
 class StyledFormMixin:
@@ -26,7 +30,7 @@ class ReunionForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = Reunion
         fields = ["objet", "description", "date", "heure_debut", "heure_fin",
-                  "type", "statut", "organisateur", "lieu"]
+                  "type", "organisateur", "lieu"]
         labels = {"lieu": "Lieu"}
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
@@ -63,3 +67,19 @@ class ParticipationForm(StyledFormMixin, forms.Form):
             qs = qs.exclude(participations_reunions__reunion=reunion)
         self.fields["participants"].queryset = qs
         self.fields["participants"].label_from_instance = nom_complet
+
+
+class PVForm(StyledFormMixin, forms.ModelForm):
+    class Meta:
+        model = ProcesVerbal
+        fields = ["contenu", "resultats", "document"]
+        widgets = {
+            "contenu": forms.Textarea(attrs={"rows": 8}),
+            "resultats": forms.Textarea(attrs={"rows": 5}),
+        }
+
+    def clean_document(self):
+        fichier = self.cleaned_data.get("document")
+        if isinstance(fichier, UploadedFile) and fichier.size > TAILLE_MAX_PV:
+            raise ValidationError("Le fichier dépasse 10 Mo.")
+        return fichier

@@ -34,6 +34,7 @@
           {% else %}<span class="badge badge-red"><span class="badge-dot dot-red"></span>Refusée</span>{% endif %}
         </td>
         <td>
+         {% if not p.reunion.est_cloturee %}
           <div style="display:flex; gap:6px; justify-content:center;">
             {% if p.statut != 'CONFIRMEE' %}
             <form method="post" action="{% url 'meetings:participation_confirmer' p.id %}" style="margin:0;">
@@ -48,6 +49,7 @@
             </form>
             {% endif %}
           </div>
+         {% endif %}
         </td>
       </tr>
       {% empty %}

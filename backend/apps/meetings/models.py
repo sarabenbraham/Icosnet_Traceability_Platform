@@ -1,5 +1,7 @@
 import uuid
+import os
 
+from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.db import models
@@ -13,6 +15,10 @@ def fin_par_defaut(date, heure_debut):
     """Heure de fin supposée (début + 1 h) pour une réunion sans heure de fin."""
     fin = datetime.combine(date, heure_debut) + timedelta(hours=1)
     return fin.time() if fin.date() == date else time(23, 59)
+
+def pv_upload_to(instance, filename):
+    return f"pv/{instance.reunion_id}/{filename}"
+
 
 class TypeReunion(models.TextChoices):
     TECHNIQUE = "TECHNIQUE", "Technique"
@@ -146,6 +152,10 @@ class Reunion(models.Model):
     def fin_effective(self):
         return self.heure_fin or fin_par_defaut(self.date, self.heure_debut)
 
+    def terminer(self):
+        self.statut = StatutReunion.TERMINEE
+        self.save(update_fields=["statut"])
+
     def clean(self):
         errors = {}
 
@@ -274,4 +284,48 @@ class Participation(models.Model):
     def __str__(self):
         return f"{self.participant} - {self.reunion}"
     
-    
+
+class ProcesVerbal(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    reunion = models.OneToOneField(
+        Reunion,
+        on_delete=models.CASCADE,
+        related_name="pv",
+    )
+
+    contenu = models.TextField("Détails de la réunion")
+    resultats = models.TextField("Résultats / décisions", blank=True)
+
+    document = models.FileField(
+        "Document joint",
+        upload_to=pv_upload_to,
+        blank=True,
+        validators=[FileExtensionValidator(
+            ["pdf", "doc", "docx", "odt", "xls", "xlsx", "ppt", "pptx", "txt", "png", "jpg", "jpeg"]
+        )],
+    )
+
+    redacteur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pv_rediges",
+    )
+    redacteur_nom = models.CharField(max_length=255, blank=True)
+
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+
+    @property
+    def nom_document(self):
+        return os.path.basename(self.document.name) if self.document else ""
+
+    def save(self, *args, **kwargs):
+        if self.redacteur_id and not self.redacteur_nom:
+            self.redacteur_nom = nom_complet(self.redacteur)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"PV – {self.reunion}"
