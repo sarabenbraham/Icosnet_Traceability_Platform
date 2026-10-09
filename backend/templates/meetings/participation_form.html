@@ -27,7 +27,7 @@
     <div>
       <div style="font-size:.95rem; font-weight:700; color:#0f1e45;">{{ reunion.objet }}</div>
       <div style="font-size:.78rem; color:#718096; margin-top:2px;">
-        {{ reunion.date }} &bull; {{ reunion.heure_debut }} – {{ reunion.heure_fin }} &bull; {{ reunion.lieu.nom_salle }}
+        {{ reunion.date }} &bull; {{ reunion.heure_debut|time:"H:i" }}{% if reunion.heure_fin %} – {{ reunion.heure_fin|time:"H:i" }}{% endif %} &bull; {{ reunion.lieu.nom_salle }}
       </div>
     </div>
   </div>

@@ -19,6 +19,7 @@
 {% block topbar_action %}
   <div style="display:flex; gap:8px; align-items:center;">
 
+    {% if est_gestionnaire %}
     <a href="{% url 'meetings:lieu_list' %}" class="btn-secondary">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <rect x="3" y="4" width="18" height="16" rx="2"/>
@@ -26,7 +27,9 @@
       </svg>
       Lieux
     </a>
+    {% endif %}
 
+    {% if peut_gerer_reunions %}
     <a href="{% url 'meetings:reunion_create' %}" class="btn-upload">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
         <path d="M12 5v14M5 12l7-7 7 7"
@@ -35,6 +38,7 @@
       </svg>
       Nouvelle réunion
     </a>
+    {% endif %}
 
   </div>
 {% endblock %}
@@ -70,8 +74,6 @@
     </select>
 
     <select name="statut" class="filter-select" onchange="this.form.submit()">
-      <option value="">Tous les statuts</option>
-      <option value="CREEE"     {% if filtre_statut == 'CREEE'     %}selected{% endif %}>Créée</option>
       <option value="PLANIFIEE" {% if filtre_statut == 'PLANIFIEE' %}selected{% endif %}>Planifiée</option>
       <option value="EN_COURS"  {% if filtre_statut == 'EN_COURS'  %}selected{% endif %}>En cours</option>
       <option value="TERMINEE"  {% if filtre_statut == 'TERMINEE'  %}selected{% endif %}>Terminée</option>
@@ -128,7 +130,7 @@
           {% endif %}
         </td>
         <td style="color:#4a5568; white-space:nowrap;">{{ reunion.date }}</td>
-        <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut }} – {{ reunion.heure_fin }}</td>
+        <td style="color:#718096; font-size:.8rem; white-space:nowrap;">{{ reunion.heure_debut|time:"H:i" }}{% if reunion.heure_fin %} – {{ reunion.heure_fin|time:"H:i" }}{% endif %}</td>
         <td style="font-size:.82rem; color:#4a5568;">
           {% if reunion.lieu %}
             <a href="{% url 'meetings:lieu_detail' reunion.lieu.id %}"

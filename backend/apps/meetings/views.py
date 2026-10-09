@@ -1,20 +1,28 @@
+import os
+
+from django.http import FileResponse, Http404
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import models
 from django.db.models import ProtectedError
-from .models import Lieu, Reunion, Participation, nom_complet, StatutParticipation
+from .models import Lieu, Reunion, Participation, nom_complet, StatutParticipation, StatutReunion, ProcesVerbal
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from .notifications import notifier_invitation
-from .permissions import est_gestionnaire, gestionnaire_required
+from .permissions import est_gestionnaire, gestionnaire_required, reunion_permission_required, peut_editer_pv
 
 from .forms import (
     LieuForm,
     ReunionForm,
     ParticipationForm,
+    PVForm,
 )
 
 
@@ -142,7 +150,9 @@ def reunion_list(request):
 
     if not est_gestionnaire(request.user):
         reunions = reunions.filter(
-            pk__in=Participation.objects.filter(utilisateur=request.user).values("reunion")
+            pk__in=Participation.objects.filter(
+                utilisateur=request.user
+            ).values("reunion")
         )
 
 
@@ -157,13 +167,20 @@ def reunion_list(request):
         },
     )
 
-@gestionnaire_required
+@reunion_permission_required
 def reunion_create(request):
     if request.method == "POST":
         form = ReunionForm(request.POST)
 
         if form.is_valid():
             reunion = form.save()
+
+            Participation.objects.create(
+                reunion=reunion,
+                utilisateur=request.user,
+                participant=nom_complet(request.user),
+                role="Organisateur",
+            )
 
             messages.success(
                 request,
@@ -201,7 +218,7 @@ def reunion_detail(request, pk):
         raise PermissionDenied
 
     participations = reunion.participations.select_related("utilisateur")
-
+    pv = ProcesVerbal.objects.filter(reunion=reunion).first()
 
     return render(
         request,
@@ -209,15 +226,21 @@ def reunion_detail(request, pk):
         {
             "reunion": reunion,
             "participations": participations,
+            "pv": pv,
+            "peut_editer_pv": peut_editer_pv(request.user, reunion, pv),
         },
     )
 
-@gestionnaire_required
+@reunion_permission_required
 def reunion_update(request, pk):
     reunion = get_object_or_404(
         Reunion,
         pk=pk,
     )
+
+    if reunion.est_cloturee:
+        messages.error(request, "Une réunion terminée ou annulée ne peut plus être modifiée.")
+        return redirect("meetings:reunion_detail", pk=reunion.pk)
 
     if request.method == "POST":
         form = ReunionForm(
@@ -279,13 +302,39 @@ def reunion_delete(request, pk):
         },
     )
 
+@reunion_permission_required
+@require_POST
+def reunion_terminer(request, pk):
+    reunion = get_object_or_404(Reunion, pk=pk)
+
+    if reunion.est_cloturee:
+        messages.error(request, "Cette réunion est déjà terminée ou annulée.")
+    elif reunion.date > timezone.localdate():
+        messages.error(request, "Impossible de terminer une réunion qui n'a pas encore eu lieu.")
+    else:
+        reunion.terminer()
+        messages.success(
+            request,
+            "La réunion est terminée. Vous pouvez maintenant rédiger le procès-verbal."
+        )
+
+    return redirect("meetings:reunion_detail", pk=reunion.pk)
+
 
 # =========================================================
 # PARTICIPATIONS
 # =========================================================
-@gestionnaire_required
+@reunion_permission_required
 def participation_create(request, reunion_pk):
     reunion = get_object_or_404(Reunion.objects.select_related("lieu"), pk=reunion_pk)
+
+    if reunion.est_cloturee:
+        messages.error(
+            request,
+            "Impossible d'ajouter des participants : la réunion est terminée ou annulée."
+        )
+        return redirect("meetings:reunion_detail", pk=reunion.pk)
+
 
     if request.method == "POST":
         form = ParticipationForm(request.POST, reunion=reunion)
@@ -354,6 +403,13 @@ def participation_delete(request, pk):
 
     reunion_pk = participation.reunion.pk
 
+    if participation.reunion.est_cloturee:
+        messages.error(
+            request,
+            "Impossible de retirer un participant : la réunion est terminée ou annulée."
+        )
+        return redirect("meetings:reunion_detail", pk=reunion_pk)
+
     if request.method == "POST":
         participation.delete()
 
@@ -386,6 +442,13 @@ def _repondre(request, pk, action, message):
     ):
         raise PermissionDenied
 
+    if participation.reunion.est_cloturee:
+        messages.error(
+            request,
+            "Cette réunion est terminée ou annulée : la réponse n'est plus modifiable."
+        )
+        return redirect("meetings:reunion_detail", pk=participation.reunion.pk)
+
     if request.method == "POST":
         getattr(participation, action)()
         messages.success(request, message)
@@ -413,3 +476,71 @@ def mes_invitations(request):
         .order_by("reunion__date", "reunion__heure_debut")
     )
     return render(request, "meetings/mes_invitations.html", {"participations": participations})
+
+
+# =========================================================
+# PROCES-VERBAL
+# =========================================================
+@login_required
+def pv_edit(request, reunion_pk):
+    reunion = get_object_or_404(Reunion, pk=reunion_pk)
+    pv = ProcesVerbal.objects.filter(reunion=reunion).first()
+
+    if reunion.statut != StatutReunion.TERMINEE:
+        messages.error(request, "Le PV ne peut être rédigé qu'une fois la réunion terminée.")
+        return redirect("meetings:reunion_detail", pk=reunion.pk)
+
+    if not peut_editer_pv(request.user, reunion, pv):
+        raise PermissionDenied
+
+    if request.method == "POST":
+        form = PVForm(request.POST, request.FILES, instance=pv)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.reunion = reunion
+            if pv is None:
+                obj.redacteur = request.user
+            obj.save()
+            messages.success(request, "Le procès-verbal a été enregistré.")
+            return redirect("meetings:reunion_detail", pk=reunion.pk)
+    else:
+        form = PVForm(instance=pv)
+
+    return render(
+        request,
+        "meetings/pv_form.html",
+        {"form": form, "reunion": reunion, "pv": pv},
+    )
+
+
+@login_required
+def pv_telecharger(request, pk):
+    pv = get_object_or_404(ProcesVerbal.objects.select_related("reunion"), pk=pk)
+
+    if not est_gestionnaire(request.user) and not pv.reunion.participations.filter(
+        utilisateur=request.user
+    ).exists():
+        raise PermissionDenied
+
+    if not pv.document:
+        raise Http404("Aucun document joint.")
+
+    return FileResponse(
+        pv.document.open("rb"),
+        as_attachment=True,
+        filename=pv.nom_document,
+    )
+
+
+@gestionnaire_required
+@require_POST
+def pv_delete(request, pk):
+    pv = get_object_or_404(ProcesVerbal, pk=pk)
+    reunion_pk = pv.reunion_id
+
+    if pv.document:
+        pv.document.delete(save=False)  # supprime aussi le fichier sur le disque
+    pv.delete()
+
+    messages.success(request, "Le procès-verbal a été supprimé.")
+    return redirect("meetings:reunion_detail", pk=reunion_pk)

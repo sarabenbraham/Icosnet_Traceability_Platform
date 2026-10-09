@@ -1,5 +1,6 @@
+# context_processors.py
 from .models import Participation, StatutParticipation, StatutReunion
-from .permissions import est_gestionnaire, roles_utilisateur
+from .permissions import est_gestionnaire, peut_gerer_reunions, roles_utilisateur
 
 
 def meetings(request):
@@ -17,7 +18,8 @@ def meetings(request):
     roles = roles_utilisateur(user)
 
     return {
-        "peut_gerer_reunions": any("directeur" in r or "chefdepartement" in r for r in roles),
+        "peut_gerer_reunions": peut_gerer_reunions(user),   # créer / modifier / inviter
+        "est_gestionnaire": est_gestionnaire(user),          # supprimer / lieux
         "invitations_count": invitations.count(),
         "invitations_recentes": list(invitations[:5]),
         "is_directeur": "directeur" in roles,

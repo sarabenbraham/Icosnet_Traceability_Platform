@@ -33,17 +33,10 @@
       </div>
 
       <!-- Type -->
-      <div class="form-group">
+      <div class="form-group" style="grid-column: 1 / -1;">
         <label for="{{ form.type.id_for_label }}">Type de réunion *</label>
         {{ form.type }}
         {% if form.type.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.type.errors.0 }}</div>{% endif %}
-      </div>
-
-      <!-- Statut -->
-      <div class="form-group">
-        <label for="{{ form.statut.id_for_label }}">Statut *</label>
-        {{ form.statut }}
-        {% if form.statut.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.statut.errors.0 }}</div>{% endif %}
       </div>
 
       <!-- Date -->
@@ -62,7 +55,7 @@
 
       <!-- Heure fin -->
       <div class="form-group">
-        <label for="{{ form.heure_fin.id_for_label }}">Heure de fin *</label>
+        <label for="{{ form.heure_fin.id_for_label }}">Heure de fin (facultatif)</label>
         {{ form.heure_fin }}
         {% if form.heure_fin.errors %}<div style="color:#c53030; font-size:.78rem;">{{ form.heure_fin.errors.0 }}</div>{% endif %}
       </div>

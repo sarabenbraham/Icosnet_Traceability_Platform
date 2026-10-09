@@ -104,5 +104,16 @@ urlpatterns = [
         name="participation_refuser",
     ),
 
-        path("mes-invitations/", views.mes_invitations, name="mes_invitations"),
+    path("mes-invitations/", views.mes_invitations, name="mes_invitations"),
+
+    path(
+        "<uuid:pk>/terminer/",
+        views.reunion_terminer,
+        name="reunion_terminer",
+    ),
+        
+    path("<uuid:reunion_pk>/pv/", views.pv_edit, name="pv_edit"),
+    path("pv/<uuid:pk>/telecharger/", views.pv_telecharger, name="pv_telecharger"),
+    path("pv/<uuid:pk>/delete/", views.pv_delete, name="pv_delete"),
+
 ]
