@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     "apps.organization",
     "apps.application_sheet",
     "apps.meetings",
-    "rest_framework",
     "apps.account_management",
     "multiselectfield",
     "apps.dashboard",

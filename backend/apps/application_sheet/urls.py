@@ -24,6 +24,12 @@ urlpatterns = [
     ),
 
     path(
+        "<int:pk>/",
+        views.fiche_detail,
+        name="fiche_detail",
+    ),
+
+    path(
         "<int:pk>/update/",
         views.fiche_update,
         name="modifier",
