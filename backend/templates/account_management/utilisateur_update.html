@@ -114,6 +114,18 @@
           {% if form.poste.errors %}<div class="field-errors">{{ form.poste.errors|striptags }}</div>{% endif %}
         </div>
       </div>
+
+      {% if compte.utilisateur.poste == 'ingenieur' or compte.utilisateur.ingenieur %}
+      <div style="margin-top:16px; background:#f0f7ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px;">
+        {{ form.est_helpdesk }}
+        <div>
+          <label for="{{ form.est_helpdesk.id_for_label }}" style="font-weight:600; color:#1e40af; margin:0; cursor:pointer;">
+            🎧 {{ form.est_helpdesk.label }}
+          </label>
+          <div style="font-size:0.75rem; color:#475569;">{{ form.est_helpdesk.help_text }}</div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Section 2 : Identifiants & Modification du Mot de passe -->

@@ -38,14 +38,61 @@
 
       <div class="form-grid">
         {% for field in form %}
-          <div class="form-group" {% if field.field.widget.input_type == "checkbox" %}style="flex-direction:row; align-items:center; gap:8px;"{% endif %}>
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
-            {% if field.help_text %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
-          </div>
+          {% if field.name == "est_helpdesk" %}
+            <div class="form-group" id="group-{{ field.name }}" style="grid-column: 1 / -1; background:#f0f7ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; display:flex; flex-direction:row; align-items:center; gap:12px;">
+              {{ field }}
+              <div>
+                <label for="{{ field.id_for_label }}" style="font-weight:600; color:#1e40af; margin:0; cursor:pointer;">🎧 {{ field.label }}</label>
+                {% if field.help_text %}<div class="field-help" style="color:#475569;">{{ field.help_text }}</div>{% endif %}
+              </div>
+              {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
+            </div>
+          {% else %}
+            <div class="form-group" id="group-{{ field.name }}" {% if field.field.widget.input_type == "checkbox" %}style="flex-direction:row; align-items:center; gap:8px;"{% endif %}>
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
+              {% if field.help_text %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
+            </div>
+          {% endif %}
         {% endfor %}
       </div>
+
+      <script>
+      (function() {
+        const posteSelect = document.getElementById("id_poste");
+        const dirGroup = document.getElementById("group-direction");
+        const depGroup = document.getElementById("group-departement");
+        const hdGroup  = document.getElementById("group-est_helpdesk");
+
+        function updateFields() {
+          if (!posteSelect) return;
+          const val = (posteSelect.value || "").toLowerCase();
+          if (val === "directeur") {
+            if (dirGroup) dirGroup.style.display = "";
+            if (depGroup) depGroup.style.display = "none";
+            if (hdGroup)  hdGroup.style.display  = "none";
+          } else if (val === "chefdepartement") {
+            if (dirGroup) dirGroup.style.display = "none";
+            if (depGroup) depGroup.style.display = "";
+            if (hdGroup)  hdGroup.style.display  = "none";
+          } else if (val === "ingenieur") {
+            if (dirGroup) dirGroup.style.display = "none";
+            if (depGroup) depGroup.style.display = "";
+            if (hdGroup)  hdGroup.style.display  = "flex";
+          } else {
+            if (dirGroup) dirGroup.style.display = "";
+            if (depGroup) depGroup.style.display = "";
+            if (hdGroup)  hdGroup.style.display  = "none";
+          }
+        }
+
+        if (posteSelect) {
+          posteSelect.addEventListener("change", updateFields);
+          updateFields();
+        }
+      })();
+      </script>
 
       <div style="display:flex; gap:10px; margin-top:26px;">
         <button type="submit" class="btn-submit">

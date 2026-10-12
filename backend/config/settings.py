@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.account_management",
     "multiselectfield",
     "apps.dashboard",
+    "apps.helpdesk",
 ]
 
 MIDDLEWARE = [

@@ -38,6 +38,12 @@ class CompteForm(forms.ModelForm):
     last_name = forms.CharField(label="Nom", max_length=100, required=False)
     email = forms.EmailField(label="Email professionnel", required=False)
     poste = forms.CharField(label="Poste / Fonction", max_length=100, required=False)
+    est_helpdesk = forms.BooleanField(
+        label="Rôle Agent Help Desk",
+        required=False,
+        help_text="Cocher si cet ingénieur peut traiter les tickets Help Desk.",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
 
     class Meta:
         model = Compte
@@ -69,6 +75,10 @@ class CompteForm(forms.ModelForm):
             self.fields["last_name"].initial = u.last_name
             self.fields["email"].initial = u.email
             self.fields["poste"].initial = getattr(u, "poste", "")
+            if hasattr(u, "ingenieur"):
+                self.fields["est_helpdesk"].initial = u.ingenieur.est_helpdesk
+            elif hasattr(u, "est_helpdesk"):
+                self.fields["est_helpdesk"].initial = u.est_helpdesk
 
     def save(self, commit=True):
         compte = super().save(commit=False)
@@ -85,8 +95,15 @@ class CompteForm(forms.ModelForm):
             if self.cleaned_data.get("poste") is not None and hasattr(u, "poste"):
                 u.poste = self.cleaned_data["poste"]
 
-
             u.save()
+
+            if hasattr(u, "ingenieur"):
+                ing = u.ingenieur
+                ing.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
+                ing.save(update_fields=["est_helpdesk"])
+            elif hasattr(u, "est_helpdesk"):
+                u.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
+                u.save(update_fields=["est_helpdesk"])
 
         if commit:
             compte.save()
@@ -110,6 +127,12 @@ class UtilisateurCompteForm(forms.ModelForm):
     )
     email_connexion = forms.EmailField(required=True)
     mot_de_passe = forms.CharField(widget=forms.PasswordInput, required=True)
+    est_helpdesk = forms.BooleanField(
+        required=False,
+        label="R\u00f4le Agent Help Desk",
+        help_text="Cocher si cet ing\u00e9nieur peut traiter les tickets Help Desk.",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
     date_expiration = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={"type": "date"}),
@@ -145,7 +168,8 @@ class UtilisateurCompteForm(forms.ModelForm):
             dep.save(update_fields=["chef_departement"])
         elif classe is Ingenieur:
             utilisateur.departement = cd["departement"]
-            utilisateur.save(update_fields=["departement"])
+            utilisateur.est_helpdesk = cd.get("est_helpdesk", False)
+            utilisateur.save(update_fields=["departement", "est_helpdesk"])
 
         compte = Compte(
             utilisateur=utilisateur,

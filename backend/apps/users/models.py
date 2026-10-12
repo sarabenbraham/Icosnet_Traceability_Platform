@@ -24,9 +24,20 @@ class Ingenieur(User):
         null=True,
         blank=True,
     )
-    
+    est_helpdesk = models.BooleanField(
+        default=False,
+        verbose_name="Agent Help Desk",
+        help_text="Cocher si cet ing\u00e9nieur peut traiter les tickets Help Desk."
+    )
+
     def remplirFormulaire(self):
         pass
+
+    def __str__(self):
+        label = super().__str__()
+        if self.est_helpdesk:
+            label += " [Help Desk]"
+        return label
 
 class ChefDepartement(User):
     def valider(self):

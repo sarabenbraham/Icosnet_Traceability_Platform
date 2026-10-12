@@ -320,6 +320,16 @@
 
 
 
+    <!-- Help Desk : visible par tous les utilisateurs connectés -->
+    <div class="nav-section-label" style="margin-top:8px;">Support</div>
+    <a href="{% url 'helpdesk:liste' %}" class="nav-item {% block nav_helpdesk %}{% endblock %}">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Help Desk
+    </a>
+
     {% if is_directeur or is_chef %}
       <div class="nav-section-label" style="margin-top:8px;">Administration</div>
       <a href="{% url 'account_management:liste' %}" class="nav-item {% block nav_accounts %}{% endblock %}">
