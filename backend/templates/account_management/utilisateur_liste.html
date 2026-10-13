@@ -308,7 +308,12 @@
               </div>
             </div>
           </td>
-          <td>{{ utilisateur.poste|default:"—" }}</td>
+          <td>
+            {{ utilisateur.poste|default:"—" }}
+            {% if utilisateur.ingenieur.est_helpdesk %}
+              <span class="badge" style="background:#e0e7ff; color:#3730a3; margin-left:4px; font-size:.68rem; font-weight:600;">🎧 Help Desk</span>
+            {% endif %}
+          </td>
           <td>{{ utilisateur.compte.email_connexion }}</td>
           <td>
             {% if utilisateur.compte.statut == "ACTIF" %}

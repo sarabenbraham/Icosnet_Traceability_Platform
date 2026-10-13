@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.pk }} – ICOSNET DSI{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_helpdesk %}active{% endblock %}
+
+{% block extra_style %}
+<style>
+  .priority-badge { display:inline-flex; align-items:center; gap:5px;
+    padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:600; }
+  .p-faible   { background:#f0fdf4; color:#166534; }
+  .p-moyen    { background:#fefce8; color:#854d0e; }
+  .p-eleve    { background:#fff7ed; color:#c2410c; }
+  .p-critique { background:#fef2f2; color:#991b1b; }
+  .s-ouvert   { background:#eff6ff; color:#1d4ed8; }
+  .s-en_cours { background:#fff7ed; color:#c2410c; }
+  .s-resolu   { background:#f0fdf4; color:#166534; }
+  .s-ferme    { background:#f8fafc; color:#64748b; }
+
+  .ticket-info-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+  .info-chip { background:#f8fafc; border:1px solid #e8edf5; border-radius:10px;
+    padding:12px 16px; }
+  .info-chip .ic-label { font-size:.72rem; color:#718096; font-weight:600;
+    text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .info-chip .ic-val { font-size:.88rem; color:#0f1e45; font-weight:600; }
+
+  .comment-thread { display:flex; flex-direction:column; gap:14px; margin-bottom:24px; }
+  .comment-bubble { border-radius:12px; padding:14px 16px; max-width:85%; }
+  .comment-user   { background:#f0f5ff; border:1px solid #dbeafe; align-self:flex-start; }
+  .comment-ing    { background:#f0fdf4; border:1px solid #bbf7d0; align-self:flex-end; }
+  .comment-author { font-size:.72rem; font-weight:700; color:#374151; margin-bottom:4px; }
+  .comment-text   { font-size:.85rem; color:#374151; line-height:1.55; }
+  .comment-date   { font-size:.7rem; color:#a0aec0; margin-top:5px; }
+
+  .statut-form-card { background:#fff8f0; border:1px solid #fde8d0;
+    border-radius:12px; padding:18px; margin-bottom:20px; }
+  .statut-form-card .sfc-title { font-weight:700; color:#92400e; margin-bottom:14px;
+    font-size:.9rem; }
+  .form-group label { font-size:.82rem; font-weight:600; color:#374151; margin-bottom:5px; display:block; }
+  .form-group select, .form-group textarea, .form-group input {
+    width:100%; padding:9px 13px; border:1.5px solid #e8edf5; border-radius:9px;
+    font-size:.83rem; font-family:'Poppins',sans-serif; outline:none;
+    transition:border-color .2s; box-sizing:border-box; }
+  .form-group select:focus, .form-group textarea:focus { border-color:#2d5be3; }
+  .form-group { margin-bottom:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in" style="margin-bottom:24px;">
+  <div class="page-header-left">
+    <a href="{% url 'helpdesk:liste' %}" class="btn-secondary"
+      style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;padding:6px 14px;font-size:.875rem;">
+      ← Retour aux tickets
+    </a>
+    <h1 style="display:flex;align-items:center;gap:12px;">
+      🎫 Ticket #{{ ticket.pk }}
+      <span class="priority-badge s-{{ ticket.statut }}">{{ ticket.get_statut_display }}</span>
+      <span class="priority-badge p-{{ ticket.priorite }}">{{ ticket.get_priorite_display }}</span>
+    </h1>
+    <p>{{ ticket.titre }}</p>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:20px;">
+
+  <!-- Colonne principale -->
+  <div>
+
+    <!-- Infos du ticket -->
+    <div class="form-card fade-in delay-1" style="margin-bottom:20px;">
+      <div class="form-section-title">Détails du ticket</div>
+
+      <div class="ticket-info-grid">
+        <div class="info-chip">
+          <div class="ic-label">Catégorie</div>
+          <div class="ic-val">{{ ticket.get_categorie_display }}</div>
+        </div>
+        <div class="info-chip">
+          <div class="ic-label">Créé par</div>
+          <div class="ic-val">{{ ticket.createur.get_full_name|default:ticket.createur.username }}</div>
+        </div>
+        <div class="info-chip">
+          <div class="ic-label">Date d'ouverture</div>
+          <div class="ic-val">{{ ticket.date_creation|date:"d/m/Y à H:i" }}</div>
+        </div>
+        <div class="info-chip">
+          <div class="ic-label">Assigné à</div>
+          <div class="ic-val">
+            {% if ticket.assigne_a %}
+              {{ ticket.assigne_a.get_full_name|default:ticket.assigne_a.username }}
+            {% else %}
+              <span style="color:#a0aec0;">Non assigné</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e8edf5;border-radius:10px;padding:16px;">
+        <div class="ic-label" style="margin-bottom:8px;">Description</div>
+        <p style="color:#374151;font-size:.875rem;line-height:1.65;margin:0;">
+          {{ ticket.description|linebreaks }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Thread commentaires -->
+    <div class="form-card fade-in delay-2">
+      <div class="form-section-title">
+        💬 Échanges ({{ commentaires|length }})
+      </div>
+
+      {% if commentaires %}
+      <div class="comment-thread">
+        {% for c in commentaires %}
+        <div>
+          <div class="comment-bubble {% if c.est_reponse_ingenieur %}comment-ing{% else %}comment-user{% endif %}">
+            <div class="comment-author">
+              {% if c.est_reponse_ingenieur %}🎧 Agent Help Desk — {% endif %}
+              {{ c.auteur.get_full_name|default:c.auteur.username }}
+            </div>
+            <div class="comment-text">{{ c.contenu|linebreaks }}</div>
+            <div class="comment-date">{{ c.date|date:"d/m/Y à H:i" }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:24px;color:#a0aec0;font-size:.85rem;">
+        Aucun message pour le moment. Soyez le premier à commenter.
+      </div>
+      {% endif %}
+
+      <!-- Formulaire commentaire -->
+      {% if ticket.statut != "ferme" %}
+      <form method="post" style="margin-top:16px; border-top:1px solid #e8edf5; padding-top:16px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="commentaire">
+        <div class="form-group">
+          <label>Ajouter un message</label>
+          {{ comment_form.contenu }}
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit"
+            style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;
+                   padding:9px 20px;border-radius:9px;font-weight:600;cursor:pointer;
+                   font-family:'Poppins',sans-serif;font-size:.83rem;">
+            💬 Envoyer
+          </button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Colonne latérale ingénieur -->
+  <div>
+    {% if est_helpdesk and statut_form and ticket.statut != "ferme" %}
+    <div class="form-card fade-in delay-1 statut-form-card">
+      <div class="sfc-title">🎧 Gestion Help Desk</div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="statut">
+        <div class="form-group">
+          <label>{{ statut_form.statut.label }}</label>
+          {{ statut_form.statut }}
+        </div>
+        <div class="form-group">
+          <label>{{ statut_form.assigne_a.label }}</label>
+          {{ statut_form.assigne_a }}
+        </div>
+        <button type="submit"
+          style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;
+                 border:none;padding:10px;border-radius:9px;font-weight:600;cursor:pointer;
+                 font-family:'Poppins',sans-serif;">
+          Mettre à jour
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Résumé statut -->
+    <div class="form-card fade-in delay-2"
+      style="background:#fff;border:1px solid #e8edf5;">
+      <div class="form-section-title">Récapitulatif</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.8rem;color:#718096;">Statut</span>
+          <span class="priority-badge s-{{ ticket.statut }}">{{ ticket.get_statut_display }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.8rem;color:#718096;">Priorité</span>
+          <span class="priority-badge p-{{ ticket.priorite }}">{{ ticket.get_priorite_display }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.8rem;color:#718096;">Ouvert depuis</span>
+          <span style="font-size:.82rem;font-weight:600;color:#0f1e45;">{{ ticket.duree_ouverture }} jour{{ ticket.duree_ouverture|pluralize }}</span>
+        </div>
+        {% if ticket.date_cloture %}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.8rem;color:#718096;">Clôturé le</span>
+          <span style="font-size:.82rem;color:#166534;font-weight:600;">{{ ticket.date_cloture|date:"d/m/Y" }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

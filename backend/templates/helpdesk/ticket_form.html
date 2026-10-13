@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Nouveau ticket – ICOSNET DSI{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_helpdesk %}active{% endblock %}
+
+{% block extra_style %}
+<style>
+  .form-group { margin-bottom:18px; }
+  .form-group label { display:block; font-size:.83rem; font-weight:600; color:#374151; margin-bottom:6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; padding:10px 14px; border:1.5px solid #e8edf5; border-radius:10px;
+    font-size:.85rem; color:#2d3748; font-family:'Poppins',sans-serif;
+    outline:none; transition:border-color .2s; box-sizing:border-box; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color:#2d5be3; box-shadow:0 0 0 3px rgba(45,91,227,.1); }
+  .field-errors { color:#c53030; font-size:.75rem; margin-top:4px; }
+  .priority-hint { font-size:.72rem; color:#718096; margin-top:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in" style="margin-bottom:24px;">
+  <div class="page-header-left">
+    <a href="{% url 'helpdesk:liste' %}" class="btn-secondary"
+      style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;padding:6px 14px;font-size:.875rem;">
+      ← Retour aux tickets
+    </a>
+    <h1>🎫 {{ titre }}</h1>
+    <p>{{ sous_titre }}</p>
+  </div>
+</div>
+
+<div class="form-card fade-in delay-1"
+  style="max-width:720px; margin:0 auto; background:#fff; border-radius:16px;
+         padding:28px; box-shadow:0 6px 24px rgba(0,0,0,0.05); border:1px solid #e8edf5;">
+
+  {% if form.non_field_errors %}
+  <div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:20px;">
+    {{ form.non_field_errors|striptags }}
+  </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="form-section-title">① Identification du problème</div>
+
+    <div class="form-group">
+      <label>{{ form.titre.label }}</label>
+      {{ form.titre }}
+      {% if form.titre.errors %}<div class="field-errors">{{ form.titre.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>{{ form.categorie.label }}</label>
+        {{ form.categorie }}
+        {% if form.categorie.errors %}<div class="field-errors">{{ form.categorie.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>{{ form.priorite.label }}</label>
+        {{ form.priorite }}
+        <div class="priority-hint">
+          🔴 Critique = bloquant · 🟠 Élevé = urgent · 🟡 Moyen = normal · 🟢 Faible = mineur
+        </div>
+        {% if form.priorite.errors %}<div class="field-errors">{{ form.priorite.errors|striptags }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-section-title" style="margin-top:24px;">② Description détaillée</div>
+
+    <div class="form-group">
+      <label>{{ form.description.label }}</label>
+      {{ form.description }}
+      {% if form.description.errors %}<div class="field-errors">{{ form.description.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #e8edf5;padding-top:20px;">
+      <a href="{% url 'helpdesk:liste' %}" class="btn-secondary" style="padding:10px 20px;border-radius:10px;">
+        Annuler
+      </a>
+      <button type="submit"
+        style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;
+               padding:10px 24px;border-radius:10px;font-weight:600;cursor:pointer;
+               font-family:'Poppins',sans-serif;box-shadow:0 4px 12px rgba(37,99,235,.3);">
+        🎫 Soumettre le ticket
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

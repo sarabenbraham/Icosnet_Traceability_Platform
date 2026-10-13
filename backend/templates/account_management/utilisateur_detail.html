@@ -39,7 +39,12 @@
     </div>
     <div class="info-row">
       <span class="info-label">Poste</span>
-      <span class="info-value">{{ compte.utilisateur.poste|default:"—" }}</span>
+      <span class="info-value">
+        {{ compte.utilisateur.poste|default:"—" }}
+        {% if compte.utilisateur.ingenieur.est_helpdesk %}
+          <span class="badge" style="background:#e0e7ff; color:#3730a3; margin-left:8px; font-size:.75rem; font-weight:600;">🎧 Agent Help Desk</span>
+        {% endif %}
+      </span>
     </div>
     <div class="info-row">
       <span class="info-label">Email</span>

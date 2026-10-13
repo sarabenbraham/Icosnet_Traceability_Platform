@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Help Desk – ICOSNET DSI{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+{% block page_sub %}{{ sous_titre }}{% endblock %}
+{% block nav_helpdesk %}active{% endblock %}
+
+{% block extra_style %}
+<style>
+  .hd-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .hd-stat  { background:#fff; border:1px solid #e8edf5; border-radius:14px; padding:18px 20px;
+               box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+  .hd-stat .num  { font-size:1.7rem; font-weight:800; color:#0f1e45; }
+  .hd-stat .lbl  { font-size:.75rem; color:#718096; margin-top:2px; }
+
+  .priority-badge { display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:600; }
+  .p-faible   { background:#f0fdf4; color:#166534; }
+  .p-moyen    { background:#fefce8; color:#854d0e; }
+  .p-eleve    { background:#fff7ed; color:#c2410c; }
+  .p-critique { background:#fef2f2; color:#991b1b; }
+
+  .s-ouvert   { background:#eff6ff; color:#1d4ed8; }
+  .s-en_cours { background:#fff7ed; color:#c2410c; }
+  .s-resolu   { background:#f0fdf4; color:#166534; }
+  .s-ferme    { background:#f8fafc; color:#64748b; }
+
+  .cat-badge { padding:2px 9px; border-radius:6px; font-size:.72rem;
+    background:#f1f5f9; color:#475569; font-weight:500; }
+
+  .filter-bar { background:#fff; border:1px solid #e8edf5; border-radius:14px;
+    padding:14px 18px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.03); }
+  .filter-bar form { display:contents; }
+  .sf { flex:1; min-width:180px; position:relative; }
+  .sf svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none; }
+  .sf input { width:100%; padding:8px 12px 8px 34px; border:1.5px solid #e8edf5;
+    border-radius:9px; font-size:.83rem; font-family:'Poppins',sans-serif; outline:none;
+    transition:border-color .2s; box-sizing:border-box; }
+  .sf input:focus { border-color:#2d5be3; box-shadow:0 0 0 3px rgba(45,91,227,.1); }
+  .fsel { padding:8px 28px 8px 10px; border:1.5px solid #e8edf5; border-radius:9px;
+    font-size:.82rem; font-family:'Poppins',sans-serif; color:#4a5568;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+    appearance:none; cursor:pointer; outline:none; }
+  .fsel:focus { border-color:#2d5be3; }
+  .fbtn { padding:8px 18px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff;
+    border:none; border-radius:9px; font-size:.82rem; font-weight:600;
+    font-family:'Poppins',sans-serif; cursor:pointer; display:flex; align-items:center; gap:5px; }
+  .freset { padding:8px 12px; background:#f1f5f9; color:#64748b; border:1.5px solid #e2e8f0;
+    border-radius:9px; font-size:.82rem; font-family:'Poppins',sans-serif;
+    text-decoration:none; display:flex; align-items:center; gap:4px; }
+
+  .ticket-row { cursor:pointer; transition:background .15s; }
+  .ticket-row:hover { background:#f8faff; }
+  .ticket-title { font-weight:600; color:#0f1e45; font-size:.875rem; }
+  .ticket-meta  { font-size:.72rem; color:#a0aec0; margin-top:2px; }
+
+  .days-badge { font-size:.7rem; color:#718096; background:#f1f5f9;
+    padding:2px 7px; border-radius:6px; }
+  .days-badge.urgent { background:#fef2f2; color:#991b1b; }
+</style>
+{% endblock %}
+
+{% block topbar_action %}
+  <a href="{% url 'helpdesk:create' %}" class="btn-upload">
+    <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Nouveau ticket
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+  <div class="page-header-left">
+    <h1>🎫 {{ titre }}</h1>
+    <p>{{ sous_titre }}</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="hd-stats fade-in delay-1">
+  <div class="hd-stat">
+    <div class="num">{{ stats.total }}</div>
+    <div class="lbl">Total tickets</div>
+  </div>
+  <div class="hd-stat">
+    <div class="num" style="color:#1d4ed8;">{{ stats.ouverts }}</div>
+    <div class="lbl">🔵 Ouverts</div>
+  </div>
+  <div class="hd-stat">
+    <div class="num" style="color:#c2410c;">{{ stats.en_cours }}</div>
+    <div class="lbl">🟠 En cours</div>
+  </div>
+  <div class="hd-stat">
+    <div class="num" style="color:#166534;">{{ stats.resolus }}</div>
+    <div class="lbl">✅ Résolus</div>
+  </div>
+</div>
+
+<!-- Filtres -->
+<div class="filter-bar fade-in delay-1">
+  <form method="get" style="display:contents;">
+    <div class="sf">
+      <svg width="14" height="14" fill="none" stroke="#a0aec0" stroke-width="1.8" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un ticket…">
+    </div>
+    <select name="statut" class="fsel">
+      <option value="">— Statut —</option>
+      {% for val, lbl in statuts %}
+        <option value="{{ val }}" {% if filtre_statut == val %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <select name="categorie" class="fsel">
+      <option value="">— Catégorie —</option>
+      {% for val, lbl in categories %}
+        <option value="{{ val }}" {% if filtre_categorie == val %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <select name="priorite" class="fsel">
+      <option value="">— Priorité —</option>
+      {% for val, lbl in priorites %}
+        <option value="{{ val }}" {% if filtre_priorite == val %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="fbtn">
+      <svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+      </svg>
+      Filtrer
+    </button>
+    {% if q or filtre_statut or filtre_categorie or filtre_priorite %}
+    <a href="{% url 'helpdesk:liste' %}" class="freset">✕ Réinitialiser</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Tableau -->
+<div class="table-wrap fade-in delay-2">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Ticket</th>
+        <th>Catégorie</th>
+        <th>Priorité</th>
+        <th>Statut</th>
+        {% if est_helpdesk %}<th>Créateur</th>{% endif %}
+        <th>Assigné à</th>
+        <th>Jours</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ticket in tickets %}
+      <tr class="ticket-row" onclick="window.location='{% url 'helpdesk:detail' pk=ticket.pk %}'">
+        <td style="color:#a0aec0; font-size:.8rem;">#{{ ticket.pk }}</td>
+        <td>
+          <div class="ticket-title">{{ ticket.titre }}</div>
+          <div class="ticket-meta">{{ ticket.date_creation|date:"d/m/Y" }}</div>
+        </td>
+        <td><span class="cat-badge">{{ ticket.get_categorie_display }}</span></td>
+        <td>
+          <span class="priority-badge p-{{ ticket.priorite }}">
+            {{ ticket.get_priorite_display }}
+          </span>
+        </td>
+        <td>
+          <span class="priority-badge s-{{ ticket.statut }}">
+            {{ ticket.get_statut_display }}
+          </span>
+        </td>
+        {% if est_helpdesk %}
+        <td style="font-size:.82rem;">{{ ticket.createur.get_full_name|default:ticket.createur.username }}</td>
+        {% endif %}
+        <td style="font-size:.82rem;">
+          {% if ticket.assigne_a %}
+            {{ ticket.assigne_a.get_full_name|default:ticket.assigne_a.username }}
+          {% else %}
+            <span style="color:#a0aec0;">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="days-badge {% if ticket.duree_ouverture > 3 and ticket.statut != 'ferme' and ticket.statut != 'resolu' %}urgent{% endif %}">
+            {{ ticket.duree_ouverture }}j
+          </span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center; padding:48px; color:#a0aec0;">
+          <div style="font-size:2rem; margin-bottom:8px;">🎫</div>
+          {% if q or filtre_statut or filtre_categorie or filtre_priorite %}
+            Aucun ticket ne correspond à votre recherche.
+          {% else %}
+            Aucun ticket pour le moment.
+            <br><a href="{% url 'helpdesk:create' %}" style="color:#2d5be3; font-weight:600;">Créer le premier ticket →</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
