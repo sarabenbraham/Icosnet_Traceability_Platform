@@ -1,13 +1,13 @@
-from collections import Counter
-
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
+from django.db.models import Q
 from django.shortcuts import render
 
 from apps.application_sheet.models import FicheApplicative
-from apps.organization.models import Departement
 from apps.meetings.models import Reunion
 from apps.meetings.permissions import roles_utilisateur
+from apps.organization.models import Departement
+
+Statut = FicheApplicative.Statut
 
 
 @login_required
@@ -20,7 +20,7 @@ def home(request):
     is_ingenieur = "ingenieur" in roles
 
     # ============================================================
-    # 1. DÉTERMINER LES FICHES VISIBLES SELON LE RÔLE
+    # 1. FICHES VISIBLES SELON LE RÔLE
     # ============================================================
 
     toutes_les_fiches = (
@@ -30,78 +30,70 @@ def home(request):
         .order_by("-date_creation")
     )
 
-    fiches = toutes_les_fiches
+    if is_directeur:
+        # Le directeur voit toutes les fiches
+        fiches = toutes_les_fiches
 
-    # Ingénieur :
-    # uniquement les fiches qu'il a créées
-    if is_ingenieur and not is_chef and not is_directeur:
-        try:
-            fiches = toutes_les_fiches.filter(
-                ingenieur=user.ingenieur
-            )
-        except AttributeError:
-            fiches = toutes_les_fiches.none()
-
-    # Chef de département :
-    # fiches concernant son département
-    elif is_chef and not is_directeur:
-        departement_chef = (
+    elif is_chef:
+        # Le chef voit les fiches de son département :
+        # celles rattachées à ce département ET celles de ses ingénieurs
+        # (même règle que dans workflow.py)
+        departement = (
             Departement.objects
-            .filter(chef_departement=user)
+            .filter(chef_departement__pk=user.pk)
             .first()
         )
 
-        if departement_chef:
+        if departement:
             fiches = toutes_les_fiches.filter(
-                departements=departement_chef
+                Q(departements=departement)
+                | Q(ingenieur__departement=departement)
             ).distinct()
         else:
             fiches = toutes_les_fiches.none()
 
-    # Directeur :
-    # accès à toutes les fiches
-    elif is_directeur:
-        fiches = toutes_les_fiches
+    elif is_ingenieur:
+        # L'ingénieur ne voit que ses propres fiches
+        fiches = toutes_les_fiches.filter(ingenieur__pk=user.pk)
+
+    else:
+        fiches = toutes_les_fiches.none()
 
     # ============================================================
-    # 2. STATISTIQUES
-    # ============================================================
-
-    stats = {
-        "total": fiches.count(),
-        "validees": fiches.filter(
-            statut=FicheApplicative.Statut.VALIDEE
-        ).count(),
-        "en_attente": fiches.filter(
-            statut__in=[
-                FicheApplicative.Statut.EN_ATTENTE,
-                FicheApplicative.Statut.EN_VALIDATION,
-            ]
-        ).count(),
-        "refusees": fiches.filter(
-            statut=FicheApplicative.Statut.REFUSEE
-        ).count(),
-        "brouillons": fiches.filter(
-            statut=FicheApplicative.Statut.BROUILLON
-        ).count(),
-    }
-
-    # ============================================================
-    # 3. FICHES À TRAITER
+    # 2. FICHES À TRAITER (file d'attente de la personne connectée)
+    #    chef       -> EN_ATTENTE     (soumises, à valider par le chef)
+    #    directeur  -> EN_VALIDATION  (déjà validées par le chef)
     # ============================================================
 
     if is_directeur:
-        fiches_a_traiter = fiches.filter(
-            statut=FicheApplicative.Statut.EN_VALIDATION
-        )
+        fiches_a_traiter = fiches.filter(statut=Statut.EN_VALIDATION)
 
     elif is_chef:
-        fiches_a_traiter = fiches.filter(
-            statut=FicheApplicative.Statut.EN_VALIDATION
-        )
+        fiches_a_traiter = fiches.filter(statut=Statut.EN_ATTENTE)
 
     else:
         fiches_a_traiter = fiches.none()
+
+    # ============================================================
+    # 3. STATISTIQUES
+    # ============================================================
+
+    if is_chef or is_directeur:
+        # Pour un valideur : ce qui attend SA décision
+        en_cours = fiches_a_traiter.count()
+    else:
+        # Pour un ingénieur : ses fiches en cours de validation
+        en_cours = fiches.filter(
+            statut__in=[Statut.EN_ATTENTE, Statut.EN_VALIDATION]
+        ).count()
+
+    stats = {
+        "total": fiches.count(),
+        "validees": fiches.filter(statut=Statut.VALIDEE).count(),
+        "en_attente": en_cours,
+        "refusees": fiches.filter(statut=Statut.REFUSEE).count(),
+        "brouillons": fiches.filter(statut=Statut.BROUILLON).count(),
+    }
 
     # ============================================================
     # 4. FICHES RÉCENTES
@@ -113,13 +105,15 @@ def home(request):
     # 5. RÉPARTITION PAR DOMAINE
     # ============================================================
 
-    domaines_counts = {
-        "RH": 0,
-        "Commercial": 0,
-        "Technique": 0,
-        "Middleware": 0,
-        "BI": 0,
+    correspondance = {
+        "RH": "RH",
+        "COMMERCIAL": "Commercial",
+        "TECHNIQUE": "Technique",
+        "MIDDLEWARE": "Middleware",
+        "BI": "BI",
     }
+
+    domaines_counts = {nom: 0 for nom in correspondance.values()}
 
     for fiche in fiches:
         domaines = fiche.domaine_fonctionnel
@@ -128,22 +122,9 @@ def home(request):
             domaines = domaines.split(",")
 
         for domaine in domaines:
-            domaine = domaine.strip()
-
-            if domaine == "RH":
-                domaines_counts["RH"] += 1
-
-            elif domaine == "COMMERCIAL":
-                domaines_counts["Commercial"] += 1
-
-            elif domaine == "TECHNIQUE":
-                domaines_counts["Technique"] += 1
-
-            elif domaine == "MIDDLEWARE":
-                domaines_counts["Middleware"] += 1
-
-            elif domaine == "BI":
-                domaines_counts["BI"] += 1
+            nom = correspondance.get(str(domaine).strip())
+            if nom:
+                domaines_counts[nom] += 1
 
     # ============================================================
     # 6. RÉUNIONS
@@ -152,7 +133,7 @@ def home(request):
     reunions_count = Reunion.objects.count()
 
     # ============================================================
-    # 7. CONTEXTE DU DASHBOARD
+    # 7. CONTEXTE
     # ============================================================
 
     context = {
@@ -161,13 +142,10 @@ def home(request):
         "fiches_recentes": fiches_recentes,
         "fiches_a_traiter": fiches_a_traiter,
         "domaines_counts": domaines_counts,
-
         "reunions_count": reunions_count,
-
         "is_directeur": is_directeur,
         "is_chef": is_chef,
         "is_ingenieur": is_ingenieur,
-
         "role": (
             "Directeur / DSI"
             if is_directeur

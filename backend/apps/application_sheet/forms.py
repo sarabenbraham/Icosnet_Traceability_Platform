@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import inlineformset_factory
 
 from .models import (
     FicheApplicative,
@@ -15,10 +16,6 @@ from .models import (
 )
 
 
-# ============================================================
-# 1. FICHE APPLICATIVE
-# ============================================================
-
 class FicheApplicativeForm(forms.ModelForm):
 
     class Meta:
@@ -31,7 +28,6 @@ class FicheApplicativeForm(forms.ModelForm):
             "domaine_fonctionnel",
             "criticite",
             "description",
-            "ingenieur",
             "departements",
         ]
 
@@ -45,10 +41,6 @@ class FicheApplicativeForm(forms.ModelForm):
             "departements": forms.CheckboxSelectMultiple(),
         }
 
-
-# ============================================================
-# 2. CONTRAT
-# ============================================================
 
 class ContratForm(forms.ModelForm):
 
@@ -71,10 +63,6 @@ class ContratForm(forms.ModelForm):
         }
 
 
-# ============================================================
-# 3. INFRASTRUCTURE
-# ============================================================
-
 class InfrastructureForm(forms.ModelForm):
 
     class Meta:
@@ -88,10 +76,6 @@ class InfrastructureForm(forms.ModelForm):
             "ip_serveur_bd": forms.TextInput(),
         }
 
-
-# ============================================================
-# 4. UTILISATEURS & ACCÈS
-# ============================================================
 
 class UtilisateurAccesForm(forms.ModelForm):
 
@@ -139,10 +123,6 @@ class UtilisateurAccesForm(forms.ModelForm):
 
         return instance
 
-
-# ============================================================
-# 5. DÉVELOPPEMENT
-# ============================================================
 
 class DeveloppementForm(forms.ModelForm):
 
@@ -197,30 +177,41 @@ class DeveloppementForm(forms.ModelForm):
         return instance
 
 
-# ============================================================
-# 6. MODULES MÉTIER
-# ============================================================
-
 class ModuleMetierForm(forms.ModelForm):
 
     class Meta:
         model = ModuleMetier
-        exclude = ["fiche"]
+        exclude = ["fiche", "modules"]
 
         widgets = {
-            "modules": forms.Textarea(attrs={
-                "rows": 4,
-            }),
-
             "description": forms.Textarea(attrs={
                 "rows": 3,
             }),
         }
 
+    def get_modules(self):
+        """Liste des modules à afficher dans le formulaire."""
+        if self.is_bound:
+            # Après envoi du formulaire : valeurs saisies
+            valeurs = self.data.getlist(f"{self.prefix}-module")
+        elif self.instance and self.instance.pk:
+            # Modification : valeurs enregistrées
+            valeurs = self.instance.modules or []
+        else:
+            valeurs = []
 
-# ============================================================
-# 7. STOCKAGE
-# ============================================================
+        return [v.strip() for v in valeurs if v.strip()]
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        instance.modules = self.get_modules()
+
+        if commit:
+            instance.save()
+
+        return instance
+
 
 class StockageForm(forms.ModelForm):
 
@@ -257,10 +248,6 @@ class StockageForm(forms.ModelForm):
         return instance
 
 
-# ============================================================
-# 8. INTÉGRATION
-# ============================================================
-
 class IntegrationForm(forms.ModelForm):
 
     class Meta:
@@ -274,20 +261,25 @@ class IntegrationForm(forms.ModelForm):
         }
 
 
-# ============================================================
-# 9. FLUX APPLICATION
-# ============================================================
+FluxFormSet = inlineformset_factory(
+    FicheApplicative,
+    FluxApplication,
+    fields=[
+        "solution_distante",
+        "adresse",
+        "port",
+        "sens",
+        "type_flux",
+        "description",
+    ],
+    widgets={
+        "description": forms.Textarea(attrs={"rows": 1}),
+        "port": forms.NumberInput(attrs={"min": 1, "max": 65535}),
+    },
+    extra=1,
+    can_delete=True,
+)
 
-class FluxApplicationForm(forms.ModelForm):
-
-    class Meta:
-        model = FluxApplication
-        exclude = ["fiche"]
-
-
-# ============================================================
-# 10. SAUVEGARDE / SUPERVISION
-# ============================================================
 
 class SauvegardeForm(forms.ModelForm):
 
@@ -306,30 +298,26 @@ class SauvegardeForm(forms.ModelForm):
         }
 
 
-# ============================================================
-# 11. INTERVENTION
-# ============================================================
-
-class InterventionForm(forms.ModelForm):
-
-    class Meta:
-        model = Intervention
-        exclude = ["fiche"]
-
-        widgets = {
-            "date_heure": forms.DateTimeInput(attrs={
-                "type": "datetime-local",
-            }),
-
-            "description": forms.Textarea(attrs={
-                "rows": 4,
-            }),
-        }
-
-
-# ============================================================
-# FORMULAIRE COMPLET
-# ============================================================
+InterventionFormSet = inlineformset_factory(
+    FicheApplicative,
+    Intervention,
+    fields=[
+        "date_heure",
+        "intervenant",
+        "type_intervention",
+        "description",
+        "statut",
+    ],
+    widgets={
+        "date_heure": forms.DateTimeInput(
+            attrs={"type": "datetime-local"},
+            format="%Y-%m-%dT%H:%M",
+        ),
+        "description": forms.Textarea(attrs={"rows": 1}),
+    },
+    extra=1,
+    can_delete=True,
+)
 
 class FicheApplicativeCompleteForm(forms.Form):
 
@@ -341,19 +329,12 @@ class FicheApplicativeCompleteForm(forms.Form):
 
         self.instance = instance
 
-        # --------------------------------------------------------
-        # Fiche principale
-        # --------------------------------------------------------
 
         self.fiche = FicheApplicativeForm(
             *args,
             prefix="fiche",
             instance=instance,
         )
-
-        # --------------------------------------------------------
-        # Fonction pour récupérer les OneToOne
-        # --------------------------------------------------------
 
         def get_related(name):
 
@@ -365,9 +346,6 @@ class FicheApplicativeCompleteForm(forms.Form):
             except Exception:
                 return None
 
-        # --------------------------------------------------------
-        # Sections
-        # --------------------------------------------------------
 
         self.contrat = ContratForm(
             *args,
@@ -411,10 +389,12 @@ class FicheApplicativeCompleteForm(forms.Form):
             instance=get_related("integration"),
         )
 
-        self.flux = FluxApplicationForm(
-            *args,
+        data = args[0] if args else None
+
+        self.flux = FluxFormSet(
+            data,
+            instance=instance,
             prefix="flux",
-            instance=get_related("flux_application"),
         )
 
         self.sauvegarde = SauvegardeForm(
@@ -423,15 +403,12 @@ class FicheApplicativeCompleteForm(forms.Form):
             instance=get_related("sauvegarde"),
         )
 
-        self.intervention = InterventionForm(
-            *args,
+        self.intervention = InterventionFormSet(
+            data,
+            instance=instance,
             prefix="intervention",
-            instance=get_related("intervention"),
         )
 
-    # ============================================================
-    # VALIDATION
-    # ============================================================
 
     def is_valid(self):
 
@@ -449,11 +426,6 @@ class FicheApplicativeCompleteForm(forms.Form):
             self.intervention.is_valid(),
         ])
 
-    # ============================================================
-    # SAUVEGARDE COMPLÈTE
-    # ============================================================
-
-    def save(self):
 
         # --------------------------------------------------------
         # 1. Fiche principale

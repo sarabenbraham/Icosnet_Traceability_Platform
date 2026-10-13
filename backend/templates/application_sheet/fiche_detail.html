@@ -41,6 +41,46 @@
     </div>
   </div>
 
+    {% if peut_soumettre %}
+    <div class="form-card fade-in" style="margin-bottom:20px;">
+      <div class="form-section-title">Soumission</div>
+      <p style="font-size:.85rem; color:#718096; margin-bottom:14px;">
+        Une fois la fiche complète, envoyez-la au chef de département pour validation.
+      </p>
+      <form method="post" action="{% url 'application_sheet:soumettre' fiche.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-submit">Soumettre au chef de département</button>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if peut_valider_chef or peut_valider_directeur %}
+    <div class="form-card fade-in" style="margin-bottom:20px;">
+      <div class="form-section-title">
+        {% if peut_valider_chef %}Validation du chef de département{% else %}Validation du directeur{% endif %}
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom:14px;">
+          <label for="commentaire">Commentaire (obligatoire en cas de refus)</label>
+          <textarea name="commentaire" id="commentaire" rows="3" class="form-input"></textarea>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <button type="submit" class="btn-submit"
+                  formaction="{% if peut_valider_chef %}{% url 'application_sheet:valider_chef' fiche.pk %}{% else %}{% url 'application_sheet:valider_directeur' fiche.pk %}{% endif %}">
+            Valider
+          </button>
+          <button type="submit" class="btn-submit"
+                  style="background:linear-gradient(135deg,#e53e3e,#9b2c2c); box-shadow:0 4px 14px rgba(229,62,62,.3);"
+                  formaction="{% url 'application_sheet:refuser' fiche.pk %}">
+            Refuser
+          </button>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+
+
   <div style="display:flex; flex-direction:column; gap:20px;">
 
     <!-- Informations générales -->
@@ -203,21 +243,62 @@
     </div>
     {% endif %}
 
-    {% if fiche.intervention %}
+        {% if fiche.interventions.all %}
     <div class="form-card fade-in">
-      <div class="form-section-title">Dernière intervention</div>
-      <div class="form-grid">
-        <div class="info-row"><span class="info-label">Date / heure</span><span class="info-value">{{ fiche.intervention.date_heure|default:"—" }}</span></div>
-        <div class="info-row"><span class="info-label">Intervenant</span><span class="info-value">{{ fiche.intervention.intervenant|default:"—" }}</span></div>
-        <div class="info-row"><span class="info-label">Type</span><span class="info-value">{{ fiche.intervention.type_intervention|default:"—" }}</span></div>
-        <div class="info-row"><span class="info-label">Statut</span><span class="info-value">{{ fiche.intervention.get_statut_display|default:"—" }}</span></div>
+      <div class="form-section-title">Registre des interventions &amp; modifications</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:.82rem;">
+          <thead>
+            <tr style="font-size:.68rem; text-transform:uppercase; color:#718096; text-align:left;">
+              <th style="padding:8px;">Date &amp; heure</th>
+              <th style="padding:8px;">Intervenant</th>
+              <th style="padding:8px;">Type</th>
+              <th style="padding:8px;">Description</th>
+              <th style="padding:8px;">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in fiche.interventions.all %}
+              <tr style="border-top:1px solid #f0f4fb;">
+                <td style="padding:8px;">{{ i.date_heure|date:"d/m/Y H:i"|default:"—" }}</td>
+                <td style="padding:8px;">{{ i.intervenant|default:"—" }}</td>
+                <td style="padding:8px;">{{ i.type_intervention|default:"—" }}</td>
+                <td style="padding:8px;">{{ i.description|default:"—" }}</td>
+                <td style="padding:8px;">{{ i.get_statut_display|default:"—" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      {% if fiche.intervention.description %}
-        <div class="info-row" style="border-bottom:none;"><span class="info-label">Description</span><span class="info-value">{{ fiche.intervention.description|linebreaksbr }}</span></div>
-      {% endif %}
     </div>
     {% endif %}
 
   </div>
 
+    {% if fiche.historique.all %}
+    <div class="form-card fade-in" style="margin-top:20px;">
+      <div class="form-section-title">Historique de validation</div>
+      <table style="width:100%; border-collapse:collapse; font-size:.82rem;">
+        <thead>
+          <tr style="font-size:.68rem; text-transform:uppercase; color:#718096; text-align:left;">
+            <th style="padding:8px;">Date</th>
+            <th style="padding:8px;">Par</th>
+            <th style="padding:8px;">Changement</th>
+            <th style="padding:8px;">Commentaire</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in fiche.historique.all %}
+            <tr style="border-top:1px solid #f0f4fb;">
+              <td style="padding:8px;">{{ h.date|date:"d/m/Y H:i" }}</td>
+              <td style="padding:8px;">{{ h.auteur }}</td>
+              <td style="padding:8px;">{{ h.ancien_statut }} → {{ h.nouveau_statut }}</td>
+              <td style="padding:8px;">{{ h.commentaire|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  
 {% endblock %}
