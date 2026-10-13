@@ -3,17 +3,33 @@
 
 {% csrf_token %}
 
-{% if form.fiche.non_field_errors or form.contrat.non_field_errors or form.infrastructure.non_field_errors or form.acces.non_field_errors or form.developpement.non_field_errors or form.module_metier.non_field_errors or form.stockage.non_field_errors or form.integration.non_field_errors or form.flux.non_field_errors or form.sauvegarde.non_field_errors or form.intervention.non_field_errors %}
+{% if form.fiche.non_field_errors or form.contrat.non_field_errors or form.infrastructure.non_field_errors or form.acces.non_field_errors or form.developpement.non_field_errors or form.module_metier.non_field_errors or form.stockage.non_field_errors or form.integration.non_field_errors or form.flux.non_form_errors or form.sauvegarde.non_field_errors or form.intervention.non_field_errors %}
   <div class="msg-error">
     Le formulaire contient des erreurs. Merci de corriger les champs signalés en rouge ci-dessous.
   </div>
 {% endif %}
 
+<!-- Navigation par sections + progression -->
+<div class="fiche-nav" id="fiche-nav">
+  <div class="fiche-nav-links">
+    <a href="#sec-1" data-sec="sec-1">1 · Identification</a>
+    <a href="#sec-2" data-sec="sec-2">2 · Architecture</a>
+    <a href="#sec-3" data-sec="sec-3">3 · Accès</a>
+    <a href="#sec-4" data-sec="sec-4">4 · Développement</a>
+    <a href="#sec-5" data-sec="sec-5">5 · Modules &amp; stockage</a>
+    <a href="#sec-6" data-sec="sec-6">6 · Intégrations &amp; flux</a>
+    <a href="#sec-7" data-sec="sec-7">7 · Sauvegarde</a>
+    <a href="#sec-8" data-sec="sec-8">8 · Interventions</a>
+  </div>
+  <div class="fiche-progress"><div class="fiche-progress-bar" id="fiche-progress-bar"></div></div>
+  <div class="fiche-progress-label" id="fiche-progress-label">0 % des champs obligatoires remplis</div>
+</div>
+
 <div style="display:flex; flex-direction:column; gap:20px;">
 
-  <!-- Informations générales -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Informations générales</div>
+  <!-- 1. Identification générale & contrats -->
+  <div class="form-card fade-in sec-card" id="sec-1">
+    <div class="form-section-title">1. Identification générale &amp; contrats</div>
     <div class="form-grid">
       {% for field in form.fiche %}
         <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
@@ -23,13 +39,6 @@
           {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
         </div>
       {% endfor %}
-    </div>
-  </div>
-
-  <!-- Contrat -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Contrat</div>
-    <div class="form-grid">
       {% for field in form.contrat %}
         <div class="form-group">
           <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
@@ -40,9 +49,9 @@
     </div>
   </div>
 
-  <!-- Infrastructure -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Infrastructure</div>
+  <!-- 2. Architecture technique & serveurs -->
+  <div class="form-card fade-in sec-card" id="sec-2">
+    <div class="form-section-title">2. Architecture technique &amp; serveurs</div>
     <div class="form-grid">
       {% for field in form.infrastructure %}
         <div class="form-group">
@@ -54,9 +63,9 @@
     </div>
   </div>
 
-  <!-- Accès utilisateurs -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Accès utilisateurs</div>
+  <!-- 3. Utilisateurs & accès -->
+  <div class="form-card fade-in sec-card" id="sec-3">
+    <div class="form-section-title">3. Utilisateurs &amp; accès</div>
     <div class="form-grid">
       {% for field in form.acces %}
         <div class="form-group" {% if field.name == "utilisateurs_cibles" or field.name == "profils_utilisateurs" or field.name == "canaux_acces" %}style="grid-column:1 / -1;"{% endif %}>
@@ -68,9 +77,9 @@
     </div>
   </div>
 
-  <!-- Développement -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Développement</div>
+  <!-- 4. Développement, configuration & personnalisation -->
+  <div class="form-card fade-in sec-card" id="sec-4">
+    <div class="form-section-title">4. Développement, configuration &amp; personnalisation</div>
     <div class="form-grid">
       {% for field in form.developpement %}
         <div class="form-group" {% if field.name in "processus_ci_cd methode_personnalisation livrables_personnalisation services" or field.name == "environnements" %}style="grid-column:1 / -1;"{% endif %}>
@@ -82,24 +91,43 @@
     </div>
   </div>
 
-  <!-- Modules métier -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Modules métier</div>
+  <!-- 5. Modules métiers & stockage des fichiers -->
+  <div class="form-card fade-in sec-card" id="sec-5">
+    <div class="form-section-title">5. Modules métiers &amp; stockage des fichiers</div>
     <div class="form-grid">
+
+      <div class="form-group" style="grid-column:1 / -1;">
+        <label>Modules utilisés</label>
+        <div id="modules-list" style="display:flex; flex-direction:column; gap:8px;">
+          {% for m in form.module_metier.get_modules %}
+            <div class="module-row" style="display:flex; gap:8px;">
+              <input type="text" name="module_metier-module" value="{{ m }}"
+                     class="form-input" placeholder="Ex : Gestion des achats / Suivi des contrats">
+              <button type="button" class="btn-secondary module-remove" title="Retirer">✕</button>
+            </div>
+          {% endfor %}
+        </div>
+        <div>
+          <button type="button" id="module-add" class="btn-secondary" style="margin-top:6px;">
+            + Ajouter un module
+          </button>
+        </div>
+      </div>
+
       {% for field in form.module_metier %}
-        <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
+        <div class="form-group" style="grid-column:1 / -1;">
           <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
           {{ field }}
-          {% if field.name == "modules" %}<span style="font-size:.7rem; color:#a0aec0;">Format JSON, ex : ["Facturation", "Reporting"]</span>{% endif %}
           {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
         </div>
       {% endfor %}
+
     </div>
   </div>
 
-  <!-- Stockage -->
+  <!-- 5 (suite). Persistance & stockage des fichiers -->
   <div class="form-card fade-in">
-    <div class="form-section-title">Stockage</div>
+    <div class="form-section-title">Persistance &amp; stockage des fichiers</div>
     <div class="form-grid">
       {% for field in form.stockage %}
         <div class="form-group" {% if field.name == "emplacements" %}style="grid-column:1 / -1;"{% endif %}>
@@ -111,9 +139,9 @@
     </div>
   </div>
 
-  <!-- Intégration -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Intégration</div>
+  <!-- 6. Intégrations socles & flux réseau -->
+  <div class="form-card fade-in sec-card" id="sec-6">
+    <div class="form-section-title">6. Intégrations socles &amp; flux réseau</div>
     <div class="form-grid">
       {% for field in form.integration %}
         <div class="form-group" {% if field.name == "groupes_ad" %}style="grid-column:1 / -1;"{% endif %}>
@@ -125,23 +153,68 @@
     </div>
   </div>
 
-  <!-- Flux applicatif -->
+  <!-- 6 (suite). Cartographie des flux (tableau à lignes multiples) -->
   <div class="form-card fade-in">
-    <div class="form-section-title">Flux applicatif</div>
-    <div class="form-grid">
-      {% for field in form.flux %}
-        <div class="form-group">
-          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
-          {{ field }}
-          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
-        </div>
-      {% endfor %}
+    <div class="form-section-title">Cartographie fine des flux inter-applications</div>
+
+    {{ form.flux.management_form }}
+
+    <div style="overflow-x:auto;">
+      <table class="formset-table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="font-size:.68rem; text-transform:uppercase; color:#718096; text-align:left;">
+            <th style="padding:6px;">Solution distante</th>
+            <th style="padding:6px;">Adresse IP / URL</th>
+            <th style="padding:6px;">Port</th>
+            <th style="padding:6px;">Sens du flux</th>
+            <th style="padding:6px;">Type (API/Hook)</th>
+            <th style="padding:6px;">Description du flux</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="flux-body">
+          {% for f in form.flux %}
+            <tr class="formset-row">
+              {% for field in f.visible_fields %}
+                {% if field.name != "DELETE" %}
+                  <td style="padding:6px; vertical-align:top;">
+                    {{ field }}
+                    {% if field.errors %}<span style="font-size:.7rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+                  </td>
+                {% endif %}
+              {% endfor %}
+              <td style="padding:6px;">
+                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                <span style="display:none;">{{ f.DELETE }}</span>
+                <button type="button" class="btn-secondary row-remove" title="Retirer">✕</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+
+    <button type="button" class="btn-secondary row-add" data-prefix="flux" style="margin-top:10px;">
+      + Ajouter un flux
+    </button>
+
+    <template id="flux-empty-row">
+      <tr class="formset-row">
+        {% for field in form.flux.empty_form.visible_fields %}
+          {% if field.name != "DELETE" %}<td style="padding:6px; vertical-align:top;">{{ field }}</td>{% endif %}
+        {% endfor %}
+        <td style="padding:6px;">
+          {% for hidden in form.flux.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+          <span style="display:none;">{{ form.flux.empty_form.DELETE }}</span>
+          <button type="button" class="btn-secondary row-remove" title="Retirer">✕</button>
+        </td>
+      </tr>
+    </template>
   </div>
 
-  <!-- Sauvegarde -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Sauvegarde</div>
+  <!-- 7. Logs, supervision & sauvegarde (MCO) -->
+  <div class="form-card fade-in sec-card" id="sec-7">
+    <div class="form-section-title">7. Logs, supervision &amp; sauvegarde (MCO)</div>
     <div class="form-grid">
       {% for field in form.sauvegarde %}
         <div class="form-group" {% if field.name == "emplacement_logs" %}style="grid-column:1 / -1;"{% endif %}>
@@ -153,18 +226,378 @@
     </div>
   </div>
 
-  <!-- Intervention -->
-  <div class="form-card fade-in">
-    <div class="form-section-title">Intervention</div>
-    <div class="form-grid">
-      {% for field in form.intervention %}
-        <div class="form-group" {% if field.name == "description" %}style="grid-column:1 / -1;"{% endif %}>
-          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
-          {{ field }}
-          {% if field.errors %}<span style="font-size:.72rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
-        </div>
-      {% endfor %}
+  <!-- 8. Registre des interventions & modifications -->
+  <div class="form-card fade-in sec-card" id="sec-8">
+    <div class="form-section-title">8. Registre des interventions &amp; modifications</div>
+
+    {{ form.intervention.management_form }}
+
+    <div style="overflow-x:auto;">
+      <table class="formset-table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="font-size:.68rem; text-transform:uppercase; color:#718096; text-align:left;">
+            <th style="padding:6px;">Date &amp; heure</th>
+            <th style="padding:6px;">Demandeur / Intervenant</th>
+            <th style="padding:6px;">Type d'intervention</th>
+            <th style="padding:6px;">Description des modifications</th>
+            <th style="padding:6px;">Statut / Résultat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="intervention-body">
+          {% for f in form.intervention %}
+            <tr class="formset-row">
+              {% for field in f.visible_fields %}
+                {% if field.name != "DELETE" %}
+                  <td style="padding:6px; vertical-align:top;">
+                    {{ field }}
+                    {% if field.errors %}<span style="font-size:.7rem; color:#c53030;">{{ field.errors.0 }}</span>{% endif %}
+                  </td>
+                {% endif %}
+              {% endfor %}
+              <td style="padding:6px;">
+                {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                <span style="display:none;">{{ f.DELETE }}</span>
+                <button type="button" class="btn-secondary row-remove" title="Retirer">✕</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+
+    <button type="button" class="btn-secondary row-add" data-prefix="intervention" style="margin-top:10px;">
+      + Ajouter une intervention
+    </button>
+
+    <template id="intervention-empty-row">
+      <tr class="formset-row">
+        {% for field in form.intervention.empty_form.visible_fields %}
+          {% if field.name != "DELETE" %}<td style="padding:6px; vertical-align:top;">{{ field }}</td>{% endif %}
+        {% endfor %}
+        <td style="padding:6px;">
+          {% for hidden in form.intervention.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+          <span style="display:none;">{{ form.intervention.empty_form.DELETE }}</span>
+          <button type="button" class="btn-secondary row-remove" title="Retirer">✕</button>
+        </td>
+      </tr>
+    </template>
   </div>
 
 </div>
+
+<style>
+/* ---------- Défilement doux + ancres sous la barre du haut ---------- */
+html { scroll-behavior: smooth; }
+.sec-card { scroll-margin-top: 150px; }
+
+/* ---------- Navigation par sections ---------- */
+.fiche-nav {
+  position: sticky;
+  top: 76px;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 14px;
+  padding: 10px 14px 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(15,30,69,.06);
+}
+@media (min-width: 1600px) { .fiche-nav { top: 92px; } }
+.fiche-nav-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.fiche-nav-links a {
+  font-size: .74rem;
+  font-weight: 500;
+  color: #4a5568;
+  text-decoration: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #f7f9fc;
+  border: 1px solid #e8edf5;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.fiche-nav-links a:hover { border-color: #2d5be3; color: #2d5be3; }
+.fiche-nav-links a.active { background: #2d5be3; border-color: #2d5be3; color: #fff; }
+.fiche-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #eef2ff;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.fiche-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2d5be3, #38a169);
+  transition: width .3s ease;
+}
+.fiche-progress-label { font-size: .68rem; color: #a0aec0; margin-top: 5px; }
+
+/* ---------- Listes déroulantes : flèche rétablie ---------- */
+.form-card select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  background-size: 14px;
+}
+
+/* ---------- Groupes de cases à cocher : options en pastilles ---------- */
+.form-card .form-group > :is(div, ul)[id]:not(#modules-list) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+}
+.form-card .form-group > :is(div, ul)[id]:not(#modules-list) > :is(div, li) > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1.5px solid #e8edf5;
+  border-radius: 999px;
+  background: #fff;
+  color: #2d3748;
+  font-size: .82rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.form-card .form-group > :is(div, ul)[id]:not(#modules-list) > :is(div, li) > label:hover {
+  border-color: #2d5be3;
+}
+.form-card .form-group > :is(div, ul)[id]:not(#modules-list) > :is(div, li) > label:has(input:checked) {
+  background: #eef2ff;
+  border-color: #2d5be3;
+  color: #2d5be3;
+}
+.form-card input[type=checkbox],
+.form-card input[type=radio] {
+  accent-color: #2d5be3;
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- Cases Oui/Non : interrupteurs ---------- */
+.form-card .form-group:has(> input[type=checkbox]) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px solid #e8edf5;
+  border-radius: 10px;
+  background: #fff;
+}
+.form-card .form-group > input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbd5e0;
+  cursor: pointer;
+  transition: background .2s;
+}
+.form-card .form-group > input[type=checkbox]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+}
+.form-card .form-group > input[type=checkbox]:checked { background: #2d5be3; }
+.form-card .form-group > input[type=checkbox]:checked::after { transform: translateX(18px); }
+
+/* ---------- Tableaux : largeur minimale, défilement horizontal ---------- */
+.formset-table { min-width: 980px; }
+</style>
+
+<script>
+/* ---------- Modules : liste dynamique ---------- */
+(function () {
+  const list = document.getElementById("modules-list");
+  const addBtn = document.getElementById("module-add");
+  if (!list || !addBtn) return;
+
+  function addRow(value) {
+    const row = document.createElement("div");
+    row.className = "module-row";
+    row.style.cssText = "display:flex; gap:8px;";
+    row.innerHTML =
+      '<input type="text" name="module_metier-module" class="form-input" ' +
+      'placeholder="Ex : Gestion des achats / Suivi des contrats">' +
+      '<button type="button" class="btn-secondary module-remove" title="Retirer">✕</button>';
+    row.querySelector("input").value = value || "";
+    list.appendChild(row);
+  }
+
+  addBtn.addEventListener("click", function () { addRow(""); });
+
+  list.addEventListener("click", function (e) {
+    if (e.target.classList.contains("module-remove")) {
+      e.target.closest(".module-row").remove();
+    }
+  });
+
+  // Au moins une ligne visible au départ
+  if (!list.querySelector(".module-row")) addRow("");
+})();
+
+/* ---------- Tableaux (formsets) : flux, puis interventions ---------- */
+(function () {
+  function styleInputs(root) {
+    root.querySelectorAll(
+      'input:not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea'
+    ).forEach(el => el.classList.add('form-input'));
+  }
+
+  function initFormset(prefix) {
+    const total = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+    const tpl = document.getElementById(prefix + '-empty-row');
+    const body = document.getElementById(prefix + '-body');
+    const addBtn = document.querySelector('.row-add[data-prefix="' + prefix + '"]');
+    if (!total || !tpl || !body || !addBtn) return;
+
+    addBtn.addEventListener('click', function () {
+      const idx = parseInt(total.value, 10);
+      body.insertAdjacentHTML('beforeend', tpl.innerHTML.replace(/__prefix__/g, idx));
+      total.value = idx + 1;
+      styleInputs(body.lastElementChild);
+    });
+
+    body.addEventListener('click', function (e) {
+      if (!e.target.classList.contains('row-remove')) return;
+      const row = e.target.closest('.formset-row');
+      const del = row.querySelector('input[type=checkbox][name$="-DELETE"]');
+      if (del) del.checked = true;
+      row.style.display = 'none';
+    });
+  }
+
+  window.initFormset = initFormset;
+  initFormset('flux');
+  initFormset('intervention');
+})();
+
+/* ---------- Champs qui apparaissent seulement quand il le faut ---------- */
+(function () {
+  function field(name) {
+    return document.querySelector('[name="' + name + '"]');
+  }
+  function group(name) {
+    const el = field(name);
+    return el ? el.closest('.form-group') : null;
+  }
+  function clear(name) {
+    document.querySelectorAll('[name="' + name + '"]').forEach(el => {
+      if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+      else el.value = '';
+    });
+  }
+
+  // Affiche les champs "cibles" selon l'état du champ "déclencheur"
+  function lier(declencheur, cibles, test) {
+    const trigger = field(declencheur);
+    if (!trigger) return;
+
+    function maj(reset) {
+      const visible = test(trigger);
+      cibles.forEach(function (nom) {
+        const g = group(nom);
+        if (!g) return;
+        g.style.display = visible ? '' : 'none';
+        if (!visible && reset) clear(nom);
+      });
+    }
+
+    maj(false);
+    trigger.addEventListener('change', function () { maj(true); });
+  }
+
+  const coche = el => el.checked;
+
+  lier('contrat-support_externe',
+       ['contrat-reference_contrat', 'contrat-date_debut', 'contrat-date_fin'], coche);
+
+  lier('infrastructure-type_infrastructure',
+       ['infrastructure-type_cloud'], el => el.value === 'CLOUD');
+
+  lier('infrastructure-serveur_bd_dedie',
+       ['infrastructure-ip_serveur_bd', 'infrastructure-nom_serveur_bd'], coche);
+
+  lier('developpement-mode_developpement',
+       ['developpement-gestion_sources'], el => el.value === 'INTERNE');
+
+  lier('stockage-persistance', ['stockage-emplacements'], coche);
+
+  lier('integration-active_directory', ['integration-groupes_ad'], coche);
+
+  lier('integration-integration_bi', ['integration-methode_bi'], coche);
+
+  lier('sauvegarde-sauvegarde_planifiee',
+       ['sauvegarde-outil', 'sauvegarde-recurrence', 'sauvegarde-heure',
+        'sauvegarde-console_backup'], coche);
+})();
+
+/* ---------- Navigation par sections + barre de progression ---------- */
+(function () {
+  const nav = document.getElementById('fiche-nav');
+  if (!nav) return;
+
+  // Section active pendant le défilement
+  const links = nav.querySelectorAll('.fiche-nav-links a');
+  const cards = document.querySelectorAll('.sec-card');
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        links.forEach(a => a.classList.toggle('active', a.dataset.sec === entry.target.id));
+      });
+    }, { rootMargin: '-25% 0px -65% 0px' });
+    cards.forEach(c => obs.observe(c));
+  }
+
+  // Progression : champs obligatoires (libellé terminé par *) remplis
+  const bar = document.getElementById('fiche-progress-bar');
+  const label = document.getElementById('fiche-progress-label');
+
+  function rempli(g) {
+    const els = g.querySelectorAll('input:not([type=hidden]), select, textarea');
+    return Array.prototype.some.call(els, function (el) {
+      return (el.type === 'checkbox' || el.type === 'radio')
+        ? el.checked
+        : el.value.trim() !== '';
+    });
+  }
+
+  function majProgression() {
+    const groupes = Array.prototype.filter.call(
+      document.querySelectorAll('.form-card .form-group'),
+      function (g) {
+        const l = g.querySelector('label');
+        return g.style.display !== 'none' && l && /\*\s*$/.test(l.textContent.trim());
+      }
+    );
+    if (!groupes.length) { nav.querySelector('.fiche-progress').style.display = 'none'; return; }
+    const ok = groupes.filter(rempli).length;
+    const pct = Math.round((ok / groupes.length) * 100);
+    bar.style.width = pct + '%';
+    label.textContent = pct + ' % des champs obligatoires remplis (' + ok + ' / ' + groupes.length + ')';
+  }
+
+  document.addEventListener('input', majProgression);
+  document.addEventListener('change', majProgression);
+  majProgression();
+})();
+</script>
