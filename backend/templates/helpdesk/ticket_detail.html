@@ -5,7 +5,6 @@
 {% block nav_helpdesk %}active{% endblock %}
 
 {% block extra_style %}
-<style>
   .priority-badge { display:inline-flex; align-items:center; gap:5px;
     padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:600; }
   .p-faible   { background:#f0fdf4; color:#166534; }
@@ -44,7 +43,52 @@
     transition:border-color .2s; box-sizing:border-box; }
   .form-group select:focus, .form-group textarea:focus { border-color:#2d5be3; }
   .form-group { margin-bottom:14px; }
-</style>
+  /* ── Vie : badges avec pastille ── */
+  .priority-badge::before { content:""; width:6px; height:6px; border-radius:50%;
+    background:currentColor; display:inline-block; }
+  .p-critique::before, .s-en_cours::before { animation:pulse-dot 1.6s infinite; }
+  @keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+
+  /* ── Progression du ticket ── */
+  .stepper { display:flex; align-items:flex-start; margin:6px 0 26px; }
+  .step { flex:1; text-align:center; position:relative; }
+  .step::before { content:""; position:absolute; top:14px; left:-50%; width:100%; height:3px;
+    background:#e8edf5; z-index:0; }
+  .step:first-child::before { display:none; }
+  .step.done::before, .step.active::before { background:linear-gradient(90deg,#2563eb,#22c55e); }
+  .step-dot { width:30px; height:30px; border-radius:50%; margin:0 auto 6px; position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700;
+    background:#fff; border:3px solid #e8edf5; color:#a0aec0; transition:all .3s; }
+  .step.done .step-dot { background:#22c55e; border-color:#22c55e; color:#fff; }
+  .step.active .step-dot { background:#2563eb; border-color:#2563eb; color:#fff;
+    box-shadow:0 0 0 5px rgba(37,99,235,.15); animation:ring 2s infinite; }
+  .step-lbl { font-size:.72rem; font-weight:600; color:#a0aec0; }
+  .step.done .step-lbl, .step.active .step-lbl { color:#0f1e45; }
+  @keyframes ring { 50% { box-shadow:0 0 0 9px rgba(37,99,235,.05); } }
+
+  /* ── Bandeau de priorité ── */
+  .info-chip { transition:transform .2s, box-shadow .2s; }
+  .info-chip:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,30,69,.07); }
+
+  /* ── Conversation avec avatars ── */
+  .comment-row { display:flex; gap:10px; align-items:flex-end; animation:bubble-in .35s ease both; }
+  .comment-row.me-agent { flex-direction:row-reverse; }
+  .comment-row .comment-bubble { max-width:80%; position:relative; }
+  .avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex;
+    align-items:center; justify-content:center; font-size:.78rem; font-weight:700; color:#fff;
+    background:linear-gradient(135deg,#2563eb,#7c3aed); }
+  .avatar.agent { background:linear-gradient(135deg,#f97316,#ea580c); }
+  @keyframes bubble-in { from { opacity:0; transform:translateY(10px) scale(.98); } to { opacity:1; transform:none; } }
+
+  .comment-form-box textarea { resize:vertical; min-height:80px; }
+  .hint-kbd { font-size:.7rem; color:#a0aec0; margin-right:12px; align-self:center; }
+  .hint-kbd kbd { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:1px 5px; font-size:.68rem; }
+
+  .side-sticky { position:sticky; top:20px; }
+  .btn-loading { opacity:.7; pointer-events:none; }
+
+  @media (max-width:900px) { .layout-detail { grid-template-columns:1fr !important; } .side-sticky { position:static; } }
+  @media (prefers-reduced-motion:reduce) { *, *::before { animation:none !important; transition:none !important; } }
 {% endblock %}
 
 {% block content %}
@@ -63,7 +107,7 @@
   </div>
 </div>
 
-<div style="display:grid; grid-template-columns:1fr 340px; gap:20px;">
+<div class="layout-detail" style="display:grid; grid-template-columns:1fr 340px; gap:20px;">
 
   <!-- Colonne principale -->
   <div>
@@ -71,6 +115,24 @@
     <!-- Infos du ticket -->
     <div class="form-card fade-in delay-1" style="margin-bottom:20px;">
       <div class="form-section-title">Détails du ticket</div>
+
+      <!-- Progression -->
+      <div class="stepper">
+        {% with st=ticket.statut %}
+        <div class="step {% if st == 'ouvert' %}active{% else %}done{% endif %}">
+          <div class="step-dot">{% if st == 'ouvert' %}1{% else %}✓{% endif %}</div><div class="step-lbl">Ouvert</div>
+        </div>
+        <div class="step {% if st == 'en_cours' %}active{% elif st == 'resolu' or st == 'ferme' %}done{% endif %}">
+          <div class="step-dot">{% if st == 'resolu' or st == 'ferme' %}✓{% else %}2{% endif %}</div><div class="step-lbl">En cours</div>
+        </div>
+        <div class="step {% if st == 'resolu' %}active{% elif st == 'ferme' %}done{% endif %}">
+          <div class="step-dot">{% if st == 'ferme' %}✓{% else %}3{% endif %}</div><div class="step-lbl">Résolu</div>
+        </div>
+        <div class="step {% if st == 'ferme' %}active{% endif %}">
+          <div class="step-dot">{% if st == 'ferme' %}✓{% else %}4{% endif %}</div><div class="step-lbl">Fermé</div>
+        </div>
+        {% endwith %}
+      </div>
 
       <div class="ticket-info-grid">
         <div class="info-chip">
@@ -114,7 +176,8 @@
       {% if commentaires %}
       <div class="comment-thread">
         {% for c in commentaires %}
-        <div>
+        <div class="comment-row {% if c.est_reponse_ingenieur %}me-agent{% endif %}" style="animation-delay:{{ forloop.counter0 }}0ms;">
+          <div class="avatar {% if c.est_reponse_ingenieur %}agent{% endif %}">{{ c.auteur.get_full_name|default:c.auteur.username|slice:":1"|upper }}</div>
           <div class="comment-bubble {% if c.est_reponse_ingenieur %}comment-ing{% else %}comment-user{% endif %}">
             <div class="comment-author">
               {% if c.est_reponse_ingenieur %}🎧 Agent Help Desk — {% endif %}
@@ -128,13 +191,13 @@
       </div>
       {% else %}
       <div style="text-align:center;padding:24px;color:#a0aec0;font-size:.85rem;">
-        Aucun message pour le moment. Soyez le premier à commenter.
+        <div style="font-size:2rem;margin-bottom:6px;">💭</div>Aucun message pour le moment. Soyez le premier à commenter.
       </div>
       {% endif %}
 
       <!-- Formulaire commentaire -->
       {% if ticket.statut != "ferme" %}
-      <form method="post" style="margin-top:16px; border-top:1px solid #e8edf5; padding-top:16px;">
+      <form method="post" id="comment-form" class="comment-form-box" style="margin-top:16px; border-top:1px solid #e8edf5; padding-top:16px;">
         {% csrf_token %}
         <input type="hidden" name="action" value="commentaire">
         <div class="form-group">
@@ -142,6 +205,7 @@
           {{ comment_form.contenu }}
         </div>
         <div style="display:flex;justify-content:flex-end;">
+          <span class="hint-kbd"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> pour envoyer</span>
           <button type="submit"
             style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;
                    padding:9px 20px;border-radius:9px;font-weight:600;cursor:pointer;
@@ -150,12 +214,15 @@
           </button>
         </div>
       </form>
+      {% else %}
+      <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;
+                  color:#64748b;font-size:.82rem;text-align:center;">🔒 Ce ticket est fermé : la conversation est terminée.</div>
       {% endif %}
     </div>
   </div>
 
   <!-- Colonne latérale ingénieur -->
-  <div>
+  <div class="side-sticky">
     {% if est_helpdesk and statut_form and ticket.statut != "ferme" %}
     <div class="form-card fade-in delay-1 statut-form-card">
       <div class="sfc-title">🎧 Gestion Help Desk</div>
@@ -208,4 +275,27 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Défiler vers le dernier message
+  const thread = document.querySelector('.comment-thread');
+  if (thread && thread.lastElementChild) thread.lastElementChild.scrollIntoView({block:'nearest'});
+
+  // Ctrl+Entrée pour envoyer + zone de texte auto-extensible
+  const cf = document.getElementById('comment-form');
+  if (cf) {
+    const ta = cf.querySelector('textarea');
+    ta.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') cf.requestSubmit();
+    });
+    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+  }
+  // Anti double-clic sur tous les boutons d'envoi
+  document.querySelectorAll('form').forEach(f => f.addEventListener('submit', () => {
+    const b = f.querySelector('button[type=submit]');
+    if (b) { b.classList.add('btn-loading'); b.textContent = 'Envoi…'; }
+  }));
+</script>
 {% endblock %}
