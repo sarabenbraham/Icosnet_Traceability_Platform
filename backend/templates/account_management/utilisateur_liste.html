@@ -314,7 +314,14 @@
               <span class="badge" style="background:#e0e7ff; color:#3730a3; margin-left:4px; font-size:.68rem; font-weight:600;">🎧 Help Desk</span>
             {% endif %}
           </td>
-          <td>{{ utilisateur.compte.email_connexion }}</td>
+          <td>
+            <div>{{ utilisateur.compte.email_connexion }}</div>
+            {% if utilisateur.compte.type_compte == 'messagerie' %}
+              <span class="badge" style="background:#f0fdf4; color:#166534; font-size:.65rem; font-weight:600; margin-top:2px;">✉️ Messagerie</span>
+            {% else %}
+              <span class="badge" style="background:#f8fafc; color:#64748b; font-size:.65rem; font-weight:600; margin-top:2px;">👤 Générique</span>
+            {% endif %}
+          </td>
           <td>
             {% if utilisateur.compte.statut == "ACTIF" %}
               <span class="badge badge-green"><span class="badge-dot dot-green"></span>Actif</span>

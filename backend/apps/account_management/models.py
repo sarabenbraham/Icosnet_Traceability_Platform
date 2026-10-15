@@ -9,6 +9,17 @@ class Compte(models.Model):
         ACTIF = "ACTIF", "Actif"
         DESACTIVE = "DESACTIVE", "Désactivé"
 
+    class TypeCompte(models.TextChoices):
+        GENERIQUE = "generique", "Compte générique"
+        MESSAGERIE = "messagerie", "Compte messagerie"
+
+    type_compte = models.CharField(
+        max_length=20,
+        choices=TypeCompte.choices,
+        default=TypeCompte.GENERIQUE,
+        verbose_name="Type de compte",
+    )
+
     utilisateur = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

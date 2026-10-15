@@ -18,6 +18,36 @@ CLASSES_PAR_POSTE = {
 }
 
 class LoginForm(AuthenticationForm):
+    def clean(self):
+        username = self.cleaned_data.get("username")
+        password = self.cleaned_data.get("password")
+
+        if username is not None and password:
+            from django.contrib.auth import authenticate
+            from apps.account_management.models import Compte
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+
+            target_username = username.strip()
+            # Permettre la connexion avec l'email_connexion OU le username OU l'email
+            compte = Compte.objects.filter(email_connexion__iexact=target_username).select_related("utilisateur").first()
+            if compte and compte.utilisateur:
+                target_username = compte.utilisateur.username
+            else:
+                user_obj = User.objects.filter(email__iexact=target_username).first()
+                if user_obj:
+                    target_username = user_obj.username
+
+            self.user_cache = authenticate(
+                self.request, username=target_username, password=password
+            )
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            else:
+                self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
+
     def confirm_login_allowed(self, user):
         super().confirm_login_allowed(user)
 
@@ -49,12 +79,14 @@ class CompteForm(forms.ModelForm):
         model = Compte
         fields = [
             "email_connexion",
+            "type_compte",
             "date_expiration",
             "expire",
             "statut",
         ]
         labels = {
             "email_connexion": "Email de connexion DSI",
+            "type_compte": "Type de compte",
             "date_expiration": "Date d'expiration",
             "statut": "Statut du compte",
             "expire": "Marquer comme expiré",
@@ -126,6 +158,11 @@ class UtilisateurCompteForm(forms.ModelForm):
         queryset=Departement.objects.all(), required=False
     )
     email_connexion = forms.EmailField(required=True)
+    type_compte = forms.ChoiceField(
+        choices=Compte.TypeCompte.choices,
+        label="Type de compte",
+        initial=Compte.TypeCompte.GENERIQUE,
+    )
     mot_de_passe = forms.CharField(widget=forms.PasswordInput, required=True)
     est_helpdesk = forms.BooleanField(
         required=False,
@@ -174,6 +211,7 @@ class UtilisateurCompteForm(forms.ModelForm):
         compte = Compte(
             utilisateur=utilisateur,
             email_connexion=cd["email_connexion"],
+            type_compte=cd.get("type_compte", Compte.TypeCompte.GENERIQUE),
             date_expiration=cd["date_expiration"],
         )
         compte.set_password(cd["mot_de_passe"])

@@ -57,6 +57,14 @@
       <span class="info-value">{{ compte.email_connexion }}</span>
     </div>
     <div class="info-row">
+      <span class="info-label">Type de compte</span>
+      <span class="info-value">
+        <span class="badge" style="background:#f1f5f9; color:#334155; font-size:.78rem; font-weight:600;">
+          {{ compte.get_type_compte_display|default:"Compte générique" }}
+        </span>
+      </span>
+    </div>
+    <div class="info-row">
       <span class="info-label">Statut</span>
       <span class="info-value">
         {% if compte.statut == "ACTIF" %}
