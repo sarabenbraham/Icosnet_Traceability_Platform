@@ -47,6 +47,15 @@
               </div>
               {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
             </div>
+          {% elif field.name == "est_directeur_systeme" %}
+            <div class="form-group" id="group-{{ field.name }}" style="grid-column: 1 / -1; background:#fef3c7; border:1.5px solid #fde68a; border-radius:12px; padding:14px 18px; display:flex; flex-direction:row; align-items:center; gap:12px;">
+              {{ field }}
+              <div>
+                <label for="{{ field.id_for_label }}" style="font-weight:600; color:#92400e; margin:0; cursor:pointer;">🔑 {{ field.label }}</label>
+                {% if field.help_text %}<div class="field-help" style="color:#78350f;">{{ field.help_text }}</div>{% endif %}
+              </div>
+              {% if field.errors %}<div class="field-errors">{{ field.errors|striptags }}</div>{% endif %}
+            </div>
           {% else %}
             <div class="form-group" id="group-{{ field.name }}" {% if field.field.widget.input_type == "checkbox" %}style="flex-direction:row; align-items:center; gap:8px;"{% endif %}>
               <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -64,6 +73,7 @@
         const dirGroup = document.getElementById("group-direction");
         const depGroup = document.getElementById("group-departement");
         const hdGroup  = document.getElementById("group-est_helpdesk");
+        const dsGroup  = document.getElementById("group-est_directeur_systeme");
 
         function updateFields() {
           if (!posteSelect) return;
@@ -72,18 +82,22 @@
             if (dirGroup) dirGroup.style.display = "";
             if (depGroup) depGroup.style.display = "none";
             if (hdGroup)  hdGroup.style.display  = "none";
+            if (dsGroup)  dsGroup.style.display  = "flex";
           } else if (val === "chefdepartement") {
             if (dirGroup) dirGroup.style.display = "none";
             if (depGroup) depGroup.style.display = "";
             if (hdGroup)  hdGroup.style.display  = "none";
+            if (dsGroup)  dsGroup.style.display  = "none";
           } else if (val === "ingenieur") {
             if (dirGroup) dirGroup.style.display = "none";
             if (depGroup) depGroup.style.display = "";
             if (hdGroup)  hdGroup.style.display  = "flex";
+            if (dsGroup)  dsGroup.style.display  = "none";
           } else {
             if (dirGroup) dirGroup.style.display = "";
             if (depGroup) depGroup.style.display = "";
             if (hdGroup)  hdGroup.style.display  = "none";
+            if (dsGroup)  dsGroup.style.display  = "none";
           }
         }
 

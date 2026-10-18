@@ -1,3 +1,4 @@
+from apps.account_management.permissions import _est_directeur_systeme as _est_directeur_systeme_safe
 # context_processors.py
 from .models import Participation, StatutParticipation, StatutReunion
 from .permissions import est_gestionnaire, peut_gerer_reunions, roles_utilisateur
@@ -24,4 +25,5 @@ def meetings(request):
         "invitations_recentes": list(invitations[:5]),
         "is_directeur": "directeur" in roles,
         "is_chef": "chefdepartement" in roles,
+        "is_directeur_systeme": _est_directeur_systeme_safe(user),
     }

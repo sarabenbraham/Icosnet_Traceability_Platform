@@ -44,6 +44,9 @@
         {% if compte.utilisateur.ingenieur.est_helpdesk %}
           <span class="badge" style="background:#e0e7ff; color:#3730a3; margin-left:8px; font-size:.75rem; font-weight:600;">🎧 Agent Help Desk</span>
         {% endif %}
+        {% if compte.utilisateur.directeur.est_directeur_systeme %}
+          <span class="badge" style="background:#fef3c7; color:#92400e; margin-left:8px; font-size:.75rem; font-weight:600;">🔑 Directeur Système</span>
+        {% endif %}
       </span>
     </div>
     <div class="info-row">

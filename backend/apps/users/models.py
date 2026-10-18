@@ -47,8 +47,20 @@ class ChefDepartement(User):
         pass
 
 class Directeur(User):
+    est_directeur_systeme = models.BooleanField(
+        default=False,
+        verbose_name="Directeur Système",
+        help_text="Cocher si ce directeur est Directeur Système et possède les privilèges de gestion des comptes."
+    )
+
     def valider(self):
         pass
 
     def refuser(self):
         pass
+
+    def __str__(self):
+        label = super().__str__()
+        if self.est_directeur_systeme:
+            label += " [Directeur Système]"
+        return label

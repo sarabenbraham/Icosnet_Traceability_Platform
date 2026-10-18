@@ -126,6 +126,18 @@
         </div>
       </div>
       {% endif %}
+
+      {% if compte.utilisateur.poste == 'directeur' or compte.utilisateur.directeur %}
+      <div style="margin-top:16px; background:#fef3c7; border:1.5px solid #fde68a; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px;">
+        {{ form.est_directeur_systeme }}
+        <div>
+          <label for="{{ form.est_directeur_systeme.id_for_label }}" style="font-weight:600; color:#92400e; margin:0; cursor:pointer;">
+            🔑 {{ form.est_directeur_systeme.label }}
+          </label>
+          <div style="font-size:0.75rem; color:#78350f;">{{ form.est_directeur_systeme.help_text }}</div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Section 2 : Identifiants & Modification du Mot de passe -->

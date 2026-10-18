@@ -330,7 +330,7 @@
       Help Desk
     </a>
 
-    {% if is_directeur or is_chef %}
+    {% if is_directeur_systeme %}
       <div class="nav-section-label" style="margin-top:8px;">Administration</div>
       <a href="{% url 'account_management:liste' %}" class="nav-item {% block nav_accounts %}{% endblock %}">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -338,14 +338,12 @@
         </svg>
         Comptes DSI
       </a>
-      {% if is_directeur %}
       <a href="{% url 'account_management:archives' %}" class="nav-item {% block nav_archives %}{% endblock %}">
         <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
           <path d="M21 8v13a1 1 0 01-1 1H4a1 1 0 01-1-1V8M1 3h22v5H1zM10 12h4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         Comptes archivés
       </a>
-      {% endif %}
     {% endif %}
   </nav>
 

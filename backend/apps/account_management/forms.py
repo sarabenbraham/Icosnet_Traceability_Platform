@@ -74,6 +74,12 @@ class CompteForm(forms.ModelForm):
         help_text="Cocher si cet ingénieur peut traiter les tickets Help Desk.",
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
     )
+    est_directeur_systeme = forms.BooleanField(
+        label="Rôle Directeur Système",
+        required=False,
+        help_text="Cocher si ce directeur a les privilèges de gestion des comptes.",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
 
     class Meta:
         model = Compte
@@ -112,6 +118,11 @@ class CompteForm(forms.ModelForm):
             elif hasattr(u, "est_helpdesk"):
                 self.fields["est_helpdesk"].initial = u.est_helpdesk
 
+            if hasattr(u, "directeur"):
+                self.fields["est_directeur_systeme"].initial = getattr(u.directeur, "est_directeur_systeme", False)
+            elif hasattr(u, "est_directeur_systeme"):
+                self.fields["est_directeur_systeme"].initial = u.est_directeur_systeme
+
     def save(self, commit=True):
         compte = super().save(commit=False)
 
@@ -136,6 +147,14 @@ class CompteForm(forms.ModelForm):
             elif hasattr(u, "est_helpdesk"):
                 u.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
                 u.save(update_fields=["est_helpdesk"])
+
+            if hasattr(u, "directeur"):
+                d = u.directeur
+                d.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
+                d.save(update_fields=["est_directeur_systeme"])
+            elif hasattr(u, "est_directeur_systeme"):
+                u.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
+                u.save(update_fields=["est_directeur_systeme"])
 
         if commit:
             compte.save()
@@ -199,6 +218,8 @@ class UtilisateurCompteForm(forms.ModelForm):
             direction = cd["direction"]
             direction.directeur = utilisateur
             direction.save(update_fields=["directeur"])
+            utilisateur.est_directeur_systeme = cd.get("est_directeur_systeme", False)
+            utilisateur.save(update_fields=["est_directeur_systeme"])
         elif classe is ChefDepartement:
             dep = cd["departement"]
             dep.chef_departement = utilisateur

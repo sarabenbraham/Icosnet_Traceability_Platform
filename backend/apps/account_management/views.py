@@ -1,3 +1,4 @@
+from .permissions import _est_directeur_systeme
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -38,6 +39,9 @@ def compte_logout(request):
 
 
 def compte_list(request):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : la gestion des comptes est réservée au Directeur Système.")
+        return redirect("dashboard")
     from django.db.models import Q
 
     comptes = Compte.objects.select_related("utilisateur").filter(archive=False)
@@ -90,6 +94,9 @@ def compte_list(request):
 
 
 def compte_detail(request, pk):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : la gestion des comptes est réservée au Directeur Système.")
+        return redirect("dashboard")
     compte = get_object_or_404(
         Compte.objects.select_related("utilisateur"),
         pk=pk,
@@ -108,6 +115,9 @@ def compte_detail(request, pk):
 
 
 def compte_update(request, pk):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : la modification des comptes est réservée au Directeur Système.")
+        return redirect("dashboard")
     compte = get_object_or_404(Compte, pk=pk)
 
     if request.method == "POST":
@@ -138,6 +148,9 @@ def compte_update(request, pk):
 
 
 def compte_archiver(request, pk):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : l'archivage des comptes est réservé au Directeur Système.")
+        return redirect("dashboard")
     compte = get_object_or_404(Compte, pk=pk)
 
     if request.method == "POST":
@@ -161,6 +174,9 @@ def compte_archiver(request, pk):
 
 
 def comptes_archives(request):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : la consultation des archives est réservée au Directeur Système.")
+        return redirect("dashboard")
     comptes = Compte.objects.select_related("utilisateur").filter(archive=True)
     return render(
         request,
@@ -174,6 +190,9 @@ def comptes_archives(request):
     )
 
 def compte_create(request):
+    if not _est_directeur_systeme(request.user):
+        messages.error(request, "Accès refusé : la création de comptes est réservée au Directeur Système.")
+        return redirect("dashboard")
     if request.method == "POST":
         form = UtilisateurCompteForm(request.POST)
 
