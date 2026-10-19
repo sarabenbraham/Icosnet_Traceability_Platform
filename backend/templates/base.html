@@ -205,24 +205,46 @@
     {% block topbar_action %}{% endblock %}
 
     <div class="notif-wrap">
-      <button class="notif-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown', event)">
+      <button class="notif-btn" id="notifBtn" onclick="toggleDropdown('notifDropdown', event)" style="position:relative;">
         <svg width="18" height="18" fill="none" stroke="#4a5568" stroke-width="1.8" viewBox="0 0 24 24">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        {% if invitations_count %}<span class="notif-count">{{ invitations_count }}</span>{% endif %}
+        {% with total_notifs=invitations_count|default:0|add:helpdesk_unread_count|default:0 %}
+          {% if total_notifs > 0 %}
+            <span class="notif-count" style="background:#ef4444; color:#fff;">{{ total_notifs }}</span>
+          {% endif %}
+        {% endwith %}
       </button>
-      <div class="notif-dropdown" id="notifDropdown">
+      <div class="notif-dropdown" id="notifDropdown" style="width:340px;">
+        {% if helpdesk_notifications %}
+          <div style="padding:10px 16px; font-size:.72rem; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:.06em; background:#eff6ff; border-bottom:1px solid #dbeafe; display:flex; align-items:center; gap:6px;">
+            🔔 Notifications Help Desk ({{ helpdesk_unread_count }})
+          </div>
+          {% for notif in helpdesk_notifications %}
+            <a href="{% url 'helpdesk:detail' notif.ticket.pk %}" style="display:block; padding:11px 16px; border-bottom:1px solid #f0f4fb; text-decoration:none; transition:background .15s;">
+              <div style="font-size:.82rem; font-weight:600; color:#0f1e45;">{{ notif.titre }}</div>
+              <div style="font-size:.73rem; color:#4b5563; margin-top:2px; line-height:1.4;">{{ notif.message|truncatechars:85 }}</div>
+              <div style="font-size:.67rem; color:#9ca3af; margin-top:4px;">{{ notif.date_creation|date:"d/m/Y à H:i" }}</div>
+            </a>
+          {% endfor %}
+        {% endif %}
+
         {% if invitations_recentes %}
-          <div style="padding:12px 16px; font-size:.72rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #f0f4fb;">Invitations en attente</div>
+          <div style="padding:10px 16px; font-size:.72rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #f0f4fb;">Invitations en attente</div>
           {% for inv in invitations_recentes %}
-            <a href="{% url 'meetings:reunion_detail' inv.reunion.id %}" style="display:block; padding:12px 16px; border-bottom:1px solid #f0f4fb; text-decoration:none;">
+            <a href="{% url 'meetings:reunion_detail' inv.reunion.id %}" style="display:block; padding:11px 16px; border-bottom:1px solid #f0f4fb; text-decoration:none;">
               <div style="font-size:.82rem; font-weight:600; color:#0f1e45;">{{ inv.reunion.objet }}</div>
               <div style="font-size:.72rem; color:#718096; margin-top:2px;">{{ inv.reunion.date|date:"d/m/Y" }} · {{ inv.reunion.heure_debut|time:"H:i" }}</div>
             </a>
           {% endfor %}
-          <a href="{% url 'meetings:mes_invitations' %}" style="display:block; padding:12px 16px; text-align:center; font-size:.8rem; font-weight:600; color:#2d5be3; text-decoration:none;">Voir toutes mes invitations</a>
-        {% else %}
-          <div style="padding:20px; text-align:center; font-size:.82rem; color:#a0aec0;">Aucune nouvelle notification</div>
+          <a href="{% url 'meetings:mes_invitations' %}" style="display:block; padding:10px 16px; text-align:center; font-size:.8rem; font-weight:600; color:#2d5be3; text-decoration:none;">Voir toutes mes invitations</a>
+        {% endif %}
+
+        {% if not helpdesk_notifications and not invitations_recentes %}
+          <div style="padding:24px; text-align:center; font-size:.82rem; color:#a0aec0;">
+            <div style="font-size:1.6rem; margin-bottom:6px;">🔔</div>
+            Aucune nouvelle notification
+          </div>
         {% endif %}
       </div>
     </div>
@@ -321,13 +343,18 @@
 
 
     <!-- Help Desk : visible par tous les utilisateurs connectés -->
-    <div class="nav-section-label" style="margin-top:8px;">Support</div>
-    <a href="{% url 'helpdesk:liste' %}" class="nav-item {% block nav_helpdesk %}{% endblock %}">
-      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Help Desk
+    <div class="nav-section-label" style="margin-top:8px;">Support & Pannes</div>
+    <a href="{% url 'helpdesk:liste' %}" class="nav-item {% block nav_helpdesk %}{% endblock %}" style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {% if is_agent_helpdesk %}Help Desk DSI{% else %}Mes Réclamations{% endif %}
+      </div>
+      {% if helpdesk_unread_count %}
+        <span class="badge" style="background:#ef4444; color:#fff; font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:10px;">{{ helpdesk_unread_count }}</span>
+      {% endif %}
     </a>
 
     {% if is_directeur_systeme %}

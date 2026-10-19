@@ -77,6 +77,22 @@
   </div>
 </div>
 
+{% if not est_helpdesk %}
+<div class="fade-in delay-1" style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px;">
+  <span style="font-size:1.4rem;">🔒</span>
+  <div style="font-size:.82rem; color:#1e40af; line-height:1.5;">
+    <strong>Espace personnel et confidentiel :</strong> Vos réclamations sont privées. Seuls vous-même et l'<strong>Agent Help Desk</strong> pouvez consulter les détails de vos signalements et y répondre.
+  </div>
+</div>
+{% else %}
+<div class="fade-in delay-1" style="background:#fefce8; border:1.5px solid #fef08a; border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px;">
+  <span style="font-size:1.4rem;">🎧</span>
+  <div style="font-size:.82rem; color:#854d0e; line-height:1.5;">
+    <strong>Supervision Help Desk :</strong> Vous êtes habilité à visualiser toutes les réclamations DSI, assigner les incidents et mettre à jour leur statut. Chaque nouveau signalement vous notifie automatiquement.
+  </div>
+</div>
+{% endif %}
+
 <!-- Stats -->
 <div class="hd-stats fade-in delay-1">
   <div class="hd-stat">

@@ -80,3 +80,30 @@ class Commentaire(models.Model):
 
     def __str__(self):
         return f"Commentaire de {self.auteur} sur #{self.ticket_id}"
+
+
+class Notification(models.Model):
+    destinataire = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="helpdesk_notifications",
+        verbose_name="Destinataire"
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        verbose_name="Ticket associé"
+    )
+    titre = models.CharField(max_length=200, verbose_name="Titre")
+    message = models.TextField(verbose_name="Message")
+    lu = models.BooleanField(default=False, verbose_name="Lu")
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date")
+
+    class Meta:
+        ordering = ["-date_creation"]
+        verbose_name = "Notification Help Desk"
+        verbose_name_plural = "Notifications Help Desk"
+
+    def __str__(self):
+        return f"Notification pour {self.destinataire}: {self.titre}"
