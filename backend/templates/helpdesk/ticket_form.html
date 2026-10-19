@@ -5,7 +5,6 @@
 {% block nav_helpdesk %}active{% endblock %}
 
 {% block extra_style %}
-<style>
   .form-group { margin-bottom:18px; }
   .form-group label { display:block; font-size:.83rem; font-weight:600; color:#374151; margin-bottom:6px; }
   .form-group input, .form-group select, .form-group textarea {
@@ -16,7 +15,31 @@
     border-color:#2d5be3; box-shadow:0 0 0 3px rgba(45,91,227,.1); }
   .field-errors { color:#c53030; font-size:.75rem; margin-top:4px; }
   .priority-hint { font-size:.72rem; color:#718096; margin-top:4px; }
-</style>
+
+  /* ── Vie : sélecteur de priorité coloré ── */
+  #id_priorite { transition:all .25s; border-left-width:6px; }
+  #id_priorite[data-p="faible"]   { border-color:#86efac; background:#f0fdf4; }
+  #id_priorite[data-p="moyen"]    { border-color:#fde047; background:#fefce8; }
+  #id_priorite[data-p="eleve"]    { border-color:#fb923c; background:#fff7ed; }
+  #id_priorite[data-p="critique"] { border-color:#ef4444; background:#fef2f2; }
+  .hint-item { opacity:.45; transition:all .2s; display:inline-block; margin-right:6px; }
+  .hint-item.on { opacity:1; font-weight:700; color:#0f1e45; transform:scale(1.05); }
+
+  /* ── Compteurs de caractères ── */
+  .counter { font-size:.7rem; color:#a0aec0; text-align:right; margin-top:4px; transition:color .2s; }
+  .counter.warn { color:#c2410c; font-weight:600; }
+
+  /* ── Carte et bouton ── */
+  .form-card { animation:card-in .4s ease both; }
+  @keyframes card-in { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  .submit-btn { transition:transform .15s, box-shadow .2s; }
+  .submit-btn:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(37,99,235,.38) !important; }
+  .submit-btn:active { transform:translateY(0); }
+  .submit-btn.loading { opacity:.7; pointer-events:none; }
+  .tip-box { background:#eff6ff; border:1px solid #dbeafe; border-radius:10px; padding:10px 14px;
+    font-size:.78rem; color:#1e40af; margin-bottom:18px; }
+  @media (max-width:640px) { .grid-2 { grid-template-columns:1fr !important; } }
+  @media (prefers-reduced-motion:reduce) { *, *::before { animation:none !important; transition:none !important; } }
 {% endblock %}
 
 {% block content %}
@@ -41,18 +64,20 @@
   </div>
   {% endif %}
 
-  <form method="post" novalidate>
+  <form method="post" novalidate id="ticket-form">
     {% csrf_token %}
 
     <div class="form-section-title">① Identification du problème</div>
+    <div class="tip-box">💡 Un titre précis et une bonne description permettent à l'équipe de vous répondre plus vite.</div>
 
     <div class="form-group">
       <label>{{ form.titre.label }}</label>
       {{ form.titre }}
+      <div class="counter" id="cnt-titre">0 / 200</div>
       {% if form.titre.errors %}<div class="field-errors">{{ form.titre.errors|striptags }}</div>{% endif %}
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;">
+    <div class="grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;">
       <div class="form-group" style="margin-bottom:0;">
         <label>{{ form.categorie.label }}</label>
         {{ form.categorie }}
@@ -62,7 +87,10 @@
         <label>{{ form.priorite.label }}</label>
         {{ form.priorite }}
         <div class="priority-hint">
-          🔴 Critique = bloquant · 🟠 Élevé = urgent · 🟡 Moyen = normal · 🟢 Faible = mineur
+          <span class="hint-item" data-for="critique">🔴 Critique = bloquant</span>
+          <span class="hint-item" data-for="eleve">🟠 Élevé = urgent</span>
+          <span class="hint-item" data-for="moyen">🟡 Moyen = normal</span>
+          <span class="hint-item" data-for="faible">🟢 Faible = mineur</span>
         </div>
         {% if form.priorite.errors %}<div class="field-errors">{{ form.priorite.errors|striptags }}</div>{% endif %}
       </div>
@@ -73,6 +101,7 @@
     <div class="form-group">
       <label>{{ form.description.label }}</label>
       {{ form.description }}
+      <div class="counter" id="cnt-desc">0 caractère</div>
       {% if form.description.errors %}<div class="field-errors">{{ form.description.errors|striptags }}</div>{% endif %}
     </div>
 
@@ -80,7 +109,7 @@
       <a href="{% url 'helpdesk:liste' %}" class="btn-secondary" style="padding:10px 20px;border-radius:10px;">
         Annuler
       </a>
-      <button type="submit"
+      <button type="submit" class="submit-btn"
         style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;
                padding:10px 24px;border-radius:10px;font-weight:600;cursor:pointer;
                font-family:'Poppins',sans-serif;box-shadow:0 4px 12px rgba(37,99,235,.3);">
@@ -89,4 +118,37 @@
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Priorité : couleur du champ + mise en avant de la légende
+  const pr = document.getElementById('id_priorite');
+  function syncPriorite() {
+    pr.dataset.p = pr.value;
+    document.querySelectorAll('.hint-item').forEach(h => h.classList.toggle('on', h.dataset.for === pr.value));
+  }
+  if (pr) { pr.addEventListener('change', syncPriorite); syncPriorite(); }
+
+  // Compteurs
+  const titre = document.getElementById('id_titre'), desc = document.getElementById('id_description');
+  function count() {
+    if (titre) {
+      const n = titre.value.length, c = document.getElementById('cnt-titre');
+      c.textContent = n + ' / 200'; c.classList.toggle('warn', n > 170);
+    }
+    if (desc) {
+      const n = desc.value.length, c = document.getElementById('cnt-desc');
+      c.textContent = n + (n > 1 ? ' caractères' : ' caractère');
+      c.classList.toggle('warn', n > 0 && n < 20);
+    }
+  }
+  [titre, desc].forEach(el => el && el.addEventListener('input', count));
+  count();
+
+  // Anti double-clic
+  document.getElementById('ticket-form').addEventListener('submit', () => {
+    const b = document.querySelector('.submit-btn'); b.classList.add('loading'); b.textContent = 'Envoi en cours…';
+  });
+</script>
 {% endblock %}

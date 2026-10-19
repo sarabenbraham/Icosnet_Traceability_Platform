@@ -11,10 +11,19 @@ class FluxApplication(models.Model):
         WEBHOOK = "WEBHOOK", "Webhook"
         AUTRE = "AUTRE", "Autre"
 
-    fiche = models.OneToOneField(
+    class Sens(models.TextChoices):
+        RECEPTION = "RECEPTION", "Réception"
+        ENVOI = "ENVOI", "Envoi"
+
+    # ForeignKey (et non plus OneToOne) : plusieurs flux par fiche
+    fiche = models.ForeignKey(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="flux_application"
+        related_name="flux"
+    )
+
+    solution_distante = models.CharField(
+        max_length=200
     )
 
     adresse = models.CharField(
@@ -27,11 +36,23 @@ class FluxApplication(models.Model):
         blank=True
     )
 
+    sens = models.CharField(
+        max_length=10,
+        choices=Sens.choices
+    )
+
     type_flux = models.CharField(
         max_length=20,
         choices=TypeFlux.choices,
         blank=True
     )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    class Meta:
+        ordering = ["id"]
 
     def clean(self):
         if self.port is not None and not (
@@ -43,4 +64,4 @@ class FluxApplication(models.Model):
             })
 
     def __str__(self):
-        return f"Flux - {self.fiche.nom_application}"
+        return f"Flux - {self.fiche.nom_application} - {self.solution_distante}"

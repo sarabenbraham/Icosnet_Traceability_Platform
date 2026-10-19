@@ -71,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "apps.meetings.context_processors.meetings",
                 "apps.helpdesk.context_processors.helpdesk_context",
+                'apps.application_sheet.context_processors.notifications_fiches',
             ],
         },
     },

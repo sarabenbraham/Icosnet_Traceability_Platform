@@ -5,7 +5,6 @@
 {% block nav_helpdesk %}active{% endblock %}
 
 {% block extra_style %}
-<style>
   .hd-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
   .hd-stat  { background:#fff; border:1px solid #e8edf5; border-radius:14px; padding:18px 20px;
                box-shadow:0 2px 10px rgba(0,0,0,0.04); }
@@ -57,7 +56,54 @@
   .days-badge { font-size:.7rem; color:#718096; background:#f1f5f9;
     padding:2px 7px; border-radius:6px; }
   .days-badge.urgent { background:#fef2f2; color:#991b1b; }
-</style>
+
+  /* ── Vie : cartes stats cliquables ── */
+  a.hd-stat { text-decoration:none; position:relative; overflow:hidden; display:block;
+    transition:transform .2s, box-shadow .2s, border-color .2s; }
+  a.hd-stat::before { content:""; position:absolute; left:0; top:0; right:0; height:3px;
+    background:var(--c,#2563eb); }
+  a.hd-stat:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(15,30,69,.10); }
+  a.hd-stat.active { border-color:var(--c,#2563eb); box-shadow:0 0 0 3px rgba(37,99,235,.10); }
+  .hd-stat .num { font-variant-numeric:tabular-nums; }
+
+  /* ── Badges avec pastille ── */
+  .priority-badge::before { content:""; width:6px; height:6px; border-radius:50%;
+    background:currentColor; display:inline-block; }
+  .p-critique::before { animation:pulse-dot 1.4s infinite; }
+  .s-en_cours::before { animation:pulse-dot 2s infinite; }
+  @keyframes pulse-dot {
+    0%   { box-shadow:0 0 0 0 currentColor; opacity:1; }
+    70%  { box-shadow:0 0 0 6px transparent; opacity:.7; }
+    100% { box-shadow:0 0 0 0 transparent; opacity:1; }
+  }
+
+  /* ── Lignes : liseré de priorité + flèche ── */
+  .ticket-row td:first-child { box-shadow:inset 4px 0 0 transparent; }
+  .row-p-faible   td:first-child { box-shadow:inset 4px 0 0 #86efac; }
+  .row-p-moyen    td:first-child { box-shadow:inset 4px 0 0 #fde047; }
+  .row-p-eleve    td:first-child { box-shadow:inset 4px 0 0 #fb923c; }
+  .row-p-critique td:first-child { box-shadow:inset 4px 0 0 #ef4444; }
+  .ticket-row:hover .ticket-title { color:#2563eb; }
+  .row-arrow { opacity:0; transform:translateX(-6px); transition:all .2s; color:#2563eb; font-weight:700; }
+  .ticket-row:hover .row-arrow { opacity:1; transform:none; }
+
+  /* ── Avatars ── */
+  .who { display:flex; align-items:center; gap:8px; font-size:.82rem; }
+  .avatar { width:26px; height:26px; border-radius:50%; display:inline-flex;
+    align-items:center; justify-content:center; font-size:.7rem; font-weight:700;
+    color:#fff; background:linear-gradient(135deg,#2563eb,#7c3aed); flex-shrink:0; }
+  .avatar.agent { background:linear-gradient(135deg,#f97316,#ea580c); }
+
+  /* ── Entrée en cascade des lignes ── */
+  .ticket-row { animation:row-in .35s ease both; }
+  @keyframes row-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* ── État vide ── */
+  .empty-ico { font-size:3rem; display:inline-block; animation:float 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform:translateY(-8px); } }
+
+  @media (max-width:900px) { .hd-stats { grid-template-columns:repeat(2,1fr); } }
+  @media (prefers-reduced-motion:reduce) { *, *::before { animation:none !important; transition:none !important; } }
 {% endblock %}
 
 {% block topbar_action %}
@@ -95,22 +141,22 @@
 
 <!-- Stats -->
 <div class="hd-stats fade-in delay-1">
-  <div class="hd-stat">
-    <div class="num">{{ stats.total }}</div>
-    <div class="lbl">Total tickets</div>
-  </div>
-  <div class="hd-stat">
-    <div class="num" style="color:#1d4ed8;">{{ stats.ouverts }}</div>
+  <a href="{% url 'helpdesk:liste' %}" class="hd-stat {% if not filtre_statut %}active{% endif %}" style="--c:#0f1e45;">
+    <div class="num" data-count="{{ stats.total }}">{{ stats.total }}</div>
+    <div class="lbl">📋 Total tickets</div>
+  </a>
+  <a href="?statut=ouvert" class="hd-stat {% if filtre_statut == 'ouvert' %}active{% endif %}" style="--c:#1d4ed8;">
+    <div class="num" style="color:#1d4ed8;" data-count="{{ stats.ouverts }}">{{ stats.ouverts }}</div>
     <div class="lbl">🔵 Ouverts</div>
-  </div>
-  <div class="hd-stat">
-    <div class="num" style="color:#c2410c;">{{ stats.en_cours }}</div>
+  </a>
+  <a href="?statut=en_cours" class="hd-stat {% if filtre_statut == 'en_cours' %}active{% endif %}" style="--c:#c2410c;">
+    <div class="num" style="color:#c2410c;" data-count="{{ stats.en_cours }}">{{ stats.en_cours }}</div>
     <div class="lbl">🟠 En cours</div>
-  </div>
-  <div class="hd-stat">
-    <div class="num" style="color:#166534;">{{ stats.resolus }}</div>
+  </a>
+  <a href="?statut=resolu" class="hd-stat {% if filtre_statut == 'resolu' %}active{% endif %}" style="--c:#166534;">
+    <div class="num" style="color:#166534;" data-count="{{ stats.resolus }}">{{ stats.resolus }}</div>
     <div class="lbl">✅ Résolus</div>
-  </div>
+  </a>
 </div>
 
 <!-- Filtres -->
@@ -165,11 +211,12 @@
         {% if est_helpdesk %}<th>Créateur</th>{% endif %}
         <th>Assigné à</th>
         <th>Jours</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
       {% for ticket in tickets %}
-      <tr class="ticket-row" onclick="window.location='{% url 'helpdesk:detail' pk=ticket.pk %}'">
+      <tr class="ticket-row row-p-{{ ticket.priorite }}" style="animation-delay:{{ forloop.counter0 }}0ms;" onclick="window.location='{% url 'helpdesk:detail' pk=ticket.pk %}'">
         <td style="color:#a0aec0; font-size:.8rem;">#{{ ticket.pk }}</td>
         <td>
           <div class="ticket-title">{{ ticket.titre }}</div>
@@ -187,13 +234,17 @@
           </span>
         </td>
         {% if est_helpdesk %}
-        <td style="font-size:.82rem;">{{ ticket.createur.get_full_name|default:ticket.createur.username }}</td>
+        <td>
+          <div class="who"><span class="avatar">{{ ticket.createur.get_full_name|default:ticket.createur.username|slice:":1"|upper }}</span>
+          {{ ticket.createur.get_full_name|default:ticket.createur.username }}</div>
+        </td>
         {% endif %}
-        <td style="font-size:.82rem;">
+        <td>
           {% if ticket.assigne_a %}
-            {{ ticket.assigne_a.get_full_name|default:ticket.assigne_a.username }}
+            <div class="who"><span class="avatar agent">{{ ticket.assigne_a.get_full_name|default:ticket.assigne_a.username|slice:":1"|upper }}</span>
+            {{ ticket.assigne_a.get_full_name|default:ticket.assigne_a.username }}</div>
           {% else %}
-            <span style="color:#a0aec0;">—</span>
+            <span style="color:#a0aec0;">— Non assigné</span>
           {% endif %}
         </td>
         <td>
@@ -201,11 +252,12 @@
             {{ ticket.duree_ouverture }}j
           </span>
         </td>
+        <td class="row-arrow">→</td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="8" style="text-align:center; padding:48px; color:#a0aec0;">
-          <div style="font-size:2rem; margin-bottom:8px;">🎫</div>
+        <td colspan="9" style="text-align:center; padding:48px; color:#a0aec0;">
+          <div class="empty-ico">🎫</div><br>
           {% if q or filtre_statut or filtre_categorie or filtre_priorite %}
             Aucun ticket ne correspond à votre recherche.
           {% else %}
@@ -218,4 +270,23 @@
     </tbody>
   </table>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Compteurs animés
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count, 10) || 0;
+    if (target === 0) return;
+    const duration = 700, start = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - start) / duration, 1);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(tick);
+    })(start);
+  });
+  // Soumission auto des filtres (select)
+  document.querySelectorAll('.filter-bar .fsel').forEach(sel =>
+    sel.addEventListener('change', () => sel.form.submit()));
+</script>
 {% endblock %}

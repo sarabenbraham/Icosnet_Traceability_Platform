@@ -1,10 +1,10 @@
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect, render, get_object_or_404
-
+from django.core.exceptions import ObjectDoesNotExist
 from .forms import FicheApplicativeCompleteForm
-from .models import FicheApplicative
-
+from .models import FicheApplicative, Notification
+from .workflow import peut_soumettre, peut_valider_chef, peut_valider_directeur
 
 def fiche_list(request):
     fiches = FicheApplicative.objects.select_related(
@@ -13,6 +13,14 @@ def fiche_list(request):
         "departements"
     )
 
+    statut = request.GET.get("statut")
+    if statut:
+        fiches = fiches.filter(statut=statut)
+
+    domaine = request.GET.get("domaine")
+    if domaine:
+        fiches = fiches.filter(domaine_fonctionnel__contains=domaine)
+
     return render(
         request,
         "application_sheet/fiche_liste.html",
@@ -20,7 +28,7 @@ def fiche_list(request):
             "fiches": fiches,
         },
     )
-
+    
 
 def fiche_detail(request, pk):
     fiche = get_object_or_404(
@@ -32,11 +40,20 @@ def fiche_detail(request, pk):
         pk=pk,
     )
 
+    Notification.objects.filter(
+        destinataire=request.user,
+        fiche=fiche,
+        lue=False,
+    ).update(lue=True)
+
     return render(
         request,
         "application_sheet/fiche_detail.html",
         {
             "fiche": fiche,
+            "peut_soumettre": peut_soumettre(request.user, fiche),
+            "peut_valider_chef": peut_valider_chef(request.user, fiche),
+            "peut_valider_directeur": peut_valider_directeur(request.user, fiche),
         },
     )
 
@@ -69,6 +86,12 @@ def fiche_delete(request, pk):
 
 def create_fiche_applicative(request):
 
+    try:
+        ingenieur = request.user.ingenieur
+    except ObjectDoesNotExist:
+        messages.error(request, "Seul un ingénieur peut créer une fiche applicative.")
+        return redirect("application_sheet:liste")
+
     if request.method == "POST":
 
         form = FicheApplicativeCompleteForm(request.POST)
@@ -77,11 +100,10 @@ def create_fiche_applicative(request):
 
             with transaction.atomic():
 
-                fiche = form.fiche.save()
-
-                contrat = form.contrat.save(commit=False)
-                contrat.fiche = fiche
-                contrat.save()
+                fiche = form.fiche.save(commit=False)
+                fiche.ingenieur = ingenieur
+                fiche.save()
+                form.fiche.save_m2m()
 
                 infrastructure = form.infrastructure.save(commit=False)
                 infrastructure.fiche = fiche
@@ -107,17 +129,15 @@ def create_fiche_applicative(request):
                 integration.fiche = fiche
                 integration.save()
 
-                flux = form.flux.save(commit=False)
-                flux.fiche = fiche
-                flux.save()
+                form.flux.instance = fiche
+                form.flux.save()
 
                 sauvegarde = form.sauvegarde.save(commit=False)
                 sauvegarde.fiche = fiche
                 sauvegarde.save()
 
-                intervention = form.intervention.save(commit=False)
-                intervention.fiche = fiche
-                intervention.save()
+                form.intervention.instance = fiche
+                form.intervention.save()
 
             messages.success(
                 request,
@@ -182,17 +202,15 @@ def fiche_update(request, pk):
                 integration.fiche = fiche
                 integration.save()
 
-                flux = form.flux.save(commit=False)
-                flux.fiche = fiche
-                flux.save()
+                form.flux.instance = fiche
+                form.flux.save()
 
                 sauvegarde = form.sauvegarde.save(commit=False)
                 sauvegarde.fiche = fiche
                 sauvegarde.save()
 
-                intervention = form.intervention.save(commit=False)
-                intervention.fiche = fiche
-                intervention.save()
+                form.intervention.instance = fiche
+                form.intervention.save()
 
             messages.success(
                 request,

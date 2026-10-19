@@ -10,10 +10,10 @@ class Intervention(models.Model):
         ECHEC = "ECHEC", "Échec"
         ROLLBACK = "ROLLBACK", "Rollback"
 
-    fiche = models.OneToOneField(
+    fiche = models.ForeignKey(
         FicheApplicative,
         on_delete=models.CASCADE,
-        related_name="intervention"
+        related_name="interventions"
     )
 
     date_heure = models.DateTimeField(
@@ -40,6 +40,9 @@ class Intervention(models.Model):
         choices=StatutIntervention.choices,
         blank=True
     )
+
+    class Meta:
+        ordering = ["-date_heure"]
 
     def __str__(self):
         return f"Intervention - {self.fiche.nom_application}"

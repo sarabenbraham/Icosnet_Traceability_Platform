@@ -9,6 +9,7 @@ from .integration import Integration
 from .fluxApplication import FluxApplication
 from .sauvegarde import Sauvegarde
 from .intervention import Intervention
+from .notification import Notification, HistoriqueValidation
 
 __all__ = [
     "FicheApplicative",
@@ -22,4 +23,6 @@ __all__ = [
     "FluxApplication",
     "Sauvegarde",
     "Intervention",
+    "Notification",
+    "HistoriqueValidation"
 ]

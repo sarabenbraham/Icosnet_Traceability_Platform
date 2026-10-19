@@ -245,6 +245,36 @@
             <div style="font-size:1.6rem; margin-bottom:6px;">🔔</div>
             Aucune nouvelle notification
           </div>
+        {% with total=invitations_count|add:notifications_fiches_count %}
+          {% if total %}<span class="notif-count">{{ total }}</span>{% endif %}
+        {% endwith %}
+      </button>
+      <div class="notif-dropdown" id="notifDropdown">
+        {% if notifications_fiches or invitations_recentes %}
+
+          {% if notifications_fiches %}
+            <div style="padding:12px 16px; font-size:.72rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #f0f4fb;">Fiches applicatives</div>
+            {% for n in notifications_fiches %}
+              <a href="{% url 'application_sheet:detail' n.fiche.pk %}" style="display:block; padding:12px 16px; border-bottom:1px solid #f0f4fb; text-decoration:none;">
+                <div style="font-size:.82rem; font-weight:600; color:#0f1e45;">{{ n.message }}</div>
+                <div style="font-size:.72rem; color:#718096; margin-top:2px;">{{ n.date_creation|date:"d/m/Y H:i" }}</div>
+              </a>
+            {% endfor %}
+          {% endif %}
+
+          {% if invitations_recentes %}
+            <div style="padding:12px 16px; font-size:.72rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #f0f4fb;">Invitations en attente</div>
+            {% for inv in invitations_recentes %}
+              <a href="{% url 'meetings:reunion_detail' inv.reunion.id %}" style="display:block; padding:12px 16px; border-bottom:1px solid #f0f4fb; text-decoration:none;">
+                <div style="font-size:.82rem; font-weight:600; color:#0f1e45;">{{ inv.reunion.objet }}</div>
+                <div style="font-size:.72rem; color:#718096; margin-top:2px;">{{ inv.reunion.date|date:"d/m/Y" }} · {{ inv.reunion.heure_debut|time:"H:i" }}</div>
+              </a>
+            {% endfor %}
+            <a href="{% url 'meetings:mes_invitations' %}" style="display:block; padding:12px 16px; text-align:center; font-size:.8rem; font-weight:600; color:#2d5be3; text-decoration:none;">Voir toutes mes invitations</a>
+          {% endif %}
+
+        {% else %}
+          <div style="padding:20px; text-align:center; font-size:.82rem; color:#a0aec0;">Aucune nouvelle notification</div>
         {% endif %}
       </div>
     </div>
