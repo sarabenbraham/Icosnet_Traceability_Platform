@@ -27,7 +27,12 @@ class Ingenieur(User):
     est_helpdesk = models.BooleanField(
         default=False,
         verbose_name="Agent Help Desk",
-        help_text="Cocher si cet ing\u00e9nieur peut traiter les tickets Help Desk."
+        help_text="Cocher si cet ingénieur peut traiter les tickets Help Desk."
+    )
+    est_directeur_systeme = models.BooleanField(
+        default=False,
+        verbose_name="Directeur Système",
+        help_text="Cocher si cet ingénieur est Directeur Système et possède les privilèges de gestion des comptes."
     )
 
     def remplirFormulaire(self):
@@ -35,8 +40,13 @@ class Ingenieur(User):
 
     def __str__(self):
         label = super().__str__()
+        roles = []
         if self.est_helpdesk:
-            label += " [Help Desk]"
+            roles.append("Help Desk")
+        if self.est_directeur_systeme:
+            roles.append("Directeur Système")
+        if roles:
+            label += f" [{', '.join(roles)}]"
         return label
 
 class ChefDepartement(User):
@@ -47,12 +57,6 @@ class ChefDepartement(User):
         pass
 
 class Directeur(User):
-    est_directeur_systeme = models.BooleanField(
-        default=False,
-        verbose_name="Directeur Système",
-        help_text="Cocher si ce directeur est Directeur Système et possède les privilèges de gestion des comptes."
-    )
-
     def valider(self):
         pass
 
@@ -60,7 +64,4 @@ class Directeur(User):
         pass
 
     def __str__(self):
-        label = super().__str__()
-        if self.est_directeur_systeme:
-            label += " [Directeur Système]"
-        return label
+        return super().__str__()

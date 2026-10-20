@@ -77,7 +77,7 @@ class CompteForm(forms.ModelForm):
     est_directeur_systeme = forms.BooleanField(
         label="Rôle Directeur Système",
         required=False,
-        help_text="Cocher si ce directeur a les privilèges de gestion des comptes.",
+        help_text="Cocher si cet ingénieur a les privilèges de gestion des comptes (Directeur Système).",
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
     )
 
@@ -118,8 +118,8 @@ class CompteForm(forms.ModelForm):
             elif hasattr(u, "est_helpdesk"):
                 self.fields["est_helpdesk"].initial = u.est_helpdesk
 
-            if hasattr(u, "directeur"):
-                self.fields["est_directeur_systeme"].initial = getattr(u.directeur, "est_directeur_systeme", False)
+            if hasattr(u, "ingenieur"):
+                self.fields["est_directeur_systeme"].initial = getattr(u.ingenieur, "est_directeur_systeme", False)
             elif hasattr(u, "est_directeur_systeme"):
                 self.fields["est_directeur_systeme"].initial = u.est_directeur_systeme
 
@@ -143,18 +143,14 @@ class CompteForm(forms.ModelForm):
             if hasattr(u, "ingenieur"):
                 ing = u.ingenieur
                 ing.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
-                ing.save(update_fields=["est_helpdesk"])
-            elif hasattr(u, "est_helpdesk"):
-                u.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
-                u.save(update_fields=["est_helpdesk"])
-
-            if hasattr(u, "directeur"):
-                d = u.directeur
-                d.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
-                d.save(update_fields=["est_directeur_systeme"])
-            elif hasattr(u, "est_directeur_systeme"):
-                u.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
-                u.save(update_fields=["est_directeur_systeme"])
+                ing.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
+                ing.save(update_fields=["est_helpdesk", "est_directeur_systeme"])
+            else:
+                if hasattr(u, "est_helpdesk"):
+                    u.est_helpdesk = self.cleaned_data.get("est_helpdesk", False)
+                if hasattr(u, "est_directeur_systeme"):
+                    u.est_directeur_systeme = self.cleaned_data.get("est_directeur_systeme", False)
+                u.save()
 
         if commit:
             compte.save()
@@ -218,8 +214,6 @@ class UtilisateurCompteForm(forms.ModelForm):
             direction = cd["direction"]
             direction.directeur = utilisateur
             direction.save(update_fields=["directeur"])
-            utilisateur.est_directeur_systeme = cd.get("est_directeur_systeme", False)
-            utilisateur.save(update_fields=["est_directeur_systeme"])
         elif classe is ChefDepartement:
             dep = cd["departement"]
             dep.chef_departement = utilisateur
@@ -227,7 +221,8 @@ class UtilisateurCompteForm(forms.ModelForm):
         elif classe is Ingenieur:
             utilisateur.departement = cd["departement"]
             utilisateur.est_helpdesk = cd.get("est_helpdesk", False)
-            utilisateur.save(update_fields=["departement", "est_helpdesk"])
+            utilisateur.est_directeur_systeme = cd.get("est_directeur_systeme", False)
+            utilisateur.save(update_fields=["departement", "est_helpdesk", "est_directeur_systeme"])
 
         compte = Compte(
             utilisateur=utilisateur,
