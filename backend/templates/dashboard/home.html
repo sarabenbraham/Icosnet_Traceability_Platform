@@ -615,7 +615,6 @@
         <div class="dashboard-card fade-in delay-3">
             <div class="dashboard-actions">
 
-                {% if is_ingenieur %}
                 <a href="{% url 'application_sheet:creer' %}" class="dashboard-action">
                     <div class="dashboard-action-icon" style="background:#eef2ff; color:#2d5be3;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
@@ -625,7 +624,6 @@
                         <div class="dashboard-action-sub">Créer une fiche applicative</div>
                     </div>
                 </a>
-                {% endif %}
 
                 {% if is_chef or is_directeur %}
                 <a href="#a-traiter" class="dashboard-action">

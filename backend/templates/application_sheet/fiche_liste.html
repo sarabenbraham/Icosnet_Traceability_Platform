@@ -81,9 +81,11 @@
                 <a href="{% url 'application_sheet:modifier' pk=fiche.pk %}" class="icon-btn icon-btn-edit" title="Modifier">
                   <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
+                {% if fiche.peut_supprimer%}
                 <a href="{% url 'application_sheet:supprimer' pk=fiche.pk %}" class="icon-btn icon-btn-delete" title="Supprimer">
                   <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
+                {% endif %}
               </div>
             </td>
           </tr>

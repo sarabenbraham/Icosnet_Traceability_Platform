@@ -6,14 +6,18 @@
 {% block nav_fiches %}active{% endblock %}
 
 {% block topbar_action %}
+  {% if peut_modifier %}
   <a href="{% url 'application_sheet:modifier' pk=fiche.pk %}" class="btn-secondary">
     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Modifier
   </a>
+  {% endif %}
+  {% if peut_supprimer%}
   <a href="{% url 'application_sheet:supprimer' pk=fiche.pk %}" class="btn-upload" style="background:linear-gradient(135deg,#e53e3e,#9b2c2c); box-shadow:0 4px 14px rgba(229,62,62,.3);">
     <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Supprimer
   </a>
+  {% endif%}
 {% endblock %}
 
 {% block content %}
@@ -277,7 +281,7 @@
 
     {% if fiche.historique.all %}
     <div class="form-card fade-in" style="margin-top:20px;">
-      <div class="form-section-title">Historique de validation</div>
+      <div class="form-section-title">Historique de validation et modification</div>
       <table style="width:100%; border-collapse:collapse; font-size:.82rem;">
         <thead>
           <tr style="font-size:.68rem; text-transform:uppercase; color:#718096; text-align:left;">
@@ -292,7 +296,9 @@
             <tr style="border-top:1px solid #f0f4fb;">
               <td style="padding:8px;">{{ h.date|date:"d/m/Y H:i" }}</td>
               <td style="padding:8px;">{{ h.auteur }}</td>
-              <td style="padding:8px;">{{ h.ancien_statut }} → {{ h.nouveau_statut }}</td>
+              <td style="padding:8px;">
+                {% if h.ancien_statut == h.nouveau_statut %}Modification{% else %}{{ h.ancien_statut }} → {{ h.nouveau_statut }}{% endif %}
+              </td>
               <td style="padding:8px;">{{ h.commentaire|default:"—" }}</td>
             </tr>
           {% endfor %}

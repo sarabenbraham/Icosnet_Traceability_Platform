@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from .forms import FicheApplicativeCompleteForm
 from .models import FicheApplicative, Notification
-from .workflow import peut_soumettre, peut_valider_chef, peut_valider_directeur
+from .workflow import ingenieur_pour, peut_modifier, peut_soumettre, peut_valider_chef, peut_valider_directeur, est_directeur, peut_supprimer, enregistrer_modification
 
 def fiche_list(request):
     fiches = FicheApplicative.objects.select_related(
@@ -21,6 +21,11 @@ def fiche_list(request):
     if domaine:
         fiches = fiches.filter(domaine_fonctionnel__contains=domaine)
 
+    fiches = list(fiches)
+    directeur = est_directeur(request.user)
+    for f in fiches:
+        f.peut_supprimer = peut_supprimer(request.user, f)
+
     return render(
         request,
         "application_sheet/fiche_liste.html",
@@ -28,7 +33,6 @@ def fiche_list(request):
             "fiches": fiches,
         },
     )
-    
 
 def fiche_detail(request, pk):
     fiche = get_object_or_404(
@@ -54,6 +58,8 @@ def fiche_detail(request, pk):
             "peut_soumettre": peut_soumettre(request.user, fiche),
             "peut_valider_chef": peut_valider_chef(request.user, fiche),
             "peut_valider_directeur": peut_valider_directeur(request.user, fiche),
+            "peut_modifier": peut_modifier(request.user, fiche),
+            "peut_supprimer": peut_supprimer(request.user, fiche),
         },
     )
 
@@ -63,6 +69,10 @@ def fiche_delete(request, pk):
         FicheApplicative,
         pk=pk,
     )
+
+    if not peut_supprimer(request.user, fiche):
+        messages.error(request, "Vous ne pouvez pas supprimer cette fiche.")
+        return redirect("application_sheet:detail", pk=pk)
 
     if request.method == "POST":
         fiche.delete()
@@ -86,17 +96,25 @@ def fiche_delete(request, pk):
 
 def create_fiche_applicative(request):
 
-    try:
-        ingenieur = request.user.ingenieur
-    except ObjectDoesNotExist:
-        messages.error(request, "Seul un ingénieur peut créer une fiche applicative.")
+    ingenieur = ingenieur_pour(request.user)
+    if ingenieur is None:
+        messages.error(request, "Impossible de créer la fiche pour ce compte.")
         return redirect("application_sheet:liste")
 
     if request.method == "POST":
-
         form = FicheApplicativeCompleteForm(request.POST)
+        valide = form.is_valid()
 
-        if form.is_valid():
+        # Un directeur doit choisir le(s) département(s) → ses chefs recevront la fiche
+        if valide and est_directeur(request.user) \
+                and not form.fiche.cleaned_data.get("departements"):
+            form.fiche.add_error(
+                "departements",
+                "Choisissez le département dont le chef doit valider la fiche."
+            )
+            valide = False
+
+        if valide:
 
             with transaction.atomic():
 
@@ -167,10 +185,38 @@ def create_fiche_applicative(request):
 def fiche_update(request, pk):
     fiche = get_object_or_404(FicheApplicative, pk=pk)
 
+    if not peut_modifier(request.user, fiche):
+        messages.error(request, "Vous ne pouvez pas modifier cette fiche.")
+        return redirect("application_sheet:detail", pk=pk)
+
     if request.method == "POST":
         form = FicheApplicativeCompleteForm(request.POST, instance=fiche)
 
         if form.is_valid():
+            sections = [
+                nom for nom, f in [
+                    ("Identification", form.fiche),
+                    ("Contrat", form.contrat),
+                    ("Infrastructure", form.infrastructure),
+                    ("Accès", form.acces),
+                    ("Développement", form.developpement),
+                    ("Modules métier", form.module_metier),
+                    ("Stockage", form.stockage),
+                    ("Intégration", form.integration),
+                    ("Flux", form.flux),
+                    ("Sauvegarde", form.sauvegarde),
+                    ("Interventions", form.intervention),
+                ] if f.has_changed()
+            ]
+            anciens_modules = list(
+                getattr(fiche, "module_metier", None).modules
+                if hasattr(fiche, "module_metier") else []
+            )
+            if form.module_metier.get_modules() != anciens_modules \
+                    and "Modules métier" not in sections:
+                sections.append("Modules métier")
+
+
             with transaction.atomic():
                 fiche = form.fiche.save()
 
@@ -211,6 +257,8 @@ def fiche_update(request, pk):
 
                 form.intervention.instance = fiche
                 form.intervention.save()
+
+                enregistrer_modification(fiche, request.user, sections)
 
             messages.success(
                 request,
